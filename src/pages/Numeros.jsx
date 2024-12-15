@@ -1,4 +1,5 @@
-import { AnimatePresence, motion } from "framer-motion"; // Importando AnimatePresence corretamente
+import axios from "axios";
+import { AnimatePresence, motion } from "framer-motion";
 import {
 	Activity,
 	Layers,
@@ -8,12 +9,12 @@ import {
 	Server,
 	Trash2,
 	Wifi,
+	X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 
-const API_BASE_URL = "https://evo.whatlead.com.br";
-const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
+const API_BASE_URL = "http://localhost:3050";
 
 const ConnectionStatus = ({ connected }) => (
 	<motion.div
@@ -39,7 +40,7 @@ const ConnectionStatus = ({ connected }) => (
 );
 
 const InstanceCard = ({ instance, onReconnect, onLogout, onDelete }) => {
-	const isConnected = instance.connectionState === "connected";
+	const isConnected = instance.connectionStatus === "connected";
 
 	return (
 		<motion.div
@@ -59,73 +60,18 @@ const InstanceCard = ({ instance, onReconnect, onLogout, onDelete }) => {
         overflow-hidden
       "
 		>
-			<div
-				className="
-        absolute
-        inset-0
-        bg-gradient-to-r
-        from-blue-500/10
-        via-purple-500/10
-        to-pink-500/10
-        opacity-30
-        pointer-events-none
-      "
-			/>
-
 			<div className="relative z-10 space-y-6">
 				<div className="flex justify-between items-center">
 					<div className="flex items-center space-x-4">
-						<div
-							className="
-              relative
-              w-12 h-12
-              rounded-2xl
-              bg-gradient-to-br
-              from-blue-500
-              to-purple-600
-              p-0.5
-            "
-						>
-							<div
-								className="
-                absolute
-                inset-0
-                bg-white
-                dark:bg-gray-800
-                rounded-2xl
-                m-[1px]
-                flex
-                items-center
-                justify-center
-              "
-							>
-								<Server
-									className={`
-                  w-6 h-6
-                  ${isConnected ? "text-green-500" : "text-red-500"}
-                `}
-								/>
-							</div>
-						</div>
+						<Server
+							className={`
+                w-8 h-8
+                ${isConnected ? "text-green-500" : "text-red-500"}
+              `}
+						/>
 						<div>
-							<h3
-								className="
-                text-xl
-                font-bold
-                bg-clip-text text-transparent
-                bg-gradient-to-r
-                from-blue-500
-                to-purple-600
-              "
-							>
-								{instance.instanceName}
-							</h3>
-							<div className="flex items-center space-x-2 mt-1">
-								<Layers className="w-3 h-3 text-gray-400" />
-								<p className="text-sm text-gray-500 dark:text-gray-400">
-									{instance.phoneNumber}
-								</p>
-							</div>
+							<h3 className="text-xl font-bold">{instance.instanceName}</h3>
+							<p className="text-sm text-gray-500">{instance.phoneNumber}</p>
 						</div>
 					</div>
 					<ConnectionStatus connected={isConnected} />
@@ -134,71 +80,47 @@ const InstanceCard = ({ instance, onReconnect, onLogout, onDelete }) => {
 				<div className="grid grid-cols-3 gap-3">
 					{!isConnected && (
 						<motion.button
-							whileHover={{ scale: 1.02 }}
-							whileTap={{ scale: 0.98 }}
 							onClick={() => onReconnect(instance.instanceName)}
 							className="
                 flex items-center justify-center
-                bg-gradient-to-r
-                from-blue-500
-                to-blue-600
+                bg-blue-500
                 text-white
-                py-2.5
-                rounded-xl
-                shadow-lg
-                shadow-blue-500/20
-                hover:shadow-blue-500/30
-                transition-all
-                duration-200
+                py-2
+                rounded
+                hover:bg-blue-600
+                transition
               "
 						>
-							<Wifi className="mr-2 w-4 h-4" />
-							<span className="text-sm font-medium">Conectar</span>
+							<Wifi className="mr-2" /> Conectar
 						</motion.button>
 					)}
 					<motion.button
-						whileHover={{ scale: 1.02 }}
-						whileTap={{ scale: 0.98 }}
 						onClick={() => onLogout(instance.instanceName)}
 						className="
               flex items-center justify-center
-              bg-gradient-to-r
-              from-yellow-500
-              to-yellow-600
+              bg-yellow-500
               text-white
-              py-2.5
-              rounded-xl
-              shadow-lg
-              shadow-yellow-500/20
-              hover:shadow-yellow-500/30
-              transition-all
-              duration-200
+              py-2
+              rounded
+              hover:bg-yellow-600
+              transition
             "
 					>
-						<Power className="mr-2 w-4 h-4" />
-						<span className="text-sm font-medium">Logout</span>
+						<Power className="mr-2" /> Logout
 					</motion.button>
 					<motion.button
-						whileHover={{ scale: 1.02 }}
-						whileTap={{ scale: 0.98 }}
 						onClick={() => onDelete(instance.instanceName)}
 						className="
               flex items-center justify-center
-              bg-gradient-to-r
-              from-red-500
-              to-red-600
+              bg-red-500
               text-white
-              py-2.5
-              rounded-xl
-              shadow-lg
-              shadow-red-500/20
-              hover:shadow-red-500/30
-              transition-all
-              duration-200
+              py-2
+              rounded
+              hover:bg-red-600
+              transition
             "
 					>
-						<Trash2 className="mr-2 w-4 h-4" />
-						<span className="text-sm font-medium">Excluir</span>
+						<Trash2 className="mr-2" /> Excluir
 					</motion.button>
 				</div>
 			</div>
@@ -209,117 +131,123 @@ const InstanceCard = ({ instance, onReconnect, onLogout, onDelete }) => {
 const Numeros = () => {
 	const [instances, setInstances] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [currentPlan, setCurrentPlan] = useState("");
+	const [instanceLimit, setInstanceLimit] = useState(0);
+	const [remainingSlots, setRemainingSlots] = useState(0);
+	const [qrCode, setQrCode] = useState(null);
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [newInstaceName, setNewInstaceName] = useState("");
+	const [showQrCodeModal, setShowQrCodeModal] = useState(false);
 
 	const fetchInstances = async () => {
 		try {
 			setLoading(true);
-			const response = await fetch(`${API_BASE_URL}/instance/fetchInstances`, {
+
+			const token = localStorage.getItem("token");
+
+			if (!token) {
+				throw new Error("Token de autenticação não encontrado");
+			}
+
+			const response = await axios.get(`${API_BASE_URL}/instances`, {
 				headers: {
-					apikey: API_KEY,
-					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
 				},
 			});
 
-			if (!response.ok) {
-				throw new Error("Erro ao buscar instâncias");
-			}
+			const {
+				instances: instancesData,
+				currentPlan,
+				instanceLimit,
+				remainingSlots,
+			} = response.data;
 
-			const data = await response.json();
-
-			const processedInstances = data.map((instance) => ({
-				instanceId: instance.instanceName || instance.id,
+			const processedInstances = instancesData.map((instance) => ({
+				instanceId: instance._id,
 				instanceName: instance.instanceName,
-				phoneNumber: instance.number || instance.phoneNumber,
-				connectionState: instance.connectionState || "disconnected",
+				phoneNumber: instance.number,
+				connectionStatus: instance.connectionStatus,
 			}));
 
 			setInstances(processedInstances);
+			setCurrentPlan(currentPlan);
+			setInstanceLimit(instanceLimit);
+			setRemainingSlots(remainingSlots);
 			setLoading(false);
 		} catch (error) {
 			console.error("Erro na busca de instâncias:", error);
-			toast.error("Erro ao carregar instâncias");
+
+			if (error.response) {
+				switch (error.response.status) {
+					case 401:
+						toast.error("Sessão expirada. Faça login novamente.");
+						break;
+					case 403:
+						toast.error("Você não tem permissão para acessar este recurso.");
+						break;
+					default:
+						toast.error("Erro ao carregar instâncias");
+				}
+			} else if (error.request) {
+				toast.error("Sem resposta do servidor. Verifique sua conexão.");
+			} else {
+				toast.error("Erro ao configurar a requisição");
+			}
+
 			setLoading(false);
 		}
 	};
 
-	const handleReconnect = async (instanceName) => {
+	const handleCreateInstance = async () => {
+		if (remainingSlots <= 0) {
+			toast.error(`Limite de instâncias atingido para o plano ${currentPlan}`);
+			return;
+		}
+
 		try {
-			const response = await fetch(
-				`${API_BASE_URL}/instance/connect/${instanceName}`,
+			const token = localStorage.getItem("token");
+			const response = await axios.post(
+				`${API_BASE_URL}/instances/createInstance`,
 				{
-					method: "POST",
-					headers: {
-						apikey: API_KEY,
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						instanceName,
-						qrcode: true,
-						integration: "WHATSAPP-BAILEYS",
-					}),
+					instanceName: newInstaceName,
 				},
+				{ headers: { Authorization: `Bearer ${token}` } },
 			);
 
-			if (!response.ok) {
-				throw new Error("Erro ao reconectar instância");
-			}
-
-			toast.success("Instância reconectada com sucesso");
+			const { qrcode } = response.data;
+			setQrCode(qrcode);
+			setShowQrCodeModal(true);
 			fetchInstances();
+			toast.success("Instância criada com sucesso!");
+			setIsModalOpen(false);
 		} catch (error) {
-			toast.error("Erro ao reconectar instância");
+			console.error("Erro ao criar instância:", error);
+			toast.error(error.response?.data?.message || "Erro ao criar instância");
 		}
 	};
 
-	const handleLogout = async (instanceName) => {
-		try {
-			const response = await fetch(
-				`${API_BASE_URL}/instance/logout/${instanceName}`,
-				{
-					method: "POST",
-					headers: {
-						apikey: API_KEY,
-					},
-				},
-			);
-
-			if (!response.ok) {
-				throw new Error("Erro ao fazer logout");
-			}
-
-			toast.success("Logout realizado com sucesso");
-			fetchInstances();
-		} catch (error) {
-			toast.error("Erro ao fazer logout");
+	const openModal = () => {
+		if (remainingSlots <= 0) {
+			toast.error(`Limite de instâncias atingido para o plano ${currentPlan}`);
+			return;
 		}
+		setIsModalOpen(true);
 	};
 
-	const handleDelete = async (instanceName) => {
-		try {
-			const response = await fetch(
-				`${API_BASE_URL}/instance/delete/${instanceName}`,
-				{
-					method: "DELETE",
-					headers: {
-						apikey: API_KEY,
-					},
-				},
-			);
+	const closeModal = () => {
+		setIsModalOpen(false);
+		setNewInstaceName("");
+	};
 
-			if (!response.ok) {
-				throw new Error("Erro ao excluir instância");
-			}
-
-			toast.success("Instância excluída com sucesso");
-			fetchInstances();
-		} catch (error) {
-			toast.error("Erro ao excluir instância");
-		}
+	const closeQrCodeModal = () => {
+		setShowQrCodeModal(false);
+		setQrCode(null);
 	};
 
 	useEffect(() => {
 		fetchInstances();
-		const intervalId = setInterval(fetchInstances, 60000); // Atualiza a cada minuto
+
+		const intervalId = setInterval(fetchInstances, 60000);
 		return () => clearInterval(intervalId);
 	}, []);
 
@@ -335,32 +263,30 @@ const Numeros = () => {
 
 					<div className="flex space-x-4">
 						<motion.button
-							whileHover={{ scale: 1.05 }}
-							whileTap={{ scale: 0.95 }}
 							onClick={fetchInstances}
-							className="
-                bg-white/10 p-3 rounded-full
-                shadow-md hover:bg-white/20
-                transition-colors
-              "
+							className="bg-white/10 p-3 rounded-full shadow-md hover:bg-white/20"
 						>
 							<RefreshCw className="text-white" />
 						</motion.button>
 						<motion.button
-							whileHover={{ scale: 1.05 }}
-							whileTap={{ scale: 0.95 }}
+							onClick={openModal}
 							className="
                 flex items-center
                 bg-gradient-to-r from-blue-500 to-blue-600
                 text-white px-4 py-2 rounded-lg
-                shadow-lg
-                hover:shadow-xl
-                transition-all
+                shadow-lg hover:shadow-xl
               "
 						>
-							<Plus className="mr-2" />
-							Nova Instância
+							<Plus className="mr-2" /> Nova Instância
 						</motion.button>
+					</div>
+				</div>
+
+				<div className="mb-4 bg-blue-100 dark:bg-gray-800 p-3 rounded text-black dark:text-white flex justify-between items-center">
+					<div className="flex space-x-4">
+						<span>Plano Atual: {currentPlan}</span>
+						<span>Limite de Instâncias: {instanceLimit}</span>
+						<span>Slots Restantes: {remainingSlots}</span>
 					</div>
 				</div>
 
@@ -383,15 +309,117 @@ const Numeros = () => {
 								<InstanceCard
 									key={instance.instanceId}
 									instance={instance}
-									onReconnect={handleReconnect}
-									onLogout={handleLogout}
-									onDelete={handleDelete}
+									onReconnect={() => {}}
+									onLogout={() => {}}
+									onDelete={() => {}}
 								/>
 							))}
 						</AnimatePresence>
 					</motion.div>
 				)}
 			</div>
+
+			{/* Modal de Criação de Instância */}
+			{isModalOpen && (
+				<motion.div
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					exit={{ opacity: 0 }}
+					className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+				>
+					<motion.div
+						initial={{ y: 20, opacity: 0 }}
+						animate={{ y: 0, opacity: 1 }}
+						exit={{ y: 20, opacity: 0 }}
+						className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md relative"
+					>
+						<button
+							onClick={closeModal}
+							className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+						>
+							<X className="w-6 h-6" />
+						</button>
+						<h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+							Criar Nova Instância
+						</h2>
+						<div className="mb-4">
+							<label
+								htmlFor="instanceName"
+								className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2"
+							>
+								Nome da Instância
+							</label>
+							<input
+								type="text"
+								id="instanceName"
+								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+								placeholder="Ex: Instância Principal"
+								value={newInstaceName}
+								onChange={(e) => setNewInstaceName(e.target.value)}
+							/>
+						</div>
+						<motion.button
+							onClick={handleCreateInstance}
+							className="
+                bg-gradient-to-r from-blue-500 to-blue-600
+                text-white px-4 py-2 rounded-lg
+                shadow-lg hover:shadow-xl
+              "
+						>
+							Criar Instância
+						</motion.button>
+					</motion.div>
+				</motion.div>
+			)}
+
+			{/* Modal do QR Code */}
+			{showQrCodeModal && qrCode && (
+				<motion.div
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					exit={{ opacity: 0 }}
+					className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+				>
+					<motion.div
+						initial={{ y: 20, opacity: 0 }}
+						animate={{ y: 0, opacity: 1 }}
+						exit={{ y: 20, opacity: 0 }}
+						className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md relative"
+					>
+						<button
+							onClick={closeQrCodeModal}
+							className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+						>
+							<X className="w-6 h-6" />
+						</button>
+						<h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+							QR Code para Conexão
+						</h2>
+						<img
+							src={qrCode.base64} // Remova o prefixo duplicado
+							alt="QR Code"
+							className="mx-auto"
+						/>
+						<p className="text-gray-700 dark:text-gray-300 mt-4">
+							Use o aplicativo para escanear o QR code e conectar.
+						</p>
+						<motion.button
+							onClick={closeQrCodeModal}
+							className="
+                mt-6
+                bg-gray-300
+                dark:bg-gray-700
+                text-gray-800
+                dark:text-gray-200
+                px-4 py-2 rounded-lg
+                shadow-md hover:shadow-lg
+              "
+						>
+							Fechar
+						</motion.button>
+					</motion.div>
+				</motion.div>
+			)}
 		</div>
 	);
 };

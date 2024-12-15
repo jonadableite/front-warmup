@@ -73,7 +73,7 @@ const Aquecimento: React.FC = () => {
 	const fetchInstances = async () => {
 		setLoading(true);
 		try {
-			const response = await axios.get(`/api/instances`);
+			const response = await axios.get(`/instances`);
 			const data = response.data;
 
 			if (!data) {
@@ -321,10 +321,12 @@ const Aquecimento: React.FC = () => {
 				</motion.div>
 
 				{/* Informações de Plano */}
-				<div className="mb-4 bg-blue-100 dark:bg-gray-800 p-3 rounded text-black dark:text-white">
-					<p>Plano Atual: {currentPlan}</p>
-					<p>Limite de Instâncias: {instanceLimit}</p>
-					<p>Slots Restantes: {remainingSlots}</p>
+				<div className="mb-4 bg-blue-100 dark:bg-gray-800 p-3 rounded text-black dark:text-white flex justify-betwee items-center">
+					<div className="flex space-x-3">
+						<span>Plano Atual: {currentPlan}</span>
+						<span>Limite de Instâncias: {instanceLimit}</span>
+						<span>Slots Restantes: {remainingSlots}</span>
+					</div>
 				</div>
 
 				{/* Seletor de Instâncias */}

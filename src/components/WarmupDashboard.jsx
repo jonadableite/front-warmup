@@ -1,3 +1,5 @@
+
+// src/components/WarmupDashboard.jsx
 import {
 	ActivityIcon,
 	ClockIcon,
