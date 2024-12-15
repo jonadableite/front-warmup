@@ -6,7 +6,6 @@ import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
 import Aquecimento from "./pages/Aquecimento";
 import Configuracoes from "./pages/Configuracoes";
-import Conversas from "./pages/Conversas";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Numeros from "./pages/Numeros"; // Certifique-se de que esta linha está presente
@@ -50,14 +49,7 @@ function App() {
 								</PrivateRoute>
 							}
 						/>
-						<Route
-							path="/conversas"
-							element={
-								<PrivateRoute>
-									<Conversas />
-								</PrivateRoute>
-							}
-						/>
+
 						<Route
 							path="/numeros"
 							element={

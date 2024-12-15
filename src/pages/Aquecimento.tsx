@@ -8,8 +8,7 @@ import { BsFileText, BsPlay, BsTrash, BsWifi, BsWifiOff } from "react-icons/bs";
 import { FaServer } from "react-icons/fa";
 
 // Configurações da API
-const LOCAL_BACKEND_URL = "http://localhost:3050/api"; // URL do backend local
-const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
+const API_BASE_URL = "http://localhost:3050"; // URL do backend local
 
 // Emojis para reações
 const REACTION_EMOJIS = [
@@ -73,58 +72,42 @@ const Aquecimento: React.FC = () => {
 	const fetchInstances = async () => {
 		setLoading(true);
 		try {
-			const response = await axios.get(`/instances`);
-			const data = response.data;
+			const token = localStorage.getItem("token");
 
-			if (!data) {
-				throw new Error("Resposta inválida da API");
+			if (!token) {
+				throw new Error("Token de autenticação não encontrado");
 			}
+
+			const response = await axios.get(`${API_BASE_URL}/instances`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
 
 			const {
 				instances: instancesData,
 				currentPlan,
 				instanceLimit,
 				remainingSlots,
-			} = data;
+			} = response.data;
 
-			const processedInstances = Array.isArray(instancesData)
-				? instancesData.map((instance: any) => ({
-						id: instance._id,
-						name: instance.instanceName,
-						connectionStatus: instance.connectionStatus,
-						ownerJid: instance.ownerJid,
-						profileName: instance.profileName,
-					}))
-				: [];
+			const processedInstances = instancesData.map((instance: any) => ({
+				id: instance._id,
+				name: instance.instanceName,
+				connectionStatus: instance.connectionStatus,
+				ownerJid: instance.ownerJid,
+				profileName: instance.profileName,
+			}));
 
 			setInstances(processedInstances);
-			setCurrentPlan(currentPlan || "free");
-			setInstanceLimit(instanceLimit || 0);
-			setRemainingSlots(remainingSlots || 0);
+			setCurrentPlan(currentPlan);
+			setInstanceLimit(instanceLimit);
+			setRemainingSlots(remainingSlots);
 		} catch (error: any) {
 			console.error("Erro ao buscar instâncias:", error);
 			toast.error(error.message || "Não foi possível carregar as instâncias");
 		} finally {
 			setLoading(false);
-		}
-	};
-
-	const handleCreateInstance = async () => {
-		if (remainingSlots <= 0) {
-			toast.error(`Limite de instâncias atingido para o plano ${currentPlan}`);
-			return;
-		}
-
-		try {
-			const response = await axios.post("/api/createInstance", {
-				instanceName: `Instancia-${instances.length + 1}`,
-			});
-
-			fetchInstances();
-			toast.success("Instância criada com sucesso!");
-		} catch (error: any) {
-			console.error("Erro ao criar instância:", error);
-			toast.error(error.response?.data?.error || "Erro ao criar instância");
 		}
 	};
 
@@ -240,7 +223,7 @@ const Aquecimento: React.FC = () => {
 			console.log("Enviando payload para o backend:", payload);
 
 			const localResponse = await axios.post(
-				`${LOCAL_BACKEND_URL}/warmup/config`,
+				`${API_BASE_URL}/warmup/config`,
 				payload,
 			);
 
@@ -261,7 +244,7 @@ const Aquecimento: React.FC = () => {
 
 	const handleStopWarmup = async () => {
 		try {
-			await axios.post(`${LOCAL_BACKEND_URL}/stop-all`, null, {
+			await axios.post(`${API_BASE_URL}/stop-all`, null, {
 				headers: { apikey: API_KEY },
 			});
 			toast.success("Aquecimento de todas as instâncias parado com sucesso!");
@@ -321,7 +304,7 @@ const Aquecimento: React.FC = () => {
 				</motion.div>
 
 				{/* Informações de Plano */}
-				<div className="mb-4 bg-blue-100 dark:bg-gray-800 p-3 rounded text-black dark:text-white flex justify-betwee items-center">
+				<div className="mb-4 bg-blue-100 dark:bg-gray-800 p-3 rounded text-black dark:text-white flex justify-between items-center">
 					<div className="flex space-x-3">
 						<span>Plano Atual: {currentPlan}</span>
 						<span>Limite de Instâncias: {instanceLimit}</span>
