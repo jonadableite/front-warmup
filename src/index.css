@@ -1,0 +1,43 @@
+/* index.css */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Syne:wght@400..800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .bg-grid-pattern {
+    background-image: linear-gradient(to right, #ffffff0f 1px, transparent 1px),
+      linear-gradient(to bottom, #ffffff0f 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+}
+
+
+body,
+html {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-family: "Montserrat", sans-serif; /* Define a fonte padrão */
+}
+
+.app-container {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+}
+
+.header {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 64px;
+	z-index: 10;
+}
+
+.content {
+	margin-top: 64px;
+	flex: 1;
+}
