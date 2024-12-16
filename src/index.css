@@ -6,13 +6,51 @@
 @tailwind utilities;
 
 @layer utilities {
-  .bg-grid-pattern {
-    background-image: linear-gradient(to right, #ffffff0f 1px, transparent 1px),
-      linear-gradient(to bottom, #ffffff0f 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
+	.bg-grid-pattern {
+		background-image: linear-gradient(to right, #ffffff0f 1px, transparent 1px),
+			linear-gradient(to bottom, #ffffff0f 1px, transparent 1px);
+		background-size: 24px 24px;
+	}
 }
 
+/* Estilização da scrollbar para navegadores WebKit (Chrome, Safari) */
+::-webkit-scrollbar {
+	width: 12px; /* Largura da scrollbar */
+}
+
+::-webkit-scrollbar-track {
+	background-color: #0e0e12; /* Cor de fundo da track */
+	border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: linear-gradient(90deg, #25d366 0%, #25d366 50%, #dcf8c6 100%);
+	background-size: 200% 100%;
+	border-radius: 10px;
+	border: 2px solid #0e0e12; /* Cor da borda do thumb */
+	animation: gradientScroll 3s linear infinite;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: linear-gradient(90deg, #128c7e 0%, #25d366 50%, #dcf8c6 100%);
+	background-size: 200% 100%;
+	animation: gradientScroll 2s linear infinite;
+}
+
+@keyframes gradientScroll {
+	0% {
+		background-position: 0% 0%;
+	}
+	100% {
+		background-position: 100% 0%;
+	}
+}
+
+/* Suporte para Firefox */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: #26d466 #111826;
+}
 
 body,
 html {
@@ -35,6 +73,13 @@ html {
 	right: 0;
 	height: 64px;
 	z-index: 10;
+	margin-left: 256px; /* Ajuste conforme a largura da sua sidebar */
+	background-color: white;
+	transition: margin-left 0.3s ease;
+}
+
+.header.collapsed {
+	margin-left: 0;
 }
 
 .content {

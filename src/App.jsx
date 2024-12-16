@@ -6,9 +6,12 @@ import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
 import Aquecimento from "./pages/Aquecimento";
 import Configuracoes from "./pages/Configuracoes";
+import ForgotPassword from "./pages/ForgotPassword"; // Importe o componente
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Numeros from "./pages/Numeros"; // Certifique-se de que esta linha está presente
+import Numeros from "./pages/Numeros";
+import PricingPage from "./pages/Pricing";
+import Register from "./pages/Register";
 
 function App() {
 	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -18,26 +21,46 @@ function App() {
 		setIsSidebarOpen(!isSidebarOpen);
 	};
 
-	const isLoginRoute = location.pathname === "/login";
+	const isPublicRoute =
+		location.pathname === "/login" ||
+		location.pathname === "/register" ||
+		location.pathname === "/forgot-password";
 
 	return (
 		<div className="flex min-h-screen">
-			{!isLoginRoute && (
+			{!isPublicRoute && (
 				<Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 			)}
 			<div
 				className={`flex-1 flex flex-col transition-all duration-300 ${
-					!isLoginRoute && isSidebarOpen ? "ml-64" : "ml-0"
+					!isPublicRoute && isSidebarOpen ? "ml-64" : "ml-0"
 				}`}
 			>
-				{!isLoginRoute && <Header />}
-				<main className={`${!isLoginRoute ? "pt-16" : ""}`}>
+				{!isPublicRoute && <Header isSidebarOpen={isSidebarOpen} />}
+				<main className={`${!isPublicRoute ? "pt-16" : ""}`}>
 					<Routes>
 						<Route
 							path="/login"
 							element={
 								<PublicRoute>
 									<Login />
+								</PublicRoute>
+							}
+						/>
+						<Route
+							path="/register"
+							element={
+								<PublicRoute>
+									<Register />
+								</PublicRoute>
+							}
+						/>
+						<Route path="/pricing" element={<PricingPage />} />
+						<Route
+							path="/forgot-password"
+							element={
+								<PublicRoute>
+									<ForgotPassword />
 								</PublicRoute>
 							}
 						/>
