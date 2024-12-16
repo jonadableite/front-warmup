@@ -35,10 +35,21 @@ interface WarmupStats {
 		video: number;
 		audio: number;
 		sticker: number;
+		reaction: number;
 	};
 	warmupTime: number;
 	status: "active" | "paused";
 	lastActive: string;
+	startTime: string;
+	pauseTime: string;
+	progress: number;
+	mediaReceived: {
+		text: number;
+		image: number;
+		audio: number;
+		sticker: number;
+		reaction: number;
+	};
 }
 
 // Componente StatCard
@@ -139,6 +150,7 @@ const Home: React.FC = () => {
 					averageTime,
 					instanceProgress,
 					messageTypes,
+					instances, // Adicionando a busca das instâncias
 				} = response.data;
 
 				setDashboardData((prevState) => ({
@@ -151,6 +163,7 @@ const Home: React.FC = () => {
 					],
 					instanceProgress,
 					messageTypes,
+					instanceDetails: instances, // Armazenando os detalhes das instâncias
 				}));
 			} catch (error) {
 				console.error("Erro ao buscar dados do dashboard:", error);
@@ -203,27 +216,40 @@ const Home: React.FC = () => {
 						<h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">
 							Progresso das Instâncias
 						</h2>
-						{dashboardData.instanceProgress.map((progress, index) => (
-							<div key={index} className="flex items-center mb-4">
-								<div className="flex-grow mr-4">
-									<ProgressBar
-										label={progress.label}
-										value={progress.value}
-										color={progress.color}
-									/>
+						{Array.isArray(dashboardData.instanceDetails) &&
+							dashboardData.instanceDetails.map((instance, index) => (
+								<div key={index} className="flex items-center mb-4">
+									<div className="flex-grow mr-4">
+										<ProgressBar
+											label={instance.instanceId}
+											value={Math.min(
+												(instance.warmupTime / (480 * 3600)) * 100,
+												100,
+											)}
+											color={
+												instance.warmupTime >= 480 * 3600
+													? "bg-green-500"
+													: "bg-blue-500"
+											}
+										/>
+									</div>
+									<button
+										className="text-blue-500 hover:text-blue-700"
+										onClick={() => {
+											if (
+												dashboardData.instanceDetails &&
+												dashboardData.instanceDetails[index]
+											) {
+												setSelectedInstanceDetails(
+													dashboardData.instanceDetails[index],
+												);
+											}
+										}}
+									>
+										<EyeIcon className="w-6 h-6" />
+									</button>
 								</div>
-								<button
-									className="text-blue-500 hover:text-blue-700"
-									onClick={() =>
-										setSelectedInstanceDetails(
-											dashboardData.instanceDetails[index],
-										)
-									}
-								>
-									<EyeIcon className="w-6 h-6" />
-								</button>
-							</div>
-						))}
+							))}
 					</motion.div>
 
 					<motion.div
@@ -288,36 +314,78 @@ const Home: React.FC = () => {
 
 				{selectedInstanceDetails && (
 					<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-						<div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-4xl w-full">
+						<div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
 							<h3 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">
 								Detalhes da Instância: {selectedInstanceDetails.instanceId}
 							</h3>
 
-							<div className="grid md:grid-cols-2 gap-6">
-								<div>
+							<div className="grid md:grid-cols-3 gap-6">
+								{/* Coluna de Informações Básicas */}
+								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
 									<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
 										Informações Básicas
 									</h4>
-									<p className="text-gray-700 dark:text-gray-300">
-										<strong>Status:</strong> {selectedInstanceDetails.status}
-									</p>
-									<p className="text-gray-700 dark:text-gray-300">
-										<strong>Mensagens Enviadas:</strong>{" "}
-										{selectedInstanceDetails.messagesSent}
-									</p>
-									<p className="text-gray-700 dark:text-gray-300">
-										<strong>Mensagens Recebidas:</strong>{" "}
-										{selectedInstanceDetails.messagesReceived}
-									</p>
-									<p className="text-gray-700 dark:text-gray-300">
-										<strong>Tempo de Aquecimento:</strong>{" "}
-										{selectedInstanceDetails.warmupTime}
-									</p>
+									<div className="space-y-3">
+										<p className="flex justify-between">
+											<span className="font-medium">Status:</span>
+											<span
+												className={`
+                                                ${
+																									selectedInstanceDetails.status ===
+																									"active"
+																										? "text-green-600"
+																										: "text-red-600"
+																								} font-bold
+                                            `}
+											>
+												{selectedInstanceDetails.status.toUpperCase()}
+											</span>
+										</p>
+										<p className="flex justify-between">
+											<span>Mensagens Enviadas:</span>
+											<span className="font-bold">
+												{selectedInstanceDetails.messagesSent}
+											</span>
+										</p>
+										<p className="flex justify-between">
+											<span>Mensagens Recebidas:</span>
+											<span className="font-bold">
+												{selectedInstanceDetails.messagesReceived}
+											</span>
+										</p>
+										<p className="flex justify-between">
+											<span>Tempo de Aquecimento:</span>
+											<span className="font-bold">
+												{selectedInstanceDetails.warmupTime} min
+											</span>
+										</p>
+									</div>
 								</div>
 
-								<div>
+								{/* Coluna de Estatísticas de Mídia */}
+								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
 									<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
-										Progressão Diária
+										Estatísticas de Mídia
+									</h4>
+									<div className="space-y-3">
+										{Object.entries(selectedInstanceDetails.mediaStats).map(
+											([type, count]) => (
+												<div
+													key={type}
+													className="flex justify-between items-center"
+												>
+													<span className="capitalize">{type}:</span>
+													<span className="font-bold">{count}</span>
+												</div>
+											),
+										)}
+									</div>
+								</div>
+
+								{/* Coluna de Gráfico de Progressão */}
+								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+									<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
+										Progresso de Aquecimento
 									</h4>
 									<ResponsiveContainer width="100%" height={250}>
 										<AreaChart
@@ -359,8 +427,32 @@ const Home: React.FC = () => {
 								</div>
 							</div>
 
+							{/* Gráfico Completo de Progressão */}
+							<div className="mt-8 bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+								<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
+									Progressão Detalhada
+								</h4>
+								<ResponsiveContainer width="100%" height={300}>
+									<AreaChart
+										data={generateAreaChartData(selectedInstanceDetails)}
+									>
+										<CartesianGrid strokeDasharray="3 3" />
+										<XAxis dataKey="name" />
+										<YAxis />
+										<Tooltip />
+										<Area
+											type="monotone"
+											dataKey="mensagens"
+											stroke="#8884d8"
+											fill="url(#colorUv)"
+											fillOpacity={0.6}
+										/>
+									</AreaChart>
+								</ResponsiveContainer>
+							</div>
+
 							<button
-								className="mt-6 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+								className="mt-6 w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
 								onClick={() => setSelectedInstanceDetails(null)}
 							>
 								Fechar
