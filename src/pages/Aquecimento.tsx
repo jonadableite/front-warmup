@@ -8,7 +8,8 @@ import { BsFileText, BsPlay, BsTrash, BsWifi, BsWifiOff } from "react-icons/bs";
 import { FaServer } from "react-icons/fa";
 
 // Configurações da API
-const API_BASE_URL = "http://localhost:3050"; // URL do backend local
+const API_BASE_URL = "http://localhost:3050";
+const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
 
 // Emojis para reações
 const REACTION_EMOJIS = [
@@ -39,6 +40,31 @@ interface MediaContent {
 	preview?: string;
 }
 
+interface PhoneInstance {
+	phoneNumber: string;
+	instanceId: string;
+}
+
+export interface WarmupConfig {
+	phoneInstances: PhoneInstance[];
+	contents: {
+		texts: string[];
+		images: string[];
+		audios: string[];
+		emojis: string[];
+		videos: string[];
+		stickers: string[];
+	};
+	config: {
+		reactionChance: number;
+		audioChance: number;
+		stickerChance: number;
+		minDelay: number;
+		maxDelay: number;
+		videoChance: number;
+	};
+}
+
 const Aquecimento: React.FC = () => {
 	const [instances, setInstances] = useState<Instancia[]>([]);
 	const [selectedInstances, setSelectedInstances] = useState<Set<string>>(
@@ -49,6 +75,7 @@ const Aquecimento: React.FC = () => {
 	const [images, setImages] = useState<MediaContent[]>([]);
 	const [videos, setVideos] = useState<MediaContent[]>([]);
 	const [audios, setAudios] = useState<MediaContent[]>([]);
+	const [stickers, setStickers] = useState<MediaContent[]>([]);
 	const [mediaType, setMediaType] = useState("image");
 	const [loading, setLoading] = useState(false);
 	const [isWarmingUp, setIsWarmingUp] = useState(false);
@@ -154,9 +181,19 @@ const Aquecimento: React.FC = () => {
 				case "audio":
 					setAudios((prev) => [...prev, newMedia]);
 					break;
+				case "sticker":
+					setStickers((prev) => [...prev, newMedia]);
+					break;
 			}
 		};
 		reader.readAsDataURL(file);
+	};
+
+	const processBase64 = (base64String: string, type: string) => {
+		if (!base64String.startsWith("data:")) {
+			return `data:${type};base64,${base64String}`;
+		}
+		return base64String;
 	};
 
 	const removeMedia = (index: number, type: string) => {
@@ -169,6 +206,9 @@ const Aquecimento: React.FC = () => {
 				break;
 			case "audio":
 				setAudios((prev) => prev.filter((_, i) => i !== index));
+				break;
+			case "sticker":
+				setStickers((prev) => prev.filter((_, i) => i !== index));
 				break;
 		}
 	};
@@ -184,50 +224,77 @@ const Aquecimento: React.FC = () => {
 		if (
 			texts.length === 0 &&
 			images.length === 0 &&
+			audios.length === 0 &&
 			videos.length === 0 &&
-			audios.length === 0
+			stickers.length === 0
 		) {
 			toast.error("Adicione pelo menos um tipo de conteúdo");
 			return;
 		}
 
 		try {
-			const phoneInstances = Array.from(selectedInstances)
-				.map((instanceName) => {
-					const instance = instances.find((inst) => inst.name === instanceName);
-					return {
-						phoneNumber: instance?.ownerJid || "",
-						instanceId: instanceName,
-					};
+			const token = localStorage.getItem("token");
+
+			if (!token) {
+				throw new Error("Token de autenticação não encontrado");
+			}
+
+			const phoneInstances: PhoneInstance[] = instances
+				.filter((instance) => {
+					const isSelected = selectedInstances.has(instance.name);
+					const hasValidPhoneNumber =
+						instance.ownerJid && instance.ownerJid.trim() !== "";
+
+					return isSelected && hasValidPhoneNumber;
 				})
-				.filter((inst) => inst.phoneNumber);
+				.map((instance) => ({
+					phoneNumber: instance.ownerJid ? instance.ownerJid.trim() : "",
+					instanceId: instance.name,
+				}));
+
+			if (phoneInstances.length < 2) {
+				toast.error("Selecione pelo menos duas instâncias com números válidos");
+				return;
+			}
+
+			const config = {
+				reactionChance: 0.4,
+				audioChance: 0.3,
+				stickerChance: 0.2,
+				minDelay: 3000,
+				maxDelay: 90000,
+				videoChance: 0.2,
+			};
+
+			const contents = {
+				texts: texts,
+				images: images.map((img) => processBase64(img.base64, img.type)),
+				audios: audios.map((aud) => processBase64(aud.base64, aud.type)),
+				emojis: REACTION_EMOJIS,
+				videos: videos.map((vid) => processBase64(vid.base64, vid.type)),
+				stickers: stickers.map((sticker) =>
+					processBase64(sticker.base64, sticker.type),
+				),
+			};
 
 			const payload = {
 				phoneInstances: phoneInstances,
-				contents: {
-					texts: texts,
-					images: images.map((img) => img.base64),
-					videos: videos.map((vid) => vid.base64),
-					audios: audios.map((aud) => aud.base64),
-					emojis: REACTION_EMOJIS,
-				},
-				config: {
-					reactionChance: 0.4,
-					audioChance: 0.3,
-					stickerChance: 0.2,
-					minDelay: 3000,
-					maxDelay: 90000,
-				},
+				contents: contents,
+				config: config,
 			};
 
-			console.log("Enviando payload para o backend:", payload);
+			console.log("Payload final:", payload);
 
 			const localResponse = await axios.post(
 				`${API_BASE_URL}/warmup/config`,
 				payload,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+				},
 			);
-
-			console.log("Resposta do backend local:", localResponse.data);
 
 			if (localResponse.data.success) {
 				toast.success("Configuração de aquecimento salva com sucesso!");
@@ -237,16 +304,25 @@ const Aquecimento: React.FC = () => {
 			}
 		} catch (error: any) {
 			console.error("Erro ao salvar conteúdo:", error);
-			console.error("Detalhes do erro:", error.response?.data);
 			toast.error(error.response?.data?.message || "Falha ao salvar conteúdo");
 		}
 	};
 
 	const handleStopWarmup = async () => {
 		try {
-			await axios.post(`${API_BASE_URL}/stop-all`, null, {
-				headers: { apikey: API_KEY },
-			});
+			const token = localStorage.getItem("token");
+			if (!token) {
+				throw new Error("Token de autenticação não encontrado");
+			}
+			await axios.post(
+				`${API_BASE_URL}/warmup/stop-all`,
+				{},
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				},
+			);
 			toast.success("Aquecimento de todas as instâncias parado com sucesso!");
 			setIsWarmingUp(false);
 		} catch (error: any) {
@@ -271,14 +347,16 @@ const Aquecimento: React.FC = () => {
 		const statusColors = {
 			open: "text-green-500",
 			connecting: "text-yellow-500",
-			close: "text-red-500",
+			disconnected: "text-red-500",
 		};
 
 		const StatusIcon = status === "open" ? BsWifi : BsWifiOff;
 
 		return (
 			<div
-				className={`${statusColors[status as keyof typeof statusColors]} text-2xl`}
+				className={`${
+					statusColors[status as keyof typeof statusColors]
+				} text-2xl`}
 			>
 				<StatusIcon />
 			</div>
@@ -403,6 +481,7 @@ const Aquecimento: React.FC = () => {
 							<option value="image">Imagens</option>
 							<option value="video">Vídeos</option>
 							<option value="audio">Áudios</option>
+							<option value="sticker">Stickers</option>
 						</select>
 						<input
 							type="file"
@@ -453,6 +532,22 @@ const Aquecimento: React.FC = () => {
 										</audio>
 										<button
 											onClick={() => removeMedia(index, "audio")}
+											className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"
+										>
+											<BsTrash />
+										</button>
+									</div>
+								))}
+							{mediaType === "sticker" &&
+								stickers.map((sticker, index) => (
+									<div key={index} className="relative">
+										<img
+											src={sticker.preview}
+											alt={sticker.fileName}
+											className="w-full h-24 object-cover rounded"
+										/>
+										<button
+											onClick={() => removeMedia(index, "sticker")}
 											className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"
 										>
 											<BsTrash />

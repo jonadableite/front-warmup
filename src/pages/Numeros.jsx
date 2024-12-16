@@ -15,6 +15,8 @@ import React, { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 
 const API_BASE_URL = "http://localhost:3050";
+const API_URL = "https://evo.whatlead.com.br";
+const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
 
 const ConnectionStatus = ({ connected }) => (
 	<motion.div
@@ -40,7 +42,7 @@ const ConnectionStatus = ({ connected }) => (
 );
 
 const InstanceCard = ({ instance, onReconnect, onLogout, onDelete }) => {
-	const isConnected = instance.connectionStatus === "connected";
+	const isConnected = instance.connectionStatus === "open";
 
 	return (
 		<motion.div
@@ -109,7 +111,7 @@ const InstanceCard = ({ instance, onReconnect, onLogout, onDelete }) => {
 						<Power className="mr-2" /> Logout
 					</motion.button>
 					<motion.button
-						onClick={() => onDelete(instance.instanceName)}
+						onClick={() => onDelete(instance.instanceId, instance.instanceName)}
 						className="
               flex items-center justify-center
               bg-red-500
@@ -138,6 +140,7 @@ const Numeros = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [newInstaceName, setNewInstaceName] = useState("");
 	const [showQrCodeModal, setShowQrCodeModal] = useState(false);
+	const [selectedInstanceName, setSelectedInstanceName] = useState(null);
 
 	const fetchInstances = async () => {
 		try {
@@ -226,6 +229,87 @@ const Numeros = () => {
 		}
 	};
 
+	const handleReconnectInstance = async (instanceName) => {
+		setSelectedInstanceName(instanceName);
+		try {
+			const token = localStorage.getItem("token");
+			const response = await axios.get(
+				`${API_URL}/instance/connect/${instanceName}`,
+				{
+					headers: {
+						apikey: API_KEY,
+					},
+				},
+			);
+
+			if (response.status === 200) {
+				const qrCodeResponse = await axios.get(
+					`${API_URL}/instance/fetchInstances?instanceName=${instanceName}`,
+					{
+						headers: {
+							apikey: API_KEY,
+						},
+					},
+				);
+
+				if (qrCodeResponse.status === 200 && qrCodeResponse.data.instance) {
+					setQrCode(qrCodeResponse.data.instance.qrcode);
+					setShowQrCodeModal(true);
+					toast.success("Instância reconectando...");
+					fetchInstances();
+				} else {
+					toast.error("Erro ao obter QR code para reconexão");
+				}
+			} else {
+				toast.error("Erro ao tentar reconectar a instância");
+			}
+		} catch (error) {
+			console.error("Erro ao reconectar instância:", error);
+			toast.error(
+				error.response?.data?.message || "Erro ao tentar reconectar instância",
+			);
+		}
+	};
+
+	const handleLogoutInstance = async (instanceName) => {
+		try {
+			const token = localStorage.getItem("token");
+			await axios.delete(`${API_URL}/instance/logout/${instanceName}`, {
+				headers: {
+					apikey: API_KEY,
+				},
+			});
+			toast.success("Instância desconectada com sucesso!");
+			fetchInstances();
+		} catch (error) {
+			console.error("Erro ao desconectar instância:", error);
+			toast.error(
+				error.response?.data?.message || "Erro ao desconectar instância",
+			);
+		}
+	};
+
+	const handleDeleteInstance = async (instanceId, instanceName) => {
+		try {
+			const token = localStorage.getItem("token");
+			await axios.delete(`${API_BASE_URL}/instances/instance/${instanceId}`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			await axios.delete(`${API_URL}/instance/delete/${instanceName}`, {
+				headers: {
+					apikey: API_KEY,
+				},
+			});
+			toast.success("Instância excluída com sucesso!");
+			fetchInstances();
+		} catch (error) {
+			console.error("Erro ao excluir instância:", error);
+			toast.error(error.response?.data?.message || "Erro ao excluir instância");
+		}
+	};
+
 	const openModal = () => {
 		if (remainingSlots <= 0) {
 			toast.error(`Limite de instâncias atingido para o plano ${currentPlan}`);
@@ -242,6 +326,7 @@ const Numeros = () => {
 	const closeQrCodeModal = () => {
 		setShowQrCodeModal(false);
 		setQrCode(null);
+		setSelectedInstanceName(null);
 	};
 
 	useEffect(() => {
@@ -309,9 +394,9 @@ const Numeros = () => {
 								<InstanceCard
 									key={instance.instanceId}
 									instance={instance}
-									onReconnect={() => {}}
-									onLogout={() => {}}
-									onDelete={() => {}}
+									onReconnect={handleReconnectInstance}
+									onLogout={handleLogoutInstance}
+									onDelete={handleDeleteInstance}
 								/>
 							))}
 						</AnimatePresence>
@@ -395,11 +480,7 @@ const Numeros = () => {
 						<h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
 							QR Code para Conexão
 						</h2>
-						<img
-							src={qrCode.base64} // Remova o prefixo duplicado
-							alt="QR Code"
-							className="mx-auto"
-						/>
+						<img src={qrCode.base64} alt="QR Code" className="mx-auto" />
 						<p className="text-gray-700 dark:text-gray-300 mt-4">
 							Use o aplicativo para escanear o QR code e conectar.
 						</p>
