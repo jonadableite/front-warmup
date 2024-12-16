@@ -4,6 +4,7 @@ import { Key, Lock, Mail, ShieldCheck } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 
 const ForgotPassword: React.FC = () => {
@@ -12,6 +13,7 @@ const ForgotPassword: React.FC = () => {
 	const [verificationCode, setVerificationCode] = useState("");
 	const [newPassword, setNewPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
+	const navigate = useNavigate();
 
 	const handleSendCode = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -21,7 +23,7 @@ const ForgotPassword: React.FC = () => {
 				{ email },
 			);
 			if (response.data.success) {
-				toast.success("Código de verificação enviado para seu email");
+				toast.success(response.data.message);
 				setStep("verify");
 			}
 		} catch (error: any) {
@@ -40,7 +42,7 @@ const ForgotPassword: React.FC = () => {
 				},
 			);
 			if (response.data.success) {
-				toast.success("Código verificado com sucesso");
+				toast.success(response.data.message);
 				setStep("reset");
 			}
 		} catch (error: any) {
@@ -62,8 +64,8 @@ const ForgotPassword: React.FC = () => {
 				code: verificationCode,
 			});
 			if (response.data.success) {
-				toast.success("Senha redefinida com sucesso");
-				// Redirecionar para login ou fazer login automático
+				toast.success(response.data.message);
+				navigate("/login");
 			}
 		} catch (error: any) {
 			toast.error(error.response?.data?.message || "Erro ao redefinir senha");
