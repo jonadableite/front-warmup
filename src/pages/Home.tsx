@@ -218,7 +218,6 @@ const Home: React.FC = () => {
 							Progresso das Instâncias
 						</h2>
 						{Array.isArray(dashboardData.instanceDetails) &&
-<<<<<<< HEAD
 							dashboardData.instanceDetails.map((instance, index) => {
 								const progressValue =
 									typeof instance.warmupTime === "number" &&
@@ -254,41 +253,6 @@ const Home: React.FC = () => {
 									</div>
 								);
 							})}
-=======
-							dashboardData.instanceDetails.map((instance, index) => (
-								<div key={index} className="flex items-center mb-4">
-									<div className="flex-grow mr-4">
-										<ProgressBar
-											label={instance.instanceId}
-											value={Math.min(
-												(instance.warmupTime / (480 * 3600)) * 100,
-												100,
-											)}
-											color={
-												instance.warmupTime >= 480 * 3600
-													? "bg-green-500"
-													: "bg-blue-500"
-											}
-										/>
-									</div>
-									<button
-										className="text-blue-500 hover:text-blue-700"
-										onClick={() => {
-											if (
-												dashboardData.instanceDetails &&
-												dashboardData.instanceDetails[index]
-											) {
-												setSelectedInstanceDetails(
-													dashboardData.instanceDetails[index],
-												);
-											}
-										}}
-									>
-										<EyeIcon className="w-6 h-6" />
-									</button>
-								</div>
-							))}
->>>>>>> 121a0c2c243e5cc1deb2d69f1af99945d83c5d0c
 					</motion.div>
 
 					<motion.div
