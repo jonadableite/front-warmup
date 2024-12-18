@@ -14,7 +14,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 
-const API_BASE_URL = "http://localhost:3050";
+const API_BASE_URL = "https://back.whatlead.com.br";
 const API_URL = "https://evo.whatlead.com.br";
 const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
 
@@ -243,6 +243,7 @@ const Numeros = () => {
 			);
 
 			if (response.status === 200) {
+				// Busca o QR code da API externa
 				const qrCodeResponse = await axios.get(
 					`${API_URL}/instance/fetchInstances?instanceName=${instanceName}`,
 					{
@@ -252,12 +253,100 @@ const Numeros = () => {
 					},
 				);
 
-				if (qrCodeResponse.status === 200 && qrCodeResponse.data.instance) {
-					setQrCode(qrCodeResponse.data.instance.qrcode);
-					setShowQrCodeModal(true);
-					toast.success("Instância reconectando...");
-					fetchInstances();
+				if (qrCodeResponse.status === 200) {
+					if (qrCodeResponse.data && typeof qrCodeResponse.data === "object") {
+						if (
+							qrCodeResponse.data.instance &&
+							qrCodeResponse.data.instance.qrcode
+						) {
+							// Trata a resposta 200 com qrcode
+							setQrCode(qrCodeResponse.data.instance.qrcode);
+							setShowQrCodeModal(true);
+							toast.success("Instância reconectando...");
+							// Atualiza o status da instância no banco de dados
+							try {
+								await axios.put(
+									`${API_BASE_URL}/instances/instance/${
+										instances.find(
+											(instance) => instance.instanceName === instanceName,
+										).instanceId
+									}`,
+									{
+										connectionStatus: "connecting",
+									},
+									{
+										headers: {
+											Authorization: `Bearer ${token}`,
+										},
+									},
+								);
+							} catch (error) {
+								console.error(
+									"Erro ao atualizar status da instância no banco de dados:",
+									error,
+								);
+								toast.error(
+									"Erro ao atualizar status da instância no banco de dados",
+								);
+							}
+							fetchInstances();
+						} else if (qrCodeResponse.data.code) {
+							// Trata a resposta 200 com code
+							setQrCode({ base64: qrCodeResponse.data.code });
+							setShowQrCodeModal(true);
+							toast.success("Instância reconectando...");
+							// Atualiza o status da instância no banco de dados
+							try {
+								await axios.put(
+									`${API_BASE_URL}/instances/instance/${
+										instances.find(
+											(instance) => instance.instanceName === instanceName,
+										).instanceId
+									}`,
+									{
+										connectionStatus: "connecting",
+									},
+									{
+										headers: {
+											Authorization: `Bearer ${token}`,
+										},
+									},
+								);
+							} catch (error) {
+								console.error(
+									"Erro ao atualizar status da instância no banco de dados:",
+									error,
+								);
+								toast.error(
+									"Erro ao atualizar status da instância no banco de dados",
+								);
+							}
+							fetchInstances();
+						} else {
+							console.error(
+								"Erro: QR code ou code não encontrado na resposta da API:",
+								qrCodeResponse.data,
+							);
+							toast.error("Erro ao obter QR code para reconexão");
+						}
+					} else {
+						console.error(
+							"Erro: Resposta da API inválida:",
+							qrCodeResponse.data,
+						);
+						toast.error("Erro ao obter QR code para reconexão");
+					}
+				} else if (qrCodeResponse.status === 404) {
+					// Trata a resposta 404
+					console.error(
+						"Erro: Instância não encontrada na API externa:",
+						qrCodeResponse.data,
+					);
+					toast.error(
+						"Instância não encontrada na API externa. Verifique o nome da instância.",
+					);
 				} else {
+					console.error("Erro: Resposta da API inválida:", qrCodeResponse.data);
 					toast.error("Erro ao obter QR code para reconexão");
 				}
 			} else {

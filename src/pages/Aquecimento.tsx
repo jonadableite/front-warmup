@@ -8,7 +8,7 @@ import { BsFileText, BsPlay, BsTrash, BsWifi, BsWifiOff } from "react-icons/bs";
 import { FaServer } from "react-icons/fa";
 
 // Configurações da API
-const API_BASE_URL = "http://localhost:3050";
+const API_BASE_URL = "https://back.whatlead.com.br";
 const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
 
 // Emojis para reações

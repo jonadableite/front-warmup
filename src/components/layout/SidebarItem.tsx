@@ -1,6 +1,6 @@
+import { motion } from "framer-motion";
 import type React from "react";
 
-// Definição das propriedades esperadas pelo componente SidebarItem
 interface SidebarItemProps {
 	icon: React.ElementType;
 	label: string;
@@ -13,10 +13,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 	isOpen,
 }) => {
 	return (
-		<div
+		<motion.div
+			initial={{ opacity: 0, x: -20 }}
+			animate={{ opacity: 1, x: 0 }}
+			transition={{ duration: 0.2 }}
 			className={`
         flex items-center p-3 cursor-pointer group
-        hover:bg-whatsapp-green/20 dark:hover:bg-gray-700
+        hover:bg-gray-700/50
+        transition-colors duration-200
         ${isOpen ? "justify-start" : "justify-center"}
       `}
 			title={!isOpen ? label : ""}
@@ -24,12 +28,16 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 			<Icon
 				className={`
           ${isOpen ? "mr-3" : ""}
-          text-gray-500
+          text-gray-400 group-hover:text-white
         `}
-				size={24}
+				size={20}
 			/>
-			{isOpen && <span className="text-sm dark:text-white">{label}</span>}
-		</div>
+			{isOpen && (
+				<span className="text-sm text-gray-300 group-hover:text-white">
+					{label}
+				</span>
+			)}
+		</motion.div>
 	);
 };
 

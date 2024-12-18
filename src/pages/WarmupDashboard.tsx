@@ -6,8 +6,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const API_BASE_URL =
-	import.meta.env.VITE_API_BASE_URL || "http://localhost:3050";
+const API_BASE_URL = "https://back.whatlead.com.br";
 
 // Componente de Cartão de Estatística
 const StatCard = ({ icon: Icon, title, value, trend, color }) => (
