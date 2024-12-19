@@ -4,7 +4,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSidebar } from "@/components/ui/sidebar";
 import { motion } from "framer-motion";
 import {
 	CalendarIcon,
@@ -27,7 +26,6 @@ const SidebarComponent: React.FC = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const userString = localStorage.getItem("user");
 	const user = userString ? JSON.parse(userString) : null;
-	const { open: sidebarOpen } = useSidebar();
 	const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
 
 	useEffect(() => {
@@ -71,7 +69,7 @@ const SidebarComponent: React.FC = () => {
 		<motion.div
 			initial={false}
 			animate={{
-				width: sidebarOpen ? "240px" : "80px",
+				width: "240px",
 				transition: { duration: 0.3, ease: "easeInOut" },
 			}}
 			className="fixed left-0 top-0 h-full bg-gray-900/95 backdrop-blur-md border-r border-gray-800/50 shadow-xl z-50"
@@ -81,23 +79,21 @@ const SidebarComponent: React.FC = () => {
 				<motion.div
 					className="p-4 border-b border-gray-800/50"
 					initial={false}
-					animate={{ justifyContent: sidebarOpen ? "flex-start" : "center" }}
+					animate={{ justifyContent: "flex-start" }}
 				>
 					<div className="flex items-center space-x-3">
 						<img src={LogoWhatsapp} className="w-10 h-10" alt="Logo" />
-						{sidebarOpen && (
-							<motion.div
-								initial={{ opacity: 0 }}
-								animate={{ opacity: 1 }}
-								exit={{ opacity: 0 }}
-								className="flex flex-col"
-							>
-								<span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
-									Warmer
-								</span>
-								<span className="text-xs text-gray-400">by Whatlead</span>
-							</motion.div>
-						)}
+						<motion.div
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							className="flex flex-col"
+						>
+							<span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
+								Warmer
+							</span>
+							<span className="text-xs text-gray-400">by Whatlead</span>
+						</motion.div>
 					</div>
 				</motion.div>
 
@@ -122,16 +118,14 @@ const SidebarComponent: React.FC = () => {
                     `}
 									>
 										<item.icon size={20} />
-										{sidebarOpen && (
-											<motion.span
-												initial={{ opacity: 0, x: -10 }}
-												animate={{ opacity: 1, x: 0 }}
-												exit={{ opacity: 0, x: -10 }}
-												className="ml-3 text-sm font-medium"
-											>
-												{item.label}
-											</motion.span>
-										)}
+										<motion.span
+											initial={{ opacity: 0, x: -10 }}
+											animate={{ opacity: 1, x: 0 }}
+											exit={{ opacity: 0, x: -10 }}
+											className="ml-3 text-sm font-medium"
+										>
+											{item.label}
+										</motion.span>
 										{isActive && (
 											<motion.div
 												layoutId="activeTab"
@@ -151,17 +145,15 @@ const SidebarComponent: React.FC = () => {
 						<h4 className="text-sm font-semibold text-gray-400">
 							Upgrade do Plano
 						</h4>
-						{sidebarOpen && (
-							<motion.p
-								initial={{ opacity: 0, y: 10 }}
-								animate={{ opacity: 1, y: 0 }}
-								exit={{ opacity: 0, y: 10 }}
-								className="text-xs text-gray-500 mt-1 text-center"
-							>
-								Desbloqueie todos os recursos e tenha acesso ilimitado à nossa
-								plataforma
-							</motion.p>
-						)}
+						<motion.p
+							initial={{ opacity: 0, y: 10 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: 10 }}
+							className="text-xs text-gray-500 mt-1 text-center"
+						>
+							Desbloqueie todos os recursos e tenha acesso ilimitado à nossa
+							plataforma
+						</motion.p>
 					</div>
 					<div className="flex justify-center">
 						<motion.button
@@ -210,16 +202,14 @@ const SidebarComponent: React.FC = () => {
 							className="flex items-center w-full p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5"
 						>
 							<User2 size={20} />
-							{sidebarOpen && (
-								<motion.div
-									initial={{ opacity: 0 }}
-									animate={{ opacity: 1 }}
-									exit={{ opacity: 0 }}
-									className="ml-3 flex-1 text-left text-sm font-medium"
-								>
-									{user?.name}
-								</motion.div>
-							)}
+							<motion.div
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								exit={{ opacity: 0 }}
+								className="ml-3 flex-1 text-left text-sm font-medium"
+							>
+								{user?.name}
+							</motion.div>
 							<motion.div
 								animate={{ rotate: false ? 180 : 0 }}
 								transition={{ duration: 0.2 }}
