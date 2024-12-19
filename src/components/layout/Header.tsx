@@ -1,4 +1,5 @@
 import MoonIcon from "@/assets/lua-e-estrelas.svg";
+import { useSidebar } from "@/components/ui/sidebar";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { motion } from "framer-motion";
 import { RocketIcon } from "lucide-react";
@@ -6,15 +7,12 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-interface HeaderProps {
-	isSidebarOpen: boolean;
-}
-
-const Header: React.FC<HeaderProps> = ({ isSidebarOpen }) => {
+const Header: React.FC = () => {
 	const [isDarkMode, setIsDarkMode] = useDarkMode();
 	const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
 	const [trialHoursLeft, setTrialHoursLeft] = useState<number | null>(null);
 	const navigate = useNavigate();
+	const { open } = useSidebar();
 
 	const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
 
@@ -108,9 +106,7 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen }) => {
 			initial={{ y: -100 }}
 			animate={{ y: 0 }}
 			transition={{ duration: 0.5, type: "spring" }}
-			className={`fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-900 shadow-md flex justify-between items-center px-6 z-10 ${
-				isSidebarOpen ? "ml-64" : "ml-0"
-			}`} // Ajuste para compensar a sidebar
+			className={`fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-900 shadow-md flex justify-between items-center px-6 z-10`}
 		>
 			<div className="flex items-center space-x-4">{renderTrialInfo()}</div>
 			<div className="flex items-center">
@@ -130,14 +126,14 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen }) => {
 					</span>
 				</label>
 				<style>{`
-                    .toggle-checkbox:checked {
-                        right: 0;
-                        border-color: #4caf50;
-                    }
-                    .toggle-checkbox:checked + .toggle-label {
-                        background-color: #4caf50;
-                    }
-                `}</style>
+                        .toggle-checkbox:checked {
+                            right: 0;
+                            border-color: #4caf50;
+                        }
+                        .toggle-checkbox:checked + .toggle-label {
+                            background-color: #4caf50;
+                        }
+                    `}</style>
 			</div>
 		</motion.header>
 	);

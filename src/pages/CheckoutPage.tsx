@@ -1,22 +1,12 @@
-import {
-	EmbeddedCheckout,
-	EmbeddedCheckoutProvider,
-} from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
 import { motion } from "framer-motion";
 import { CheckIcon, CreditCardIcon, ShieldCheckIcon } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-
-// Carregue sua chave pública do Stripe
-const stripePromise = loadStripe(
-	"pk_test_51PwdGsP7kXKQS2swyo4SjcuKBNkLvhzQGQDbENARzlMTJWvSpEHaOTEVW1sQnC6k0AZJPa6HYaJSsMDR6WPPGgK800XJvWdkMo",
-);
+import { useLocation, useNavigate } from "react-router-dom";
 
 const CheckoutPage: React.FC = () => {
 	const location = useLocation();
-	const [clientSecret, setClientSecret] = useState<string | null>(null);
+	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [price, setPrice] = useState<number | null>(null);
@@ -41,7 +31,7 @@ const CheckoutPage: React.FC = () => {
 	}, [planPrice, planBillingCycle]);
 
 	// Função para buscar o client secret
-	const fetchClientSecret = useCallback(async () => {
+	const fetchCheckoutUrl = useCallback(async () => {
 		try {
 			const token = localStorage.getItem("token");
 			const response = await fetch(
@@ -54,7 +44,7 @@ const CheckoutPage: React.FC = () => {
 					},
 					body: JSON.stringify({
 						priceId,
-						returnUrl: `${import.meta.env.VITE_FRONTEND_URL}/return`,
+						returnUrl: "http://localhost:5173/return",
 					}),
 				},
 			);
@@ -65,18 +55,17 @@ const CheckoutPage: React.FC = () => {
 				setError(data.error);
 				setLoading(false);
 			} else {
-				setClientSecret(data.clientSecret);
-				setLoading(false);
+				window.location.href = data.url;
 			}
 		} catch (err: any) {
 			setError(err.message);
 			setLoading(false);
 		}
-	}, [priceId]);
+	}, [priceId, navigate]);
 
 	useEffect(() => {
-		fetchClientSecret();
-	}, [fetchClientSecret]);
+		fetchCheckoutUrl();
+	}, [fetchCheckoutUrl]);
 
 	// Detalhes do plano
 	const getPlanDetails = () => {
@@ -203,16 +192,7 @@ const CheckoutPage: React.FC = () => {
 				</div>
 
 				{/* Lado Direito - Formulário de Checkout */}
-				<div className="p-8 flex flex-col justify-center">
-					{clientSecret && (
-						<EmbeddedCheckoutProvider
-							stripe={stripePromise}
-							options={{ clientSecret }}
-						>
-							<EmbeddedCheckout />
-						</EmbeddedCheckoutProvider>
-					)}
-				</div>
+				<div className="p-8 flex flex-col justify-center"></div>
 			</motion.div>
 		</div>
 	);

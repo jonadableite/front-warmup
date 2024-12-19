@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
 import PublicRoute from "./components/PublicRoute";
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
+import { SidebarProvider, useSidebar } from "./components/ui/sidebar";
 import Aquecimento from "./pages/Aquecimento";
 import CheckoutPage from "./pages/CheckoutPage";
 import Configuracoes from "./pages/Configuracoes";
@@ -13,14 +14,19 @@ import Login from "./pages/Login";
 import Numeros from "./pages/Numeros";
 import PricingPage from "./pages/Pricing";
 import Register from "./pages/Register";
+import Return from "./pages/Return";
 
 function App() {
-	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-	const location = useLocation();
+	return (
+		<SidebarProvider>
+			<AppContent />
+		</SidebarProvider>
+	);
+}
 
-	const toggleSidebar = () => {
-		setIsSidebarOpen(!isSidebarOpen);
-	};
+function AppContent() {
+	const location = useLocation();
+	const { open } = useSidebar();
 
 	const isPublicRoute =
 		location.pathname === "/login" ||
@@ -29,15 +35,9 @@ function App() {
 
 	return (
 		<div className="flex min-h-screen">
-			{!isPublicRoute && (
-				<Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-			)}
-			<div
-				className={`flex-1 flex flex-col transition-all duration-300 ${
-					!isPublicRoute && isSidebarOpen ? "ml-64" : "ml-0"
-				}`}
-			>
-				{!isPublicRoute && <Header isSidebarOpen={isSidebarOpen} />}
+			{!isPublicRoute && <Sidebar />}
+			<div className="flex-1 flex flex-col transition-all duration-300">
+				{!isPublicRoute && <Header isSidebarOpen={open} />}
 				<main className={`${!isPublicRoute ? "pt-16" : ""}`}>
 					<Routes>
 						<Route
@@ -73,7 +73,6 @@ function App() {
 								</PrivateRoute>
 							}
 						/>
-
 						<Route
 							path="/numeros"
 							element={
@@ -99,6 +98,7 @@ function App() {
 							}
 						/>
 						<Route path="/checkout" element={<CheckoutPage />} />
+						<Route path="/return" element={<Return />} />
 					</Routes>
 				</main>
 			</div>
