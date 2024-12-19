@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-	baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3050",
+	baseURL: import.meta.env.VITE_API_BASE_URL || "https://back.whatlead.com.br",
 });
 
 // Interceptor para adicionar o token de autenticação
