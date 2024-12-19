@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
@@ -6,8 +5,9 @@ import PublicRoute from "./components/PublicRoute";
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
 import Aquecimento from "./pages/Aquecimento";
+import CheckoutPage from "./pages/CheckoutPage";
 import Configuracoes from "./pages/Configuracoes";
-import ForgotPassword from "./pages/ForgotPassword"; // Importe o componente
+import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Numeros from "./pages/Numeros";
@@ -98,6 +98,7 @@ function App() {
 								</PrivateRoute>
 							}
 						/>
+						<Route path="/checkout" element={<CheckoutPage />} />
 					</Routes>
 				</main>
 			</div>

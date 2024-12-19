@@ -26,6 +26,10 @@ const PricingPage: React.FC = () => {
 			icon: <RocketIcon className="w-12 h-12 text-blue-500" />,
 			bgGradient: "from-blue-500 to-blue-700",
 			recommended: false,
+			priceId: {
+				monthly: "price_1QXZeUP7kXKQS2swswgJXxmq", // priceId correto do plano básico mensal
+				annual: "price_1QXldGP7kXKQS2swtG5ROJNP", // priceId correto do plano básico anual
+			},
 		},
 		{
 			name: "Pro",
@@ -43,12 +47,16 @@ const PricingPage: React.FC = () => {
 			icon: <GlobeIcon className="w-12 h-12 text-purple-500" />,
 			bgGradient: "from-purple-500 to-purple-700",
 			recommended: true,
+			priceId: {
+				monthly: "price_1QXZgvP7kXKQS2swScbspD9T", // priceId correto do plano pro mensal
+				annual: "price_1QXlclP7kXKQS2swYvpB2m6B", // priceId correto do plano pro anual
+			},
 		},
 		{
 			name: "Enterprise",
 			price: {
-				monthly: 79.0,
-				annual: 79 * 12,
+				monthly: 79.99,
+				annual: 799.99,
 			},
 			features: [
 				"Números Ilimitados",
@@ -62,12 +70,27 @@ const PricingPage: React.FC = () => {
 			icon: <InfinityIcon className="w-12 h-12 text-green-500" />,
 			bgGradient: "from-green-500 to-emerald-700",
 			recommended: false,
+			priceId: {
+				monthly: "price_1QXZiFP7kXKQS2sw2G8Io0Jx", // priceId correto do plano enterprise mensal
+				annual: "price_1QXlc3P7kXKQS2swVckKe7KJ", // priceId correto do plano enterprise anual
+			},
 		},
 	];
 
-	const handleSubscribe = (planName: string) => {
+	const handleSubscribe = (
+		planName: string,
+		priceId: string,
+		price: number,
+	) => {
 		// Lógica para assinatura do plano
-		navigate("/checkout", { state: { plan: planName } });
+		navigate("/checkout", {
+			state: {
+				plan: planName,
+				priceId,
+				price,
+				billingCycle,
+			},
+		});
 	};
 
 	return (
@@ -119,12 +142,16 @@ const PricingPage: React.FC = () => {
 							animate={{ opacity: 1, scale: 1 }}
 							whileHover={{ scale: 1.05 }}
 							className={`
-                                bg-gray-800 rounded-2xl p-6
-                                border border-opacity-20
-                                ${plan.recommended ? "border-green-500 border-opacity-100 transform scale-105 shadow-2xl" : "border-gray-700"}
-                                transition-all duration-300
-                                relative overflow-hidden
-                            `}
+                        bg-gray-800 rounded-2xl p-6
+                        border border-opacity-20
+                        ${
+													plan.recommended
+														? "border-green-500 border-opacity-100 transform scale-105 shadow-2xl"
+														: "border-gray-700"
+												}
+                        transition-all duration-300
+                        relative overflow-hidden
+                    `}
 						>
 							{plan.recommended && (
 								<div className="absolute top-0 right-0 bg-whatsapp-green text-white px-4 py-1 transform rotate-45 translate-x-1/4 -translate-y-1/4">
@@ -154,16 +181,22 @@ const PricingPage: React.FC = () => {
 								))}
 							</ul>
 							<motion.button
-								onClick={() => handleSubscribe(plan.name)}
+								onClick={() =>
+									handleSubscribe(
+										plan.name,
+										plan.priceId[billingCycle],
+										plan.price[billingCycle],
+									)
+								}
 								whileHover={{ scale: 1.05 }}
 								whileTap={{ scale: 0.95 }}
 								className={`
-                                    w-full py-3 rounded-full
-                                    bg-gradient-to-r ${plan.bgGradient}
-                                    text-white font-bold
-                                    hover:opacity-90
-                                    transition-all duration-300
-                                `}
+                            w-full py-3 rounded-full
+                            bg-gradient-to-r ${plan.bgGradient}
+                            text-white font-bold
+                            hover:opacity-90
+                            transition-all duration-300
+                        `}
 							>
 								Escolher {plan.name}
 							</motion.button>
