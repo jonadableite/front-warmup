@@ -8,7 +8,9 @@ const LayoutSidebar: React.FC = ({ children }) => {
 			<DropdownMenu>
 				<SidebarComponent />
 			</DropdownMenu>
-			<main className="flex-1 transition-all duration-300">{children}</main>
+			<main className="flex-1 transition-all duration-300 pl-60">
+				{children}
+			</main>
 		</div>
 	);
 };

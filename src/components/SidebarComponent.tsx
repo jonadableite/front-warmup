@@ -72,7 +72,7 @@ const SidebarComponent: React.FC = () => {
 				width: "240px",
 				transition: { duration: 0.3, ease: "easeInOut" },
 			}}
-			className="h-full bg-gray-900/95 backdrop-blur-md border-r border-gray-800/50 shadow-xl z-50"
+			className="h-screen bg-gray-900/95 backdrop-blur-md border-r border-gray-800/50 shadow-xl z-50 overflow-y-auto fixed top-0 left-0"
 		>
 			<div className="flex flex-col h-full">
 				{/* Header */}
@@ -98,7 +98,7 @@ const SidebarComponent: React.FC = () => {
 				</motion.div>
 
 				{/* Navigation */}
-				<div className="flex-1 overflow-y-auto py-4 px-3">
+				<div className="flex-1 py-4 px-3">
 					<nav className="space-y-1">
 						{sidebarItems.map((item) => {
 							const isActive = location.pathname === item.path;
