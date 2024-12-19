@@ -72,7 +72,7 @@ const SidebarComponent: React.FC = () => {
 				width: "240px",
 				transition: { duration: 0.3, ease: "easeInOut" },
 			}}
-			className="fixed left-0 top-0 h-full bg-gray-900/95 backdrop-blur-md border-r border-gray-800/50 shadow-xl z-50"
+			className="h-full bg-gray-900/95 backdrop-blur-md border-r border-gray-800/50 shadow-xl z-50"
 		>
 			<div className="flex flex-col h-full">
 				{/* Header */}
