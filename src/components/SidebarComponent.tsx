@@ -14,6 +14,7 @@ import {
 	HomeIcon,
 	LifeBuoy,
 	PhoneIcon,
+	RocketIcon,
 	User2,
 } from "lucide-react";
 import type React from "react";
@@ -61,6 +62,10 @@ const SidebarComponent: React.FC = () => {
 		{ id: 2, icon: FlameIcon, label: "Aquecimento", path: "/aquecimento" },
 		{ id: 3, icon: PhoneIcon, label: "Números", path: "/numeros" },
 	];
+
+	const handleUpgrade = () => {
+		navigate("/pricing");
+	};
 
 	return (
 		<motion.div
@@ -138,6 +143,62 @@ const SidebarComponent: React.FC = () => {
 							);
 						})}
 					</nav>
+				</div>
+
+				{/* Upgrade Section */}
+				<div className="p-4 border-t border-gray-800/50">
+					<div className="mb-4 flex flex-col items-center">
+						<h4 className="text-sm font-semibold text-gray-400">
+							Upgrade do Plano
+						</h4>
+						{sidebarOpen && (
+							<motion.p
+								initial={{ opacity: 0, y: 10 }}
+								animate={{ opacity: 1, y: 0 }}
+								exit={{ opacity: 0, y: 10 }}
+								className="text-xs text-gray-500 mt-1 text-center"
+							>
+								Desbloqueie todos os recursos e tenha acesso ilimitado à nossa
+								plataforma
+							</motion.p>
+						)}
+					</div>
+					<div className="flex justify-center">
+						<motion.button
+							whileHover={{ scale: 1.05 }}
+							whileTap={{ scale: 0.95 }}
+							onClick={handleUpgrade}
+							className="relative inline-flex items-center justify-center overflow-hidden
+              text-sm font-bold text-white
+              bg-gradient-to-r from-whatsapp-dark via-green-500 to-whatsapp-dark
+              bg-size-200 bg-pos-0 hover:bg-pos-100
+              px-4 py-2 rounded-full
+              transition-all duration-300 ease-in-out
+              transform hover:rotate-3 hover:shadow-lg
+              group"
+						>
+							<RocketIcon className="mr-2 w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
+							Upgrade
+							<motion.span
+								initial={{ width: 0 }}
+								animate={{ width: "100%" }}
+								transition={{
+									duration: 2,
+									repeat: Number.POSITIVE_INFINITY,
+									repeatType: "reverse",
+									ease: "easeInOut",
+								}}
+								className="absolute bottom-0 left-0 h-1 bg-white/30 group-hover:bg-white/50"
+							/>
+							<motion.div
+								initial={{ opacity: 0 }}
+								whileHover={{ opacity: 1 }}
+								className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100
+              transition-opacity duration-300 rounded-full
+              animate-pulse"
+							/>
+						</motion.button>
+					</div>
 				</div>
 
 				{/* Footer */}
