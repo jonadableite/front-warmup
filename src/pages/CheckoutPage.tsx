@@ -32,8 +32,15 @@ const CheckoutPage: React.FC = () => {
 
 	// Função para buscar o client secret
 	const fetchCheckoutUrl = useCallback(async () => {
+		setLoading(true); // Iniciar o loading
+		setError(null); // Limpar erros anteriores
 		try {
 			const token = localStorage.getItem("token");
+			if (!token) {
+				setError("Token não encontrado. Por favor, faça login novamente.");
+				setLoading(false);
+				return;
+			}
 			const response = await fetch(
 				"http://localhost:3050/users/create-checkout-session",
 				{
@@ -44,22 +51,28 @@ const CheckoutPage: React.FC = () => {
 					},
 					body: JSON.stringify({
 						priceId,
-						returnUrl: "http://localhost:5173/return",
+						returnUrl: `${window.location.origin}/return`, // Usar a origem da página
 					}),
 				},
 			);
+
+			if (response.status === 401) {
+				setError("Token inválido. Por favor, faça login novamente.");
+				setLoading(false);
+				return;
+			}
 
 			const data = await response.json();
 
 			if (data.error) {
 				setError(data.error);
-				setLoading(false);
 			} else {
 				window.location.href = data.url;
 			}
 		} catch (err: any) {
 			setError(err.message);
-			setLoading(false);
+		} finally {
+			setLoading(false); // Finalizar o loading
 		}
 	}, [priceId, navigate]);
 
@@ -70,7 +83,7 @@ const CheckoutPage: React.FC = () => {
 	// Detalhes do plano
 	const getPlanDetails = () => {
 		const planDetails = {
-			Basic: {
+			basic: {
 				color: "bg-blue-500",
 				gradient: "from-blue-500 to-blue-700",
 				features: [
@@ -80,7 +93,7 @@ const CheckoutPage: React.FC = () => {
 					"Limite de 50 Mensagens/Dia",
 				],
 			},
-			Pro: {
+			pro: {
 				color: "bg-purple-500",
 				gradient: "from-purple-500 to-purple-700",
 				features: [
@@ -91,7 +104,7 @@ const CheckoutPage: React.FC = () => {
 					"Relatórios Avançados",
 				],
 			},
-			Enterprise: {
+			enterprise: {
 				color: "bg-green-500",
 				gradient: "from-green-500 to-emerald-700",
 				features: [
@@ -105,7 +118,7 @@ const CheckoutPage: React.FC = () => {
 				],
 			},
 		};
-		return planDetails[plan as keyof typeof planDetails] || planDetails.Basic;
+		return planDetails[plan as keyof typeof planDetails] || planDetails.basic;
 	};
 
 	// Renderização condicional de conteúdo
@@ -158,7 +171,7 @@ const CheckoutPage: React.FC = () => {
 						<motion.h2
 							initial={{ y: -20, opacity: 0 }}
 							animate={{ y: 0, opacity: 1 }}
-							className="text-4xl font-bold mb-4"
+							className="text-4xl font-bold mb-4 capitalize"
 						>
 							{plan} Plan
 						</motion.h2>

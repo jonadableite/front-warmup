@@ -17,11 +17,17 @@ module.exports = {
 		extend: {
 			colors: {
 				whatsapp: {
-					green: "#25D366",
+					green: "#00FF6A",
 					dark: "#128C7E",
 					light: "#DCF8C6",
+					cinza: "#1B1B1F",
+					eletrico: "#7D00FF",
+					luminoso: "#00E5FF",
+					profundo: "#0D0D0D",
+					branco: "#F0F0F5",
 				},
 			},
+
 			keyframes: {
 				"accordion-down": {
 					from: { height: "0" },

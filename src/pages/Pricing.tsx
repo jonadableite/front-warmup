@@ -12,7 +12,7 @@ const PricingPage: React.FC = () => {
 
 	const plans = [
 		{
-			name: "Basic",
+			name: "basic",
 			price: {
 				monthly: 19.99,
 				annual: 199.99,
@@ -32,7 +32,7 @@ const PricingPage: React.FC = () => {
 			},
 		},
 		{
-			name: "Pro",
+			name: "pro",
 			price: {
 				monthly: 49.99,
 				annual: 499.99,
@@ -53,7 +53,7 @@ const PricingPage: React.FC = () => {
 			},
 		},
 		{
-			name: "Enterprise",
+			name: "enterprise",
 			price: {
 				monthly: 79.99,
 				annual: 799.99,
@@ -161,12 +161,12 @@ const PricingPage: React.FC = () => {
 							<div className="flex justify-between items-center mb-6">
 								<div className="flex items-center space-x-4">
 									{plan.icon}
-									<h2 className="text-2xl font-bold">{plan.name}</h2>
+									<h2 className="text-2xl font-bold capitalize">{plan.name}</h2>
 								</div>
 							</div>
 							<div className="mb-6">
 								<span className="text-4xl font-bold">
-									${plan.price[billingCycle]}
+									R$ {plan.price[billingCycle]?.toFixed(2)}
 								</span>
 								<span className="text-gray-400 ml-2">
 									/{billingCycle === "monthly" ? "mês" : "ano"}

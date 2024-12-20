@@ -1,4 +1,3 @@
-import MoonIcon from "@/assets/lua-e-estrelas.svg";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { motion } from "framer-motion";
@@ -108,7 +107,7 @@ const Header: React.FC = () => {
 			transition={{ duration: 0.5, type: "spring" }}
 			className={`fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-900 shadow-md flex justify-between items-center px-6 z-10`}
 		>
-			<div className="flex items-center space-x-4">{renderTrialInfo()}</div>
+			{/* <div className="flex items-center space-x-4">{renderTrialInfo()}</div>
 			<div className="flex items-center">
 				<label className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
 					<input
@@ -134,7 +133,7 @@ const Header: React.FC = () => {
                             background-color: #4caf50;
                         }
                     `}</style>
-			</div>
+			</div> */}
 		</motion.header>
 	);
 };
