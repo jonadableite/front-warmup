@@ -65,7 +65,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 											: ""
 								}
                 ${variant === "inset" ? "border-none shadow-none" : ""}
-                dark:bg-gray-900 dark:border-gray-700
+                dark:bg-whatsapp-profundo dark:border-gray-700
             `}
 		>
 			{children}

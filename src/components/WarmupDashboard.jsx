@@ -1,4 +1,3 @@
-
 // src/components/WarmupDashboard.jsx
 import {
 	ActivityIcon,
@@ -53,7 +52,7 @@ const ProgressBar = ({ label, value, color }) => (
 			<span>{label}</span>
 			<span>{value}%</span>
 		</div>
-		<div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+		<div className="w-full bg-gray-200 dark:bg-whatsapp-green/5 rounded-full h-2.5">
 			<div
 				className={`${color} h-2.5 rounded-full`}
 				style={{ width: `${value}%` }}
@@ -110,7 +109,7 @@ const WarmupDashboard = () => {
 	return (
 		<div
 			className="
-      bg-gray-50 dark:bg-gray-900
+      bg-gray-50 dark:bg-whatsapp-green/5
       min-h-screen
       p-8
       space-y-8
@@ -119,7 +118,7 @@ const WarmupDashboard = () => {
 			<div
 				className="
         bg-white
-        dark:bg-gray-800
+        dark:bg-whatsapp-green/5
         shadow-2xl
         rounded-3xl
         p-8
@@ -159,7 +158,7 @@ const WarmupDashboard = () => {
 				<div
 					className="
           bg-white
-          dark:bg-gray-800
+          dark:bg-whatsapp-green/5
           rounded-3xl
           p-6
           shadow-xl
@@ -173,7 +172,7 @@ const WarmupDashboard = () => {
             text-2xl
             font-bold
             mb-6
-            text-gray-800
+            text-whatsapp-green/5
             dark:text-gray-200
           "
 					>
@@ -188,7 +187,7 @@ const WarmupDashboard = () => {
 				<div
 					className="
           bg-white
-          dark:bg-gray-800
+          dark:bg-whatsapp-green/5
           rounded-3xl
           p-6
           shadow-xl
@@ -202,7 +201,7 @@ const WarmupDashboard = () => {
             text-2xl
             font-bold
             mb-6
-            text-gray-800
+            text-whatsapp-green/5
             dark:text-gray-200
           "
 					>

@@ -105,7 +105,7 @@ const Header: React.FC = () => {
 			initial={{ y: -100 }}
 			animate={{ y: 0 }}
 			transition={{ duration: 0.5, type: "spring" }}
-			className={`fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-900 shadow-md flex justify-between items-center px-6 z-10`}
+			className={`fixed top-0 left-0 right-0 h-16 bg-white dark:bg-whatsapp-profundo/95 shadow-md flex justify-between items-center px-6 z-10`}
 		>
 			{/* <div className="flex items-center space-x-4">{renderTrialInfo()}</div>
 			<div className="flex items-center">

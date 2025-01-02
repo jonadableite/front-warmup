@@ -72,7 +72,11 @@ const SidebarComponent: React.FC = () => {
 				width: "240px",
 				transition: { duration: 0.3, ease: "easeInOut" },
 			}}
-			className="h-screen bg-gray-900/95 backdrop-blur-md border-r border-gray-800/50 shadow-xl z-50 overflow-y-auto fixed top-0 left-0"
+			className="h-screen bg-whatsapp-profundo/95 border-r border-gray-800/50 shadow-xl z-50 overflow-y-auto fixed top-0 left-0"
+			style={{
+				backdropFilter: "blur(10px)",
+				WebkitBackdropFilter: "blur(10px)",
+			}} // Efeito de vidro
 		>
 			<div className="flex flex-col h-full">
 				{/* Header */}
@@ -107,15 +111,11 @@ const SidebarComponent: React.FC = () => {
 									<motion.div
 										whileHover={{ scale: 1.02, x: 5 }}
 										whileTap={{ scale: 0.98 }}
-										className={`
-                      flex items-center p-3 rounded-lg
-                      ${
-												isActive
-													? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400"
-													: "text-gray-400 hover:text-white hover:bg-white/5"
-											}
-                      transition-colors duration-200
-                    `}
+										className={`flex items-center p-3 rounded-lg ${
+											isActive
+												? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400"
+												: "text-gray-400 hover:text-white hover:bg-white/5"
+										} transition-colors duration-200`}
 									>
 										<item.icon size={20} />
 										<motion.span
@@ -160,14 +160,7 @@ const SidebarComponent: React.FC = () => {
 							whileHover={{ scale: 1.05 }}
 							whileTap={{ scale: 0.95 }}
 							onClick={handleUpgrade}
-							className="relative inline-flex items-center justify-center overflow-hidden
-              text-sm font-bold text-white
-              bg-gradient-to-r from-whatsapp-dark via-green-500 to-whatsapp-dark
-              bg-size-200 bg-pos-0 hover:bg-pos-100
-              px-4 py-2 rounded-full
-              transition-all duration-300 ease-in-out
-              transform hover:rotate-3 hover:shadow-lg
-              group"
+							className="relative inline-flex items-center justify-center overflow-hidden text-sm font-bold text-white bg-gradient-to-r from-whatsapp-dark via-green-500 to-whatsapp-dark bg-size-200 bg-pos-0 hover:bg-pos-100 px-4 py-2 rounded-full transition-all duration-300 ease-in-out transform hover:rotate-3 hover:shadow-lg group"
 						>
 							<RocketIcon className="mr-2 w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
 							Upgrade
@@ -185,9 +178,7 @@ const SidebarComponent: React.FC = () => {
 							<motion.div
 								initial={{ opacity: 0 }}
 								whileHover={{ opacity: 1 }}
-								className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100
-              transition-opacity duration-300 rounded-full
-              animate-pulse"
+								className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full animate-pulse"
 							/>
 						</motion.button>
 					</div>
@@ -222,7 +213,7 @@ const SidebarComponent: React.FC = () => {
 					<DropdownMenuContent
 						side="top"
 						align="start"
-						className="w-56 bg-gray-900 border border-gray-800 text-gray-300"
+						className="w-56 bg-whatsapp-profundo border border-whatsapp-cinza text-gray-300"
 					>
 						<DropdownMenuItem onClick={() => {}}>
 							<User2 className="mr-2" size={16} />

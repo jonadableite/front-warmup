@@ -87,7 +87,7 @@ const ProgressBar = ({ label, value, color }) => (
 			<span className="font-medium">{label}</span>
 			<span className="font-bold">{value.toFixed(2)}%</span>
 		</div>
-		<div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+		<div className="w-full bg-gray-200 dark:bg-whatsapp-profundo rounded-full h-3 overflow-hidden">
 			<motion.div
 				initial={{ width: 0 }}
 				animate={{ width: `${value}%` }}
@@ -142,7 +142,7 @@ const Home: React.FC = () => {
 		const fetchDashboardData = async () => {
 			try {
 				// Busca os dados do dashboard a partir da rota do backend
-				const response = await axios.get("/dashboard");
+				const response = await axios.get("/api/dashboard");
 				const {
 					totalWarmups,
 					activeInstances,
@@ -188,7 +188,7 @@ const Home: React.FC = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-whatsapp-light dark:bg-gray-900 p-6">
+		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-whatsapp-profundo to-whatsapp-profundo p-6">
 			<motion.div
 				initial={{ opacity: 0, y: -50 }}
 				animate={{ opacity: 1, y: 0 }}
@@ -196,7 +196,7 @@ const Home: React.FC = () => {
 				className="container mx-auto"
 			>
 				<header className="mb-10">
-					<h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 text-center">
+					<h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green to-whatsapp-green/40 dark:from-whatsapp-green/50 dark:to-whatsapp-green/70 text-center">
 						WhatsApp Warmer Dashboard
 					</h1>
 				</header>
@@ -209,7 +209,7 @@ const Home: React.FC = () => {
 
 				<div className="grid md:grid-cols-2 gap-8">
 					<motion.div
-						className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl"
+						className="bg-white dark:bg-whatsapp-cinza rounded-3xl p-6 shadow-xl"
 						initial={{ opacity: 0, x: -50 }}
 						animate={{ opacity: 1, x: 0 }}
 						transition={{ delay: 0.2, duration: 0.5 }}
@@ -256,7 +256,7 @@ const Home: React.FC = () => {
 					</motion.div>
 
 					<motion.div
-						className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl"
+						className="bg-white dark:bg-whatsapp-cinza rounded-3xl p-6 shadow-xl"
 						initial={{ opacity: 0, x: 50 }}
 						animate={{ opacity: 1, x: 0 }}
 						transition={{ delay: 0.2, duration: 0.5 }}
@@ -303,7 +303,7 @@ const Home: React.FC = () => {
 										borderRadius: "12px",
 										color: "black",
 										border: "none",
-										className: "dark:bg-gray-800 dark:text-white",
+										className: "dark:bg-whatsapp-profundo dark:text-white",
 									}}
 									labelStyle={{
 										color: "rgba(248, 248, 248, 0.7)",
@@ -317,14 +317,14 @@ const Home: React.FC = () => {
 
 				{selectedInstanceDetails && (
 					<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-						<div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-							<h3 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">
+						<div className="bg-white dark:bg-whatsapp-profundo rounded-lg p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+							<h3 className="text-2xl font-bold mb-6 text-whatsapp-profundo dark:text-gray-200">
 								Detalhes da Instância: {selectedInstanceDetails.instanceId}
 							</h3>
 
 							<div className="grid md:grid-cols-3 gap-6">
 								{/* Coluna de Informações Básicas */}
-								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+								<div className="bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4">
 									<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
 										Informações Básicas
 									</h4>
@@ -366,7 +366,7 @@ const Home: React.FC = () => {
 								</div>
 
 								{/* Coluna de Estatísticas de Mídia */}
-								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+								<div className="bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4">
 									<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
 										Estatísticas de Mídia
 									</h4>
@@ -386,7 +386,7 @@ const Home: React.FC = () => {
 								</div>
 
 								{/* Coluna de Gráfico de Progressão */}
-								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+								<div className="bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4">
 									<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
 										Progresso de Aquecimento
 									</h4>
@@ -431,7 +431,7 @@ const Home: React.FC = () => {
 							</div>
 
 							{/* Gráfico Completo de Progressão */}
-							<div className="mt-8 bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+							<div className="mt-8 bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4">
 								<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
 									Progressão Detalhada
 								</h4>

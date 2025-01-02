@@ -1,4 +1,7 @@
+/* eslint-disable react/prop-types */
 import axios from "axios";
+import TypebotConfigForm from "../components/TypebotConfigForm";
+
 import { AnimatePresence, motion } from "framer-motion";
 import {
 	Activity,
@@ -7,6 +10,7 @@ import {
 	Power,
 	RefreshCw,
 	Server,
+	Settings,
 	Trash2,
 	Wifi,
 	X,
@@ -14,7 +18,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 
-const API_BASE_URL = "https://back.whatlead.com.br";
+const API_BASE_URL = "http://localhost:3050";
 const API_URL = "https://evo.whatlead.com.br";
 const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
 
@@ -41,7 +45,13 @@ const ConnectionStatus = ({ connected }) => (
 	</motion.div>
 );
 
-const InstanceCard = ({ instance, onReconnect, onLogout, onDelete }) => {
+const InstanceCard = ({
+	instance,
+	onReconnect,
+	onLogout,
+	onDelete,
+	onConfigureTypebot,
+}) => {
 	const isConnected = instance.connectionStatus === "open";
 
 	return (
@@ -79,48 +89,30 @@ const InstanceCard = ({ instance, onReconnect, onLogout, onDelete }) => {
 					<ConnectionStatus connected={isConnected} />
 				</div>
 
-				<div className="grid grid-cols-3 gap-3">
+				<div className="grid grid-cols-4 gap-3">
 					{!isConnected && (
 						<motion.button
 							onClick={() => onReconnect(instance.instanceName)}
-							className="
-                flex items-center justify-center
-                bg-blue-500
-                text-white
-                py-2
-                rounded
-                hover:bg-blue-600
-                transition
-              "
+							className="flex items-center justify-center bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
 						>
 							<Wifi className="mr-2" /> Conectar
 						</motion.button>
 					)}
 					<motion.button
 						onClick={() => onLogout(instance.instanceName)}
-						className="
-              flex items-center justify-center
-              bg-yellow-500
-              text-white
-              py-2
-              rounded
-              hover:bg-yellow-600
-              transition
-            "
+						className="flex items-center justify-center bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 transition"
 					>
 						<Power className="mr-2" /> Logout
 					</motion.button>
 					<motion.button
+						onClick={() => onConfigureTypebot(instance)}
+						className="flex items-center justify-center bg-purple-500 text-white py-2 rounded hover:bg-purple-600 transition"
+					>
+						<Settings className="mr-2" /> Typebot
+					</motion.button>
+					<motion.button
 						onClick={() => onDelete(instance.instanceId, instance.instanceName)}
-						className="
-              flex items-center justify-center
-              bg-red-500
-              text-white
-              py-2
-              rounded
-              hover:bg-red-600
-              transition
-            "
+						className="flex items-center justify-center bg-red-500 text-white py-2 rounded hover:bg-red-600 transition"
 					>
 						<Trash2 className="mr-2" /> Excluir
 					</motion.button>
@@ -140,19 +132,21 @@ const Numeros = () => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [newInstaceName, setNewInstaceName] = useState("");
 	const [showQrCodeModal, setShowQrCodeModal] = useState(false);
-	const [selectedInstanceName, setSelectedInstanceName] = useState(null);
+	const [selectedInstance, setSelectedInstance] = useState(null);
+	const [showTypebotConfig, setShowTypebotConfig] = useState(false);
 
 	const fetchInstances = async () => {
 		try {
 			setLoading(true);
-
 			const token = localStorage.getItem("token");
 
 			if (!token) {
-				throw new Error("Token de autenticação não encontrado");
+				toast.error("Token de autenticação não encontrado");
+				window.location.href = "/login";
+				return;
 			}
 
-			const response = await axios.get(`${API_BASE_URL}/instances`, {
+			const response = await axios.get(`${API_BASE_URL}/api/instances`, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},
@@ -165,38 +159,14 @@ const Numeros = () => {
 				remainingSlots,
 			} = response.data;
 
-			const processedInstances = instancesData.map((instance) => ({
-				instanceId: instance._id,
-				instanceName: instance.instanceName,
-				phoneNumber: instance.number,
-				connectionStatus: instance.connectionStatus,
-			}));
-
-			setInstances(processedInstances);
-			setCurrentPlan(currentPlan);
-			setInstanceLimit(instanceLimit);
-			setRemainingSlots(remainingSlots);
-			setLoading(false);
+			setInstances(instancesData || []);
+			setCurrentPlan(currentPlan || "");
+			setInstanceLimit(instanceLimit || 0);
+			setRemainingSlots(remainingSlots || 0);
 		} catch (error) {
 			console.error("Erro na busca de instâncias:", error);
-
-			if (error.response) {
-				switch (error.response.status) {
-					case 401:
-						toast.error("Sessão expirada. Faça login novamente.");
-						break;
-					case 403:
-						toast.error("Você não tem permissão para acessar este recurso.");
-						break;
-					default:
-						toast.error("Erro ao carregar instâncias");
-				}
-			} else if (error.request) {
-				toast.error("Sem resposta do servidor. Verifique sua conexão.");
-			} else {
-				toast.error("Erro ao configurar a requisição");
-			}
-
+			handleError(error);
+		} finally {
 			setLoading(false);
 		}
 	};
@@ -210,27 +180,38 @@ const Numeros = () => {
 		try {
 			const token = localStorage.getItem("token");
 			const response = await axios.post(
-				`${API_BASE_URL}/instances/createInstance`,
+				`${API_BASE_URL}/api/instances/create`,
 				{
 					instanceName: newInstaceName,
+					qrcode: true,
+					integration: "WHATSAPP-BAILEYS",
 				},
 				{ headers: { Authorization: `Bearer ${token}` } },
 			);
 
 			const { qrcode } = response.data;
-			setQrCode(qrcode);
+
+			// Atualizar o estado do QR code
+			setQrCode(qrcode.base64); // Agora estamos armazenando o QR code em base64
 			setShowQrCodeModal(true);
 			fetchInstances();
 			toast.success("Instância criada com sucesso!");
 			setIsModalOpen(false);
 		} catch (error) {
 			console.error("Erro ao criar instância:", error);
-			toast.error(error.response?.data?.message || "Erro ao criar instância");
+			const errorMessage =
+				error.response?.data?.message || "Erro desconhecido ao criar instância";
+			toast.error(errorMessage);
+
+			if (error.response) {
+				toast.error(error.response?.data?.message || "Erro ao criar instância");
+			} else {
+				toast.error("Erro ao configurar a requisição");
+			}
 		}
 	};
 
 	const handleReconnectInstance = async (instanceName) => {
-		setSelectedInstanceName(instanceName);
 		try {
 			const token = localStorage.getItem("token");
 			const response = await axios.get(
@@ -243,7 +224,6 @@ const Numeros = () => {
 			);
 
 			if (response.status === 200) {
-				// Busca o QR code da API externa
 				const qrCodeResponse = await axios.get(
 					`${API_URL}/instance/fetchInstances?instanceName=${instanceName}`,
 					{
@@ -259,14 +239,12 @@ const Numeros = () => {
 							qrCodeResponse.data.instance &&
 							qrCodeResponse.data.instance.qrcode
 						) {
-							// Trata a resposta 200 com qrcode
 							setQrCode(qrCodeResponse.data.instance.qrcode);
 							setShowQrCodeModal(true);
 							toast.success("Instância reconectando...");
-							// Atualiza o status da instância no banco de dados
 							try {
 								await axios.put(
-									`${API_BASE_URL}/instances/instance/${
+									`${API_BASE_URL}/api/instances/instance/${
 										instances.find(
 											(instance) => instance.instanceName === instanceName,
 										).instanceId
@@ -291,14 +269,12 @@ const Numeros = () => {
 							}
 							fetchInstances();
 						} else if (qrCodeResponse.data.code) {
-							// Trata a resposta 200 com code
 							setQrCode({ base64: qrCodeResponse.data.code });
 							setShowQrCodeModal(true);
 							toast.success("Instância reconectando...");
-							// Atualiza o status da instância no banco de dados
 							try {
 								await axios.put(
-									`${API_BASE_URL}/instances/instance/${
+									`${API_BASE_URL}/api/instances/instance/${
 										instances.find(
 											(instance) => instance.instanceName === instanceName,
 										).instanceId
@@ -337,7 +313,6 @@ const Numeros = () => {
 						toast.error("Erro ao obter QR code para reconexão");
 					}
 				} else if (qrCodeResponse.status === 404) {
-					// Trata a resposta 404
 					console.error(
 						"Erro: Instância não encontrada na API externa:",
 						qrCodeResponse.data,
@@ -362,7 +337,6 @@ const Numeros = () => {
 
 	const handleLogoutInstance = async (instanceName) => {
 		try {
-			const token = localStorage.getItem("token");
 			await axios.delete(`${API_URL}/instance/logout/${instanceName}`, {
 				headers: {
 					apikey: API_KEY,
@@ -378,14 +352,42 @@ const Numeros = () => {
 		}
 	};
 
+	const handleConfigureTypebot = (instance) => {
+		setSelectedInstance(instance);
+		setShowTypebotConfig(true);
+	};
+
+	const handleUpdateTypebotConfig = async (config) => {
+		try {
+			const token = localStorage.getItem("token");
+			await axios.put(
+				`${API_BASE_URL}/api/instances/instance/${selectedInstance.instanceId}/typebot`,
+				config,
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				},
+			);
+
+			toast.success("Configurações do Typebot atualizadas com sucesso!");
+			setShowTypebotConfig(false);
+			fetchInstances();
+		} catch (error) {
+			console.error("Erro ao atualizar configurações do Typebot:", error);
+			toast.error("Erro ao atualizar configurações do Typebot");
+		}
+	};
+
 	const handleDeleteInstance = async (instanceId, instanceName) => {
 		try {
 			const token = localStorage.getItem("token");
-			await axios.delete(`${API_BASE_URL}/instances/instance/${instanceId}`, {
-				headers: {
-					Authorization: `Bearer ${token}`,
+			await axios.delete(
+				`${API_BASE_URL}/api/instances/instance/${instanceId}`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
 				},
-			});
+			);
 			await axios.delete(`${API_URL}/instance/delete/${instanceName}`, {
 				headers: {
 					apikey: API_KEY,
@@ -426,12 +428,13 @@ const Numeros = () => {
 	}, []);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-10">
+		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-whatsapp-profundo to-whatsapp-profundo p-10">
 			<Toaster position="top-right" />
 
 			<div className="max-w-6xl mx-auto">
+				{/* Header */}
 				<div className="mb-10 flex justify-between items-center">
-					<h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+					<h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green/40 to-whatsapp-green/80">
 						Instâncias WhatsApp
 					</h1>
 
@@ -444,29 +447,26 @@ const Numeros = () => {
 						</motion.button>
 						<motion.button
 							onClick={openModal}
-							className="
-                flex items-center
-                bg-gradient-to-r from-blue-500 to-blue-600
-                text-white px-4 py-2 rounded-lg
-                shadow-lg hover:shadow-xl
-              "
+							className="flex items-center bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl"
 						>
 							<Plus className="mr-2" /> Nova Instância
 						</motion.button>
 					</div>
 				</div>
 
-				<div className="mb-4 bg-blue-100 dark:bg-gray-800 p-3 rounded text-black dark:text-white flex justify-between items-center">
+				{/* Status Bar */}
+				<div className="mb-4 bg-blue-100 dark:bg-whatsapp-prata/20 p-3 rounded text-black dark:text-white flex justify-between items-center">
 					<div className="flex space-x-4">
-						<span>Plano Atual: {currentPlan}</span>
-						<span>Limite de Instâncias: {instanceLimit}</span>
-						<span>Slots Restantes: {remainingSlots}</span>
+						<span>Plano Atual: {currentPlan || "Free"}</span>
+						<span>Limite de Instâncias: {instanceLimit || 0}</span>
+						<span>Slots Restantes: {remainingSlots || 0}</span>
 					</div>
 				</div>
 
+				{/* Instances Grid */}
 				{loading ? (
 					<div className="flex justify-center items-center h-64">
-						<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500"></div>
+						<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
 					</div>
 				) : instances.length === 0 ? (
 					<div className="text-center bg-white/10 p-10 rounded-xl shadow-lg">
@@ -486,6 +486,7 @@ const Numeros = () => {
 									onReconnect={handleReconnectInstance}
 									onLogout={handleLogoutInstance}
 									onDelete={handleDeleteInstance}
+									onConfigureTypebot={handleConfigureTypebot}
 								/>
 							))}
 						</AnimatePresence>
@@ -505,7 +506,7 @@ const Numeros = () => {
 						initial={{ y: 20, opacity: 0 }}
 						animate={{ y: 0, opacity: 1 }}
 						exit={{ y: 20, opacity: 0 }}
-						className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md relative"
+						className="bg-white dark:bg-whatsapp-profundo p-8 rounded-xl shadow-2xl w-full max-w-md relative"
 					>
 						<button
 							onClick={closeModal}
@@ -526,7 +527,7 @@ const Numeros = () => {
 							<input
 								type="text"
 								id="instanceName"
-								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
 								placeholder="Ex: Instância Principal"
 								value={newInstaceName}
 								onChange={(e) => setNewInstaceName(e.target.value)}
@@ -534,11 +535,7 @@ const Numeros = () => {
 						</div>
 						<motion.button
 							onClick={handleCreateInstance}
-							className="
-                bg-gradient-to-r from-blue-500 to-blue-600
-                text-white px-4 py-2 rounded-lg
-                shadow-lg hover:shadow-xl
-              "
+							className="bg-gradient-to-r from-whatsapp-green to-whatsapp-dark text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl w-full"
 						>
 							Criar Instância
 						</motion.button>
@@ -558,7 +555,7 @@ const Numeros = () => {
 						initial={{ y: 20, opacity: 0 }}
 						animate={{ y: 0, opacity: 1 }}
 						exit={{ y: 20, opacity: 0 }}
-						className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md relative"
+						className="bg-white dark:bg-whatsapp-profundo p-8 rounded-xl shadow-2xl w-full max-w-md relative"
 					>
 						<button
 							onClick={closeQrCodeModal}
@@ -575,23 +572,45 @@ const Numeros = () => {
 						</p>
 						<motion.button
 							onClick={closeQrCodeModal}
-							className="
-                mt-6
-                bg-gray-300
-                dark:bg-gray-700
-                text-gray-800
-                dark:text-gray-200
-                px-4 py-2 rounded-lg
-                shadow-md hover:shadow-lg
-              "
+							className="mt-6 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg shadow-md hover:shadow-lg w-full"
 						>
 							Fechar
 						</motion.button>
 					</motion.div>
 				</motion.div>
 			)}
+
+			{/* Modal de Configuração do Typebot */}
+			{showTypebotConfig && selectedInstance && (
+				<motion.div
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					exit={{ opacity: 0 }}
+					className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+				>
+					<motion.div
+						initial={{ y: 20, opacity: 0 }}
+						animate={{ y: 0, opacity: 1 }}
+						exit={{ y: 20, opacity: 0 }}
+						className="bg-white dark:bg-whatsapp-profundo p-8 rounded-xl shadow-2xl w-full max-w-md relative"
+					>
+						<button
+							onClick={() => setShowTypebotConfig(false)}
+							className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+						>
+							<X className="w-6 h-6" />
+						</button>
+						<h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+							Configurações do Typebot
+						</h2>
+						<TypebotConfigForm
+							instance={selectedInstance}
+							onUpdate={handleUpdateTypebotConfig}
+						/>
+					</motion.div>
+				</motion.div>
+			)}
 		</div>
 	);
 };
-
 export default Numeros;

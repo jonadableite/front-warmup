@@ -105,7 +105,7 @@ const Aquecimento: React.FC = () => {
 				throw new Error("Token de autenticação não encontrado");
 			}
 
-			const response = await axios.get(`${API_BASE_URL}/instances`, {
+			const response = await axios.get(`${API_BASE_URL}/api/instances`, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},
@@ -364,7 +364,7 @@ const Aquecimento: React.FC = () => {
 	};
 
 	return (
-		<div className="min-h-screen p-6 bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
+		<div className="min-h-screen p-6 bg-gray-100 dark:bg-whatsapp-profundo text-black dark:text-white">
 			<div className="max-w-7xl mx-auto space-y-6">
 				{/* Cabeçalho */}
 				<motion.div
@@ -373,16 +373,16 @@ const Aquecimento: React.FC = () => {
 					className="flex justify-between items-center border-b border-gray-700 pb-4"
 				>
 					<div>
-						<h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">
+						<h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green to-whatsapp-light">
 							WhatsApp Warmer
 						</h1>
 						<p className="text-gray-400">Gerenciamento de Instâncias</p>
 					</div>
-					<FaServer className="text-4xl text-blue-500" />
+					<FaServer className="text-4xl text-whatsapp-eletrico" />
 				</motion.div>
 
 				{/* Informações de Plano */}
-				<div className="mb-4 bg-blue-100 dark:bg-gray-800 p-3 rounded text-black dark:text-white flex justify-between items-center">
+				<div className="mb-4 bg-blue-100 dark:bg-whatsapp-cinza p-3 rounded text-black dark:text-white flex justify-between items-center">
 					<div className="flex space-x-3">
 						<span>Plano Atual: {currentPlan}</span>
 						<span>Limite de Instâncias: {instanceLimit}</span>
@@ -398,9 +398,9 @@ const Aquecimento: React.FC = () => {
 							whileHover={{ scale: 1.05 }}
 							className={`rounded-xl p-4 border ${
 								selectedInstances.has(instance.name)
-									? "border-blue-500"
+									? "border-whatsapp-eletrico"
 									: "border-transparent"
-							} hover:border-blue-500/50 transition-all cursor-pointer bg-white dark:bg-gray-800`}
+							} hover:border-whatsapp-eletrico/50 transition-all cursor-pointer bg-white dark:bg-whatsapp-profundo`}
 							onClick={() => toggleInstanceSelection(instance.name)}
 						>
 							<div className="flex justify-between items-center">
@@ -419,13 +419,13 @@ const Aquecimento: React.FC = () => {
 				{/* Conteúdo Principal */}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					{/* Seção de Textos */}
-					<div className="rounded-xl p-6 space-y-4 bg-white dark:bg-gray-800">
+					<div className="rounded-xl p-6 space-y-4 bg-white dark:bg-whatsapp-cinza">
 						<h3 className="text-xl font-semibold flex items-center">
-							<BsFileText className="mr-2 text-blue-500" /> Textos de
+							<BsFileText className="mr-2 text-whatsapp-eletrico" /> Textos de
 							Aquecimento
 						</h3>
 						<textarea
-							className="w-full rounded-lg p-3 border bg-gray-100 dark:bg-gray-900 border-gray-300 dark:border-gray-700 focus:border-blue-500 transition-colors"
+							className="w-full rounded-lg p-3 border bg-gray-100 dark:bg-whatsapp-cinza border-whatsapp-light dark:border-x-whatsapp-dark focus:border-x-whatsapp-dark transition-colors"
 							placeholder="Digite seus textos aqui..."
 							value={message}
 							onChange={(e) => setMessage(e.target.value)}
@@ -437,7 +437,7 @@ const Aquecimento: React.FC = () => {
 									setMessage("");
 								}
 							}}
-							className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg transition-colors"
+							className="bg-whatsapp-dark hover:bg-whatsapp-green text-white px-4 py-2 rounded-lg transition-colors"
 						>
 							Adicionar Texto
 						</button>
@@ -449,7 +449,7 @@ const Aquecimento: React.FC = () => {
 										key={index}
 										initial={{ opacity: 0, x: -20 }}
 										animate={{ opacity: 1, x: 0 }}
-										className="flex justify-between items-center p-2 rounded bg-gray-200 dark:bg-gray-700"
+										className="flex justify-between items-center p-2 rounded bg-gray-200 dark:bg-whatsapp-cinza"
 									>
 										<span>{text}</span>
 										<button
@@ -469,12 +469,12 @@ const Aquecimento: React.FC = () => {
 					</div>
 
 					{/* Seção de Upload */}
-					<div className="rounded-xl p-6 space-y-4 bg-white dark:bg-gray-800">
+					<div className="rounded-xl p-6 space-y-4 bg-white dark:bg-whatsapp-cinza">
 						<h3 className="text-xl font-semibold flex items-center">
 							<BsPlay className="mr-2 text-green-500" /> Upload de Mídia
 						</h3>
 						<select
-							className="w-full rounded-lg p-3 border bg-gray-100 dark:bg-gray-900 border-gray-300 dark:border-gray-700"
+							className="w-full rounded-lg p-3 border bg-whatsapp-light dark:bg-whatsapp-profundo/50 border-whatsapp-light dark:border-x-whatsapp-cinzaClaro"
 							value={mediaType}
 							onChange={(e) => setMediaType(e.target.value)}
 						>
@@ -487,7 +487,7 @@ const Aquecimento: React.FC = () => {
 							type="file"
 							multiple
 							onChange={handleFileUpload}
-							className="w-full rounded-lg p-3 border bg-gray-100 dark:bg-gray-900 border-gray-300 dark:border-gray-700"
+							className="w-full rounded-lg p-3 border bg-whatsapp-light dark:bg-whatsapp-profundo/50 border-gray-300 dark:border-x-whatsapp-cinzaClaro"
 						/>
 
 						{/* Pré-visualização de Mídias */}
@@ -564,7 +564,7 @@ const Aquecimento: React.FC = () => {
 						whileHover={{ scale: 1.05 }}
 						whileTap={{ scale: 0.95 }}
 						onClick={handleSaveContent}
-						className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 rounded-lg text-white font-bold hover:from-blue-600 hover:to-purple-700 transition-all"
+						className="bg-gradient-to-r from-whatsapp-dark to-whatsapp-light/40 px-6 py-3 rounded-lg text-white font-bold hover:from-whatsapp-green/40 hover:to-whatsapp-green transition-all"
 					>
 						Iniciar Aquecimento
 					</motion.button>

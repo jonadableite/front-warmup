@@ -25,6 +25,8 @@ module.exports = {
 					luminoso: "#00E5FF",
 					profundo: "#0D0D0D",
 					branco: "#F0F0F5",
+					prata: "#535353",
+					cinzaClaro: "#B3B3B3",
 				},
 			},
 

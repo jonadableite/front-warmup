@@ -53,19 +53,17 @@ const Register: React.FC = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-indigo-900 flex items-center justify-center px-4 py-8 overflow-hidden">
-			<div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-3xl animate-pulse"></div>
+		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-black to-whatsapp-green flex items-center justify-center px-4 py-8 overflow-hidden">
+			<div className="absolute inset-0 bg-gradient-to-r from-whatsapp-green/20 to-whatsapp-profundo/20 blur-3xl animate-pulse"></div>
 
 			<motion.div
 				initial={{ opacity: 0, scale: 0.9 }}
 				animate={{ opacity: 1, scale: 1 }}
 				transition={{ duration: 0.5, type: "spring" }}
-				className="relative z-10 w-full max-w-md bg-gray-900/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 p-8"
+				className="relative z-10 w-full max-w-md bg-whatsapp-profundo/70 backdrop-blur-xl rounded-2xl shadow-2xl border border-whatsapp-prata/30 p-8"
 			>
 				<div className="text-center mb-8">
-					<h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 mb-4">
-						WhatLead
-					</h1>
+					<img src="/Logo.png" alt="Logo" className="mx-auto h-16 w-auto" />
 					<p className="text-gray-400">Crie sua conta e comece sua jornada</p>
 				</div>
 
@@ -89,7 +87,7 @@ const Register: React.FC = () => {
 							placeholder="Nome completo"
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+							className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus: ring-whatsapp-dark transition duration-300"
 						/>
 					</div>
 
@@ -102,7 +100,7 @@ const Register: React.FC = () => {
 							placeholder="Seu melhor email"
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
-							className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+							className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus: ring-whatsapp-dark transition duration-300"
 						/>
 					</div>
 
@@ -115,7 +113,7 @@ const Register: React.FC = () => {
 							placeholder="Senha"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
-							className="w-full pl-10 pr-10 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+							className="w-full pl-10 pr-10 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus: ring-whatsapp-dark transition duration-300"
 						/>
 						<button
 							type="button"
@@ -135,13 +133,13 @@ const Register: React.FC = () => {
 							placeholder="Confirmar Senha"
 							value={confirmPassword}
 							onChange={(e) => setConfirmPassword(e.target.value)}
-							className="w-full pl-10 pr-10 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+							className="w-full pl-10 pr-10 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus: ring-whatsapp-dark transition duration-300"
 						/>
 					</div>
 
 					<button
 						type="submit"
-						className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-300 transform hover:scale-105"
+						className="w-full py-3 bg-gradient-to-r from-whatsapp-green/30 to-whatsapp-green text-white rounded-xl hover:from-whatsapp-dark hover:to-whatsapp-profundo transition duration-300 transform hover:scale-105"
 					>
 						Criar Conta
 					</button>
@@ -151,7 +149,7 @@ const Register: React.FC = () => {
 							Já tem uma conta?{" "}
 							<Link
 								to="/login"
-								className="text-blue-500 hover:text-blue-400 font-bold"
+								className="text-whatsapp-green hover:text-whatsapp-dark font-bold"
 							>
 								Faça login
 							</Link>

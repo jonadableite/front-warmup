@@ -55,11 +55,11 @@
 body {
 	background: linear-gradient(
 		135deg,
-		#001529,
-		#001329,
-		#001129,
-		#000f29,
-		#000c29
+		#000000,
+		#000000,
+		#000603,
+		#01110c,
+		#010a04
 	);
 	background-size: 400% 400%;
 	animation: gradient 15s ease infinite;
@@ -93,7 +93,7 @@ body {
 	height: 64px;
 	z-index: 10;
 	margin-left: 256px; /* Ajuste conforme a largura da sua sidebar */
-	background-color: white;
+	background-color: rgb(0, 0, 0);
 	transition: margin-left 0.3s ease;
 }
 
