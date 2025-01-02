@@ -60,70 +60,73 @@ const InstanceCard = ({
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			exit={{ opacity: 0, y: -20 }}
-			className="
-        relative
-        backdrop-blur-lg
-        bg-white/10
-        dark:bg-gray-800/50
-        rounded-3xl
-        p-6
-        shadow-2xl
-        border border-gray-200/20
-        dark:border-gray-700/30
-        overflow-hidden
-      "
+			className="relative backdrop-blur-lg bg-gradient-to-br from-whatsapp-profundo/80 to-whatsapp-cinza/50 rounded-3xl p-6 shadow-2xl border border-whatsapp-green/30 overflow-hidden transition-all duration-300 ease-in-out hover:shadow-whatsapp-green/20 hover:scale-105"
 		>
+			<div className="absolute inset-0 bg-gradient-to-tr from-whatsapp-eletrico/10 to-whatsapp-luminoso/5 opacity-50" />
 			<div className="relative z-10 space-y-6">
 				<div className="flex justify-between items-center">
 					<div className="flex items-center space-x-4">
 						<Server
-							className={`
-                w-8 h-8
-                ${isConnected ? "text-green-500" : "text-red-500"}
-              `}
+							className={`w-10 h-10 p-2 rounded-full ${
+								isConnected
+									? "text-whatsapp-green bg-whatsapp-green/20"
+									: "text-red-500 bg-red-500/20"
+							}`}
 						/>
 						<div>
-							<h3 className="text-xl font-bold">{instance.instanceName}</h3>
-							<p className="text-sm text-gray-500">{instance.phoneNumber}</p>
+							<h3 className="text-xl font-bold text-whatsapp-branco">
+								{instance.instanceName}
+							</h3>
+							<p className="text-sm text-whatsapp-cinzaClaro">
+								{instance.phoneNumber}
+							</p>
 						</div>
 					</div>
 					<ConnectionStatus connected={isConnected} />
 				</div>
 
-				<div className="grid grid-cols-4 gap-3">
+				<div className="grid grid-cols-2 gap-3">
 					{!isConnected && (
 						<motion.button
 							onClick={() => onReconnect(instance.instanceName)}
-							className="flex items-center justify-center bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
+							whileHover={{ scale: 1.05 }}
+							whileTap={{ scale: 0.95 }}
+							className="flex items-center justify-center bg-whatsapp-green text-white py-2 px-4 rounded-full hover:bg-whatsapp-green/80 transition-all duration-300"
 						>
-							<Wifi className="mr-2" /> Conectar
+							<Wifi className="mr-2 w-4 h-4" /> Conectar
 						</motion.button>
 					)}
 					<motion.button
 						onClick={() => onLogout(instance.instanceName)}
-						className="flex items-center justify-center bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 transition"
+						whileHover={{ scale: 1.05 }}
+						whileTap={{ scale: 0.95 }}
+						className="flex items-center justify-center bg-yellow-500 text-white py-2 px-4 rounded-full hover:bg-yellow-600 transition-all duration-300"
 					>
-						<Power className="mr-2" /> Logout
+						<Power className="mr-2 w-4 h-4" /> Logout
 					</motion.button>
 					<motion.button
 						onClick={() => onConfigureTypebot(instance)}
-						className="flex items-center justify-center bg-purple-500 text-white py-2 rounded hover:bg-purple-600 transition"
+						whileHover={{ scale: 1.05 }}
+						whileTap={{ scale: 0.95 }}
+						className="flex items-center justify-center bg-whatsapp-eletrico text-whatsapp-profundo py-2 px-4 rounded-full hover:bg-whatsapp-eletrico/80 transition-all duration-300"
 					>
-						<Settings className="mr-2" /> Typebot
+						<Settings className="mr-2 w-4 h-4" /> Typebot
 					</motion.button>
 					<motion.button
 						onClick={() => onDelete(instance.instanceId, instance.instanceName)}
 						disabled={deletingInstance === instance.instanceId}
+						whileHover={{ scale: 1.05 }}
+						whileTap={{ scale: 0.95 }}
 						className={`flex items-center justify-center ${
 							deletingInstance === instance.instanceId
-								? "bg-gray-500 cursor-not-allowed"
+								? "bg-whatsapp-prata cursor-not-allowed"
 								: "bg-red-500 hover:bg-red-600"
-						} text-white py-2 rounded transition`}
+						} text-white py-2 px-4 rounded-full transition-all duration-300`}
 					>
 						{deletingInstance === instance.instanceId ? (
 							<div className="animate-spin rounded-full h-4 w-4 border-2 border-white mr-2" />
 						) : (
-							<Trash2 className="mr-2" />
+							<Trash2 className="mr-2 w-4 h-4" />
 						)}
 						{deletingInstance === instance.instanceId
 							? "Excluindo..."
@@ -149,6 +152,20 @@ const Numeros = () => {
 	const [selectedInstance, setSelectedInstance] = useState(null);
 	const [showTypebotConfig, setShowTypebotConfig] = useState(false);
 	const [deletingInstance, setDeletingInstance] = useState(null);
+	const [isRefreshing, setIsRefreshing] = useState(false);
+
+	const handleRefresh = async () => {
+		setIsRefreshing(true);
+		try {
+			await fetchInstances();
+			toast.success("Dados atualizados com sucesso!");
+		} catch (error) {
+			console.error("Erro ao atualizar dados:", error);
+			toast.error("Erro ao atualizar dados");
+		} finally {
+			setIsRefreshing(false);
+		}
+	};
 
 	const handleError = (error) => {
 		if (error.response) {
@@ -226,27 +243,94 @@ const Numeros = () => {
 				{ headers: { Authorization: `Bearer ${token}` } },
 			);
 
-			console.log("Resposta da API:", response.data); // Adicione este log
-			const { qrcode } = response.data;
-
-			// Verifique se o QR code está vindo corretamente
-			console.log("QR Code recebido:", qrcode);
+			console.log("Resposta da API:", response.data);
+			const { qrcode, instance } = response.data;
 
 			// Ajuste o tratamento do QR code
-			if (qrcode && typeof qrcode === "string") {
-				setQrCode({ base64: qrcode });
-			} else if (qrcode && qrcode.base64) {
-				setQrCode(qrcode);
+			if (qrcode && (typeof qrcode === "string" || qrcode.base64)) {
+				setQrCode({
+					base64: typeof qrcode === "string" ? qrcode : qrcode.base64,
+				});
+				setShowQrCodeModal(true);
+				toast.success(
+					"Instância criada com sucesso! Escaneie o QR Code para conectar.",
+				);
+				setIsModalOpen(false);
+
+				// Inicia o monitoramento do status
+				let attempts = 0;
+				const maxAttempts = 60;
+
+				const intervalId = setInterval(async () => {
+					try {
+						attempts++;
+						console.log(
+							`Verificando status da nova instância (tentativa ${attempts})`,
+						);
+
+						const statusResponse = await axios.get(
+							`${API_URL}/instance/connectionState/${newInstaceName}`,
+							{
+								headers: {
+									apikey: API_KEY,
+								},
+							},
+						);
+
+						console.log("Status response:", statusResponse.data);
+						const currentStatus =
+							statusResponse.data?.instance?.connectionStatus ||
+							statusResponse.data?.instance?.state;
+
+						console.log("Current status:", currentStatus);
+
+						if (currentStatus === "open") {
+							try {
+								// Atualiza o status no banco local
+								await axios.put(
+									`${API_BASE_URL}/api/instances/instance/${instance.id}/connection-status`,
+									{
+										connectionStatus: "open",
+									},
+									{
+										headers: {
+											Authorization: `Bearer ${token}`,
+										},
+									},
+								);
+
+								console.log("Status atualizado para open no banco local");
+								toast.success("Instância conectada com sucesso!");
+								setShowQrCodeModal(false);
+								await fetchInstances();
+								clearInterval(intervalId);
+							} catch (updateError) {
+								console.error("Erro ao atualizar status:", updateError);
+								toast.error("Erro ao atualizar status da instância");
+							}
+						} else if (attempts >= maxAttempts) {
+							toast.error("Tempo limite de conexão excedido");
+							clearInterval(intervalId);
+						}
+					} catch (error) {
+						console.error("Erro ao verificar status:", error);
+						if (attempts >= maxAttempts) {
+							clearInterval(intervalId);
+						}
+					}
+				}, 2000);
+
+				// Limpa o intervalo após o tempo máximo
+				setTimeout(() => {
+					clearInterval(intervalId);
+				}, 120000);
 			} else {
 				console.error("Formato de QR code inválido:", qrcode);
 				toast.error("Erro ao processar QR code");
 				return;
 			}
 
-			setShowQrCodeModal(true);
-			fetchInstances();
-			toast.success("Instância criada com sucesso!");
-			setIsModalOpen(false);
+			await fetchInstances();
 		} catch (error) {
 			console.error("Erro ao criar instância:", error);
 			const errorMessage =
@@ -257,7 +341,7 @@ const Numeros = () => {
 
 	const handleReconnectInstance = async (instanceName) => {
 		try {
-			const token = localStorage.getItem("token");
+			// Tenta conectar e obter o QR code
 			const response = await axios.get(
 				`${API_URL}/instance/connect/${instanceName}`,
 				{
@@ -268,104 +352,94 @@ const Numeros = () => {
 			);
 
 			if (response.status === 200) {
-				const qrCodeResponse = await axios.get(
-					`${API_URL}/instance/fetchInstances?instanceName=${instanceName}`,
-					{
-						headers: {
-							apikey: API_KEY,
-						},
-					},
-				);
+				const qrCodeData = response.data;
 
-				if (qrCodeResponse.status === 200) {
-					if (qrCodeResponse.data && typeof qrCodeResponse.data === "object") {
-						if (
-							qrCodeResponse.data.instance &&
-							qrCodeResponse.data.instance.qrcode
-						) {
-							setQrCode(qrCodeResponse.data.instance.qrcode);
-							setShowQrCodeModal(true);
-							toast.success("Instância reconectando...");
-							try {
-								await axios.put(
-									`${API_BASE_URL}/api/instances/instance/${
-										instances.find(
-											(instance) => instance.instanceName === instanceName,
-										).instanceId
-									}`,
-									{
-										connectionStatus: "connecting",
+				if (qrCodeData && (qrCodeData.base64 || qrCodeData.code)) {
+					setQrCode({
+						base64:
+							qrCodeData.base64 || `data:image/png;base64,${qrCodeData.code}`,
+						pairingCode: qrCodeData.pairingCode,
+					});
+					setShowQrCodeModal(true);
+					toast.success("Escaneie o QR Code para conectar");
+
+					let attempts = 0;
+					const maxAttempts = 60;
+
+					// Inicia o monitoramento
+					const intervalId = setInterval(async () => {
+						try {
+							attempts++;
+							console.log(`Verificando status (tentativa ${attempts})`);
+
+							const statusResponse = await axios.get(
+								`${API_URL}/instance/connectionState/${instanceName}`,
+								{
+									headers: {
+										apikey: API_KEY,
 									},
-									{
-										headers: {
-											Authorization: `Bearer ${token}`,
-										},
-									},
-								);
-							} catch (error) {
-								console.error(
-									"Erro ao atualizar status da instância no banco de dados:",
-									error,
-								);
-								toast.error(
-									"Erro ao atualizar status da instância no banco de dados",
-								);
-							}
-							fetchInstances();
-						} else if (qrCodeResponse.data.code) {
-							setQrCode({ base64: qrCodeResponse.data.code });
-							setShowQrCodeModal(true);
-							toast.success("Instância reconectando...");
-							try {
-								await axios.put(
-									`${API_BASE_URL}/api/instances/instance/${
-										instances.find(
-											(instance) => instance.instanceName === instanceName,
-										).instanceId
-									}`,
-									{
-										connectionStatus: "connecting",
-									},
-									{
-										headers: {
-											Authorization: `Bearer ${token}`,
-										},
-									},
-								);
-							} catch (error) {
-								console.error(
-									"Erro ao atualizar status da instância no banco de dados:",
-									error,
-								);
-								toast.error(
-									"Erro ao atualizar status da instância no banco de dados",
-								);
-							}
-							fetchInstances();
-						} else {
-							console.error(
-								"Erro: QR code ou code não encontrado na resposta da API:",
-								qrCodeResponse.data,
+								},
 							);
-							toast.error("Erro ao obter QR code para reconexão");
+
+							console.log("Status response:", statusResponse.data);
+							const currentStatus =
+								statusResponse.data?.instance?.connectionStatus ||
+								statusResponse.data?.instance?.state;
+
+							console.log("Current status:", currentStatus);
+
+							if (currentStatus === "open") {
+								const token = localStorage.getItem("token");
+								const instanceToUpdate = instances.find(
+									(instance) => instance.instanceName === instanceName,
+								);
+
+								if (instanceToUpdate) {
+									try {
+										const updateResponse = await axios.put(
+											`${API_BASE_URL}/api/instances/instance/${instanceToUpdate.instanceId}/connection-status`,
+											{
+												connectionStatus: "open",
+											},
+											{
+												headers: {
+													Authorization: `Bearer ${token}`,
+												},
+											},
+										);
+
+										console.log("Update response:", updateResponse.data);
+										toast.success("Instância conectada com sucesso!");
+										setShowQrCodeModal(false);
+										await fetchInstances();
+										clearInterval(intervalId);
+									} catch (updateError) {
+										console.error("Erro ao atualizar status:", updateError);
+										console.log(
+											"Update error details:",
+											updateError.response?.data,
+										);
+										toast.error("Erro ao atualizar status da instância");
+									}
+								}
+							} else if (attempts >= maxAttempts) {
+								toast.error("Tempo limite de conexão excedido");
+								clearInterval(intervalId);
+							}
+						} catch (error) {
+							console.error("Erro ao verificar status:", error);
+							if (attempts >= maxAttempts) {
+								clearInterval(intervalId);
+							}
 						}
-					} else {
-						console.error(
-							"Erro: Resposta da API inválida:",
-							qrCodeResponse.data,
-						);
-						toast.error("Erro ao obter QR code para reconexão");
-					}
-				} else if (qrCodeResponse.status === 404) {
-					console.error(
-						"Erro: Instância não encontrada na API externa:",
-						qrCodeResponse.data,
-					);
-					toast.error(
-						"Instância não encontrada na API externa. Verifique o nome da instância.",
-					);
+					}, 2000);
+
+					// Garante que o intervalo será limpo após o tempo máximo
+					setTimeout(() => {
+						clearInterval(intervalId);
+					}, 120000);
 				} else {
-					console.error("Erro: Resposta da API inválida:", qrCodeResponse.data);
+					console.error("QR code não encontrado na resposta:", qrCodeData);
 					toast.error("Erro ao obter QR code para reconexão");
 				}
 			} else {
@@ -373,21 +447,49 @@ const Numeros = () => {
 			}
 		} catch (error) {
 			console.error("Erro ao reconectar instância:", error);
-			toast.error(
-				error.response?.data?.message || "Erro ao tentar reconectar instância",
-			);
+			handleError(error);
 		}
 	};
 
 	const handleLogoutInstance = async (instanceName) => {
 		try {
+			// Primeiro faz logout na API externa
 			await axios.delete(`${API_URL}/instance/logout/${instanceName}`, {
 				headers: {
 					apikey: API_KEY,
 				},
 			});
-			toast.success("Instância desconectada com sucesso!");
-			fetchInstances();
+
+			// Após logout bem-sucedido, atualiza o status no banco local
+			const token = localStorage.getItem("token");
+			const instanceToUpdate = instances.find(
+				(instance) => instance.instanceName === instanceName,
+			);
+
+			if (instanceToUpdate) {
+				try {
+					await axios.put(
+						`${API_BASE_URL}/api/instances/instance/${instanceToUpdate.instanceId}/connection-status`,
+						{
+							connectionStatus: "close",
+						},
+						{
+							headers: {
+								Authorization: `Bearer ${token}`,
+							},
+						},
+					);
+
+					toast.success("Instância desconectada com sucesso!");
+					await fetchInstances(); // Recarrega os dados atualizados
+				} catch (updateError) {
+					console.error(
+						"Erro ao atualizar status no banco local:",
+						updateError,
+					);
+					toast.error("Erro ao atualizar status da instância no banco local");
+				}
+			}
 		} catch (error) {
 			console.error("Erro ao desconectar instância:", error);
 			toast.error(
@@ -550,9 +652,6 @@ const Numeros = () => {
 	useEffect(() => {
 		fetchInstances();
 		setQrCodeError(false);
-
-		const intervalId = setInterval(fetchInstances, 60000);
-		return () => clearInterval(intervalId);
 	}, []);
 
 	return (
@@ -568,10 +667,15 @@ const Numeros = () => {
 
 					<div className="flex space-x-4">
 						<motion.button
-							onClick={fetchInstances}
-							className="bg-white/10 p-3 rounded-full shadow-md hover:bg-white/20"
+							onClick={handleRefresh}
+							disabled={isRefreshing}
+							className={`bg-white/10 p-3 rounded-full shadow-md hover:bg-white/20 ${
+								isRefreshing ? "cursor-not-allowed opacity-50" : ""
+							}`}
 						>
-							<RefreshCw className="text-white" />
+							<RefreshCw
+								className={`text-white ${isRefreshing ? "animate-spin" : ""}`}
+							/>
 						</motion.button>
 						<motion.button
 							onClick={openModal}
@@ -686,21 +790,14 @@ const Numeros = () => {
 						exit={{ y: 20, opacity: 0 }}
 						className="bg-white dark:bg-whatsapp-profundo p-8 rounded-xl shadow-2xl w-full max-w-md relative"
 					>
-						<button
-							onClick={closeQrCodeModal}
-							className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
-						>
+						<button onClick={closeQrCodeModal}>
 							<X className="w-6 h-6" />
 						</button>
-						<h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+						<h2 className="text-2xl font-bold mb-6 text-zinc-50">
 							QR Code para Conexão
 						</h2>
 						<img
-							src={
-								typeof qrCode === "string"
-									? `data:image/png;base64,${qrCode}`
-									: qrCode.base64
-							}
+							src={qrCode.base64}
 							alt="QR Code"
 							className="mx-auto max-w-full h-auto"
 							onError={(e) => {
@@ -713,8 +810,14 @@ const Numeros = () => {
 								Erro ao carregar o QR code. Tente fechar e abrir novamente.
 							</p>
 						)}
+						{qrCode.pairingCode && (
+							<p className="text-center mt-4 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+								Código de pareamento: <strong>{qrCode.pairingCode}</strong>
+							</p>
+						)}
 						<p className="text-gray-700 dark:text-gray-300 mt-4">
 							Use o aplicativo para escanear o QR code e conectar.
+							{qrCode.pairingCode && " Ou use o código de pareamento acima."}
 						</p>
 						<motion.button
 							onClick={closeQrCodeModal}
