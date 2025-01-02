@@ -51,6 +51,7 @@ const InstanceCard = ({
 	onLogout,
 	onDelete,
 	onConfigureTypebot,
+	deletingInstance,
 }) => {
 	const isConnected = instance.connectionStatus === "open";
 
@@ -112,9 +113,21 @@ const InstanceCard = ({
 					</motion.button>
 					<motion.button
 						onClick={() => onDelete(instance.instanceId, instance.instanceName)}
-						className="flex items-center justify-center bg-red-500 text-white py-2 rounded hover:bg-red-600 transition"
+						disabled={deletingInstance === instance.instanceId}
+						className={`flex items-center justify-center ${
+							deletingInstance === instance.instanceId
+								? "bg-gray-500 cursor-not-allowed"
+								: "bg-red-500 hover:bg-red-600"
+						} text-white py-2 rounded transition`}
 					>
-						<Trash2 className="mr-2" /> Excluir
+						{deletingInstance === instance.instanceId ? (
+							<div className="animate-spin rounded-full h-4 w-4 border-2 border-white mr-2" />
+						) : (
+							<Trash2 className="mr-2" />
+						)}
+						{deletingInstance === instance.instanceId
+							? "Excluindo..."
+							: "Excluir"}
 					</motion.button>
 				</div>
 			</div>
@@ -129,11 +142,33 @@ const Numeros = () => {
 	const [instanceLimit, setInstanceLimit] = useState(0);
 	const [remainingSlots, setRemainingSlots] = useState(0);
 	const [qrCode, setQrCode] = useState(null);
+	const [qrCodeError, setQrCodeError] = useState(false);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [newInstaceName, setNewInstaceName] = useState("");
 	const [showQrCodeModal, setShowQrCodeModal] = useState(false);
 	const [selectedInstance, setSelectedInstance] = useState(null);
 	const [showTypebotConfig, setShowTypebotConfig] = useState(false);
+	const [deletingInstance, setDeletingInstance] = useState(null);
+
+	const handleError = (error) => {
+		if (error.response) {
+			const status = error.response.status;
+			if (status === 401) {
+				toast.error("Sessão expirada. Faça login novamente.");
+				window.location.href = "/login";
+			} else if (status === 403) {
+				toast.error("Você não tem permissão para acessar este recurso.");
+			} else {
+				toast.error(
+					error.response.data?.message || "Erro ao carregar instâncias",
+				);
+			}
+		} else if (error.request) {
+			toast.error("Sem resposta do servidor. Verifique sua conexão.");
+		} else {
+			toast.error("Erro ao configurar a requisição.");
+		}
+	};
 
 	const fetchInstances = async () => {
 		try {
@@ -151,6 +186,8 @@ const Numeros = () => {
 					Authorization: `Bearer ${token}`,
 				},
 			});
+
+			console.log("Dados das instâncias:", response.data);
 
 			const {
 				instances: instancesData,
@@ -189,10 +226,23 @@ const Numeros = () => {
 				{ headers: { Authorization: `Bearer ${token}` } },
 			);
 
+			console.log("Resposta da API:", response.data); // Adicione este log
 			const { qrcode } = response.data;
 
-			// Atualizar o estado do QR code
-			setQrCode(qrcode.base64); // Agora estamos armazenando o QR code em base64
+			// Verifique se o QR code está vindo corretamente
+			console.log("QR Code recebido:", qrcode);
+
+			// Ajuste o tratamento do QR code
+			if (qrcode && typeof qrcode === "string") {
+				setQrCode({ base64: qrcode });
+			} else if (qrcode && qrcode.base64) {
+				setQrCode(qrcode);
+			} else {
+				console.error("Formato de QR code inválido:", qrcode);
+				toast.error("Erro ao processar QR code");
+				return;
+			}
+
 			setShowQrCodeModal(true);
 			fetchInstances();
 			toast.success("Instância criada com sucesso!");
@@ -202,12 +252,6 @@ const Numeros = () => {
 			const errorMessage =
 				error.response?.data?.message || "Erro desconhecido ao criar instância";
 			toast.error(errorMessage);
-
-			if (error.response) {
-				toast.error(error.response?.data?.message || "Erro ao criar instância");
-			} else {
-				toast.error("Erro ao configurar a requisição");
-			}
 		}
 	};
 
@@ -378,26 +422,109 @@ const Numeros = () => {
 	};
 
 	const handleDeleteInstance = async (instanceId, instanceName) => {
+		setDeletingInstance(instanceId);
+
+		// Adicione uma confirmação
+		if (
+			!window.confirm(
+				`Tem certeza que deseja excluir a instância "${instanceName}"?`,
+			)
+		) {
+			setDeletingInstance(null);
+			return;
+		}
+
 		try {
-			const token = localStorage.getItem("token");
-			await axios.delete(
-				`${API_BASE_URL}/api/instances/instance/${instanceId}`,
+			// Primeiro, tenta fazer logout da instância
+			try {
+				await axios.delete(`${API_URL}/instance/logout/${instanceName}`, {
+					headers: {
+						apikey: API_KEY,
+					},
+				});
+
+				// Espera um pouco para garantir que o logout foi processado
+				await new Promise((resolve) => setTimeout(resolve, 2000));
+			} catch (logoutError) {
+				console.error("Erro ao desconectar instância:", logoutError);
+				// Continua mesmo se o logout falhar, pois a instância pode já estar desconectada
+			}
+
+			// Depois, tenta deletar na API externa
+			const externalResponse = await axios.delete(
+				`${API_URL}/instance/delete/${instanceName}`,
 				{
 					headers: {
-						Authorization: `Bearer ${token}`,
+						apikey: API_KEY,
 					},
 				},
 			);
-			await axios.delete(`${API_URL}/instance/delete/${instanceName}`, {
-				headers: {
-					apikey: API_KEY,
-				},
-			});
-			toast.success("Instância excluída com sucesso!");
-			fetchInstances();
+
+			// Verifica se a deleção na API externa foi bem-sucedida
+			if (
+				externalResponse.status === 200 &&
+				externalResponse.data.status === "SUCCESS" &&
+				!externalResponse.data.error
+			) {
+				// Se a deleção na API externa foi bem-sucedida, deleta no banco local
+				const token = localStorage.getItem("token");
+				await axios.delete(
+					`${API_BASE_URL}/api/instances/instance/${instanceId}`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					},
+				);
+
+				toast.success("Instância excluída com sucesso!");
+				fetchInstances();
+			} else {
+				toast.error("Erro ao excluir instância na API externa");
+				console.error(
+					"Resposta inesperada da API externa:",
+					externalResponse.data,
+				);
+			}
 		} catch (error) {
 			console.error("Erro ao excluir instância:", error);
-			toast.error(error.response?.data?.message || "Erro ao excluir instância");
+
+			if (axios.isAxiosError(error)) {
+				if (error.response) {
+					const status = error.response.status;
+					const message =
+						error.response.data?.response?.message?.[0] ||
+						error.response.data?.message ||
+						error.response.data?.error;
+
+					if (status === 404) {
+						toast.error(message || "Instância não encontrada na API externa");
+					} else if (status === 400) {
+						if (message.includes("needs to be disconnected")) {
+							toast.error(
+								"A instância precisa ser desconectada antes de ser excluída. Tente fazer logout primeiro.",
+							);
+						} else {
+							toast.error(
+								message || "Erro ao processar a requisição na API externa",
+							);
+						}
+					} else if (status === 401) {
+						toast.error("Sessão expirada. Faça login novamente");
+						window.location.href = "/login";
+					} else {
+						toast.error(message || "Erro ao excluir instância");
+					}
+				} else if (error.request) {
+					toast.error("Erro de conexão com o servidor");
+				} else {
+					toast.error("Erro ao configurar a requisição");
+				}
+			} else {
+				toast.error("Erro ao excluir instância");
+			}
+		} finally {
+			setDeletingInstance(null);
 		}
 	};
 
@@ -417,11 +544,12 @@ const Numeros = () => {
 	const closeQrCodeModal = () => {
 		setShowQrCodeModal(false);
 		setQrCode(null);
-		setSelectedInstanceName(null);
+		setQrCodeError(false);
 	};
 
 	useEffect(() => {
 		fetchInstances();
+		setQrCodeError(false);
 
 		const intervalId = setInterval(fetchInstances, 60000);
 		return () => clearInterval(intervalId);
@@ -487,6 +615,7 @@ const Numeros = () => {
 									onLogout={handleLogoutInstance}
 									onDelete={handleDeleteInstance}
 									onConfigureTypebot={handleConfigureTypebot}
+									deletingInstance={deletingInstance}
 								/>
 							))}
 						</AnimatePresence>
@@ -566,7 +695,24 @@ const Numeros = () => {
 						<h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
 							QR Code para Conexão
 						</h2>
-						<img src={qrCode.base64} alt="QR Code" className="mx-auto" />
+						<img
+							src={
+								typeof qrCode === "string"
+									? `data:image/png;base64,${qrCode}`
+									: qrCode.base64
+							}
+							alt="QR Code"
+							className="mx-auto max-w-full h-auto"
+							onError={(e) => {
+								console.error("Erro ao carregar QR code");
+								setQrCodeError(true);
+							}}
+						/>
+						{qrCodeError && (
+							<p className="text-red-500 text-center mt-4">
+								Erro ao carregar o QR code. Tente fechar e abrir novamente.
+							</p>
+						)}
 						<p className="text-gray-700 dark:text-gray-300 mt-4">
 							Use o aplicativo para escanear o QR code e conectar.
 						</p>
