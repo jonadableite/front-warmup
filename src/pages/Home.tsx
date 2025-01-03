@@ -196,7 +196,7 @@ const Home: React.FC = () => {
 				className="container mx-auto"
 			>
 				<header className="mb-10">
-					<h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green to-whatsapp-green/40 dark:from-whatsapp-green/50 dark:to-whatsapp-green/70 text-center">
+					<h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green to-whatsapp-light">
 						WhatsApp Warmer Dashboard
 					</h1>
 				</header>

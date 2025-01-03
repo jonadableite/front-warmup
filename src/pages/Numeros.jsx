@@ -1,7 +1,8 @@
+import { useDarkMode } from "@/hooks/useDarkMode";
+import { toast } from "react-hot-toast";
+
 /* eslint-disable react/prop-types */
 import axios from "axios";
-import TypebotConfigForm from "../components/TypebotConfigForm";
-
 import { AnimatePresence, motion } from "framer-motion";
 import {
 	Activity,
@@ -9,14 +10,15 @@ import {
 	Plus,
 	Power,
 	RefreshCw,
-	Server,
 	Settings,
 	Trash2,
 	Wifi,
 	X,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { Toaster, toast } from "react-hot-toast";
+import { useEffect, useState } from "react";
+import { Toaster } from "react-hot-toast";
+import { FaWhatsapp } from "react-icons/fa";
+import TypebotConfigForm from "../components/TypebotConfigForm";
 
 const API_BASE_URL = "http://localhost:3050";
 const API_URL = "https://evo.whatlead.com.br";
@@ -54,6 +56,7 @@ const InstanceCard = ({
 	deletingInstance,
 }) => {
 	const isConnected = instance.connectionStatus === "open";
+	const hasTypebot = !!instance.typebot;
 
 	return (
 		<motion.div
@@ -62,11 +65,14 @@ const InstanceCard = ({
 			exit={{ opacity: 0, y: -20 }}
 			className="relative backdrop-blur-lg bg-gradient-to-br from-whatsapp-profundo/80 to-whatsapp-cinza/50 rounded-3xl p-6 shadow-2xl border border-whatsapp-green/30 overflow-hidden transition-all duration-300 ease-in-out hover:shadow-whatsapp-green/20 hover:scale-105"
 		>
+			{/* Efeito de gradiente de fundo */}
 			<div className="absolute inset-0 bg-gradient-to-tr from-whatsapp-eletrico/10 to-whatsapp-luminoso/5 opacity-50" />
+
 			<div className="relative z-10 space-y-6">
+				{/* Cabeçalho do Card */}
 				<div className="flex justify-between items-center">
 					<div className="flex items-center space-x-4">
-						<Server
+						<FaWhatsapp
 							className={`w-10 h-10 p-2 rounded-full ${
 								isConnected
 									? "text-whatsapp-green bg-whatsapp-green/20"
@@ -85,60 +91,102 @@ const InstanceCard = ({
 					<ConnectionStatus connected={isConnected} />
 				</div>
 
-				<div className="grid grid-cols-2 gap-3">
+				{/* Botões de Ação */}
+				<div className="grid grid-cols-2 gap-4">
+					{/* Botão de Conectar (condicional) */}
 					{!isConnected && (
 						<motion.button
 							onClick={() => onReconnect(instance.instanceName)}
-							whileHover={{ scale: 1.05 }}
-							whileTap={{ scale: 0.95 }}
-							className="flex items-center justify-center bg-whatsapp-green text-white py-2 px-4 rounded-full hover:bg-whatsapp-green/80 transition-all duration-300"
+							whileHover={{
+								scale: 1.02,
+								boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
+							}}
+							whileTap={{ scale: 0.98 }}
+							className="col-span-2 flex items-center justify-center bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
 						>
-							<Wifi className="mr-2 w-4 h-4" /> Conectar
+							<Wifi className="mr-2 w-5 h-5" /> Conectar
 						</motion.button>
 					)}
+
+					{/* Botão de Logout */}
 					<motion.button
 						onClick={() => onLogout(instance.instanceName)}
-						whileHover={{ scale: 1.05 }}
-						whileTap={{ scale: 0.95 }}
-						className="flex items-center justify-center bg-yellow-500 text-white py-2 px-4 rounded-full hover:bg-yellow-600 transition-all duration-300"
+						whileHover={{
+							scale: 1.02,
+							boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
+						}}
+						whileTap={{ scale: 0.98 }}
+						className="flex items-center justify-center bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300"
 					>
-						<Power className="mr-2 w-4 h-4" /> Logout
+						<Power className="mr-2 w-5 h-5" /> Logout
 					</motion.button>
+
+					{/* Botão do Typebot */}
 					<motion.button
 						onClick={() => onConfigureTypebot(instance)}
-						whileHover={{ scale: 1.05 }}
-						whileTap={{ scale: 0.95 }}
-						className="flex items-center justify-center bg-whatsapp-eletrico text-whatsapp-profundo py-2 px-4 rounded-full hover:bg-whatsapp-eletrico/80 transition-all duration-300"
+						whileHover={{
+							scale: 1.02,
+							boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
+						}}
+						whileTap={{ scale: 0.98 }}
+						className={`flex items-center justify-center py-3 px-4 rounded-xl shadow-lg transition-all duration-300 ${
+							hasTypebot
+								? "bg-gradient-to-r from-blue-500 to-blue-600"
+								: "bg-gradient-to-r from-whatsapp-eletrico to-whatsapp-green"
+						} text-white`}
 					>
-						<Settings className="mr-2 w-4 h-4" /> Typebot
+						<Settings className="mr-2 w-5 h-5" />
+						{hasTypebot ? "Editar Fluxo" : "Adicionar Fluxo"}
 					</motion.button>
+
+					{/* Botão de Excluir */}
 					<motion.button
 						onClick={() => onDelete(instance.instanceId, instance.instanceName)}
 						disabled={deletingInstance === instance.instanceId}
-						whileHover={{ scale: 1.05 }}
-						whileTap={{ scale: 0.95 }}
-						className={`flex items-center justify-center ${
-							deletingInstance === instance.instanceId
-								? "bg-whatsapp-prata cursor-not-allowed"
-								: "bg-red-500 hover:bg-red-600"
-						} text-white py-2 px-4 rounded-full transition-all duration-300`}
+						whileHover={{
+							scale: 1.02,
+							boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
+						}}
+						whileTap={{ scale: 0.98 }}
+						className="col-span-2 flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
 						{deletingInstance === instance.instanceId ? (
-							<div className="animate-spin rounded-full h-4 w-4 border-2 border-white mr-2" />
+							<div className="animate-spin rounded-full h-5 w-5 border-2 border-white mr-2" />
 						) : (
-							<Trash2 className="mr-2 w-4 h-4" />
+							<Trash2 className="mr-2 w-5 h-5" />
 						)}
 						{deletingInstance === instance.instanceId
 							? "Excluindo..."
 							: "Excluir"}
 					</motion.button>
 				</div>
+
+				{/* Informações do Typebot */}
+				{hasTypebot && (
+					<div className="mt-4 p-4 bg-black/20 backdrop-blur-md rounded-xl border border-whatsapp-green/20">
+						<div className="flex items-center space-x-2 mb-2">
+							<div className="w-2 h-2 bg-whatsapp-green rounded-full animate-pulse" />
+							<p className="text-sm font-semibold text-whatsapp-green">
+								Fluxo Ativo
+							</p>
+						</div>
+						<p className="text-sm text-whatsapp-branco">
+							{instance.typebot.typebot}
+						</p>
+						{instance.typebot.description && (
+							<p className="text-xs text-whatsapp-cinzaClaro mt-1">
+								{instance.typebot.description}
+							</p>
+						)}
+					</div>
+				)}
 			</div>
 		</motion.div>
 	);
 };
 
 const Numeros = () => {
+	const [isDarkMode] = useDarkMode();
 	const [instances, setInstances] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [currentPlan, setCurrentPlan] = useState("");
@@ -506,20 +554,133 @@ const Numeros = () => {
 	const handleUpdateTypebotConfig = async (config) => {
 		try {
 			const token = localStorage.getItem("token");
+
+			// Primeiro, atualiza no banco local
 			await axios.put(
 				`${API_BASE_URL}/api/instances/instance/${selectedInstance.instanceId}/typebot`,
-				config,
 				{
-					headers: { Authorization: `Bearer ${token}` },
+					typebot: {
+						...config,
+						description: config.description, // Garante que o campo description está sendo enviado
+					},
+				},
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+				},
+			);
+
+			// Depois, atualiza na API externa
+			await axios.post(
+				`${API_URL}/typebot/create/${selectedInstance.instanceName}`,
+				{
+					...config,
+					description: config.description, // Garante que o campo description está sendo enviado
+				},
+				{
+					headers: {
+						apikey: API_KEY,
+						"Content-Type": "application/json",
+					},
 				},
 			);
 
 			toast.success("Configurações do Typebot atualizadas com sucesso!");
 			setShowTypebotConfig(false);
-			fetchInstances();
+			await fetchInstances();
 		} catch (error) {
 			console.error("Erro ao atualizar configurações do Typebot:", error);
-			toast.error("Erro ao atualizar configurações do Typebot");
+			if (error.response?.data?.error) {
+				toast.error(`Erro: ${error.response.data.error}`);
+			} else {
+				toast.error("Erro ao atualizar configurações do Typebot");
+			}
+		}
+	};
+
+	const handleDeleteTypebotConfig = async (instanceId, instanceName) => {
+		try {
+			const token = localStorage.getItem("token");
+
+			// Confirma com o usuário
+			if (!window.confirm("Tem certeza que deseja remover este fluxo?")) {
+				return;
+			}
+
+			// Primeiro, desativa o typebot na API externa
+			await axios.post(
+				`${API_URL}/typebot/create/${instanceName}`,
+				{
+					enabled: false,
+					url: "",
+					typebot: "",
+					expire: 0,
+					keywordFinish: "#EXIT",
+					delayMessage: 1000,
+					unknownMessage: "",
+					triggerType: "none",
+					triggerOperator: "contains",
+					triggerValue: "",
+					listeningFromMe: false,
+					stopBotFromMe: false,
+					keepOpen: false,
+					debounceTime: 10,
+				},
+				{
+					headers: {
+						apikey: API_KEY,
+						"Content-Type": "application/json",
+					},
+				},
+			);
+
+			// Depois, atualiza no banco local
+			await axios.put(
+				`${API_BASE_URL}/api/instances/instance/${instanceId}/typebot`,
+				{
+					typebot: {
+						enabled: false,
+						url: "",
+						typebot: "",
+						expire: 0,
+						keywordFinish: "#EXIT",
+						delayMessage: 1000,
+						unknownMessage: "",
+						triggerType: "none",
+						triggerOperator: "contains",
+						triggerValue: "",
+						listeningFromMe: false,
+						stopBotFromMe: false,
+						keepOpen: false,
+						debounceTime: 10,
+					},
+				},
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+				},
+			);
+
+			toast.success("Fluxo removido com sucesso!");
+			setShowTypebotConfig(false);
+			await fetchInstances();
+		} catch (error) {
+			console.error("Erro ao remover fluxo:", error);
+
+			let errorMessage = "Erro ao remover fluxo";
+			if (error.response) {
+				if (error.response.status === 404) {
+					errorMessage = "Fluxo não encontrado";
+				} else if (error.response.data?.message) {
+					errorMessage = error.response.data.message;
+				}
+			}
+
+			toast.error(errorMessage);
 		}
 	};
 
@@ -655,13 +816,13 @@ const Numeros = () => {
 	}, []);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-whatsapp-profundo to-whatsapp-profundo p-10">
+		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-whatsapp-profundo to-whatsapp-profundo px-8 py-10">
 			<Toaster position="top-right" />
 
-			<div className="max-w-6xl mx-auto">
+			<div className="max-w-7xl mx-auto">
 				{/* Header */}
 				<div className="mb-10 flex justify-between items-center">
-					<h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green/40 to-whatsapp-green/80">
+					<h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green to-whatsapp-light">
 						Instâncias WhatsApp
 					</h1>
 
@@ -708,7 +869,7 @@ const Numeros = () => {
 				) : (
 					<motion.div
 						layout
-						className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+						className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto"
 					>
 						<AnimatePresence>
 							{instances.map((instance) => (
@@ -855,6 +1016,8 @@ const Numeros = () => {
 						<TypebotConfigForm
 							instance={selectedInstance}
 							onUpdate={handleUpdateTypebotConfig}
+							onDelete={handleDeleteTypebotConfig}
+							isEditing={!!selectedInstance?.typebot}
 						/>
 					</motion.div>
 				</motion.div>

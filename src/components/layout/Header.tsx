@@ -1,7 +1,7 @@
 import { useSidebar } from "@/components/ui/sidebar";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { motion } from "framer-motion";
-import { RocketIcon } from "lucide-react";
+import { Moon, RocketIcon, Sun } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -107,33 +107,30 @@ const Header: React.FC = () => {
 			transition={{ duration: 0.5, type: "spring" }}
 			className={`fixed top-0 left-0 right-0 h-16 bg-white dark:bg-whatsapp-profundo/95 shadow-md flex justify-between items-center px-6 z-10`}
 		>
-			{/* <div className="flex items-center space-x-4">{renderTrialInfo()}</div>
+			<div className="flex items-center space-x-4">{renderTrialInfo()}</div>
 			<div className="flex items-center">
-				<label className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
-					<input
-						type="checkbox"
-						checked={isDarkMode}
-						onChange={toggleDarkMode}
-						className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-					/>
-					<span className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer">
-						<img
-							src={MoonIcon}
-							alt="Modo Escuro"
-							className="absolute left-0 top-0 w-6 h-6"
-						/>
-					</span>
-				</label>
-				<style>{`
-                        .toggle-checkbox:checked {
-                            right: 0;
-                            border-color: #4caf50;
-                        }
-                        .toggle-checkbox:checked + .toggle-label {
-                            background-color: #4caf50;
-                        }
-                    `}</style>
-			</div> */}
+				<motion.button
+					whileHover={{ scale: 1.05 }}
+					whileTap={{ scale: 0.95 }}
+					onClick={toggleDarkMode}
+					className={`
+            p-2 rounded-full
+            ${
+							isDarkMode
+								? "bg-gray-700 text-yellow-300"
+								: "bg-gray-200 text-gray-700"
+						}
+            transition-all duration-300
+            hover:shadow-lg
+          `}
+				>
+					{isDarkMode ? (
+						<Sun className="w-5 h-5" />
+					) : (
+						<Moon className="w-5 h-5" />
+					)}
+				</motion.button>
+			</div>
 		</motion.header>
 	);
 };

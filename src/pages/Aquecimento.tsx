@@ -5,10 +5,9 @@ import type React from "react";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { BsFileText, BsPlay, BsTrash, BsWifi, BsWifiOff } from "react-icons/bs";
-import { FaServer } from "react-icons/fa";
-
+import { FaServer, FaWhatsapp } from "react-icons/fa";
 // Configurações da API
-const API_BASE_URL = "https://back.whatlead.com.br";
+const API_BASE_URL = "http://localhost:3050";
 const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
 
 // Emojis para reações
@@ -119,13 +118,14 @@ const Aquecimento: React.FC = () => {
 			} = response.data;
 
 			const processedInstances = instancesData.map((instance: any) => ({
-				id: instance._id,
+				id: instance.instanceId || instance.id,
 				name: instance.instanceName,
 				connectionStatus: instance.connectionStatus,
-				ownerJid: instance.ownerJid,
+				ownerJid: instance.ownerJid || instance.number,
 				profileName: instance.profileName,
 			}));
 
+			console.log("Instâncias processadas:", processedInstances);
 			setInstances(processedInstances);
 			setCurrentPlan(currentPlan);
 			setInstanceLimit(instanceLimit);
@@ -234,7 +234,6 @@ const Aquecimento: React.FC = () => {
 
 		try {
 			const token = localStorage.getItem("token");
-
 			if (!token) {
 				throw new Error("Token de autenticação não encontrado");
 			}
@@ -244,7 +243,6 @@ const Aquecimento: React.FC = () => {
 					const isSelected = selectedInstances.has(instance.name);
 					const hasValidPhoneNumber =
 						instance.ownerJid && instance.ownerJid.trim() !== "";
-
 					return isSelected && hasValidPhoneNumber;
 				})
 				.map((instance) => ({
@@ -257,35 +255,31 @@ const Aquecimento: React.FC = () => {
 				return;
 			}
 
-			const config = {
-				reactionChance: 0.4,
-				audioChance: 0.3,
-				stickerChance: 0.2,
-				minDelay: 3000,
-				maxDelay: 90000,
-				videoChance: 0.2,
-			};
-
-			const contents = {
-				texts: texts,
-				images: images.map((img) => processBase64(img.base64, img.type)),
-				audios: audios.map((aud) => processBase64(aud.base64, aud.type)),
-				emojis: REACTION_EMOJIS,
-				videos: videos.map((vid) => processBase64(vid.base64, vid.type)),
-				stickers: stickers.map((sticker) =>
-					processBase64(sticker.base64, sticker.type),
-				),
-			};
-
 			const payload = {
-				phoneInstances: phoneInstances,
-				contents: contents,
-				config: config,
+				phoneInstances,
+				contents: {
+					texts,
+					images: images.map((img) => processBase64(img.base64, img.type)),
+					audios: audios.map((aud) => processBase64(aud.base64, aud.type)),
+					emojis: REACTION_EMOJIS,
+					videos: videos.map((vid) => processBase64(vid.base64, vid.type)),
+					stickers: stickers.map((sticker) =>
+						processBase64(sticker.base64, sticker.type),
+					),
+				},
+				config: {
+					reactionChance: 0.4,
+					audioChance: 0.3,
+					stickerChance: 0.2,
+					minDelay: 3000,
+					maxDelay: 90000,
+					videoChance: 0.2,
+				},
 			};
 
-			console.log("Payload final:", payload);
+			console.log("Iniciando aquecimento com payload:", payload);
 
-			const localResponse = await axios.post(
+			const response = await axios.post(
 				`${API_BASE_URL}/warmup/config`,
 				payload,
 				{
@@ -296,15 +290,19 @@ const Aquecimento: React.FC = () => {
 				},
 			);
 
-			if (localResponse.data.success) {
-				toast.success("Configuração de aquecimento salva com sucesso!");
+			if (response.status === 200) {
+				toast.success("Aquecimento iniciado com sucesso!");
 				setIsWarmingUp(true);
 			} else {
-				toast.error("Erro ao configurar aquecimento");
+				throw new Error("Erro ao iniciar aquecimento");
 			}
 		} catch (error: any) {
-			console.error("Erro ao salvar conteúdo:", error);
-			toast.error(error.response?.data?.message || "Falha ao salvar conteúdo");
+			console.error("Erro ao iniciar aquecimento:", error);
+			toast.error(
+				error.response?.data?.message ||
+					error.message ||
+					"Erro ao iniciar aquecimento",
+			);
 		}
 	};
 
@@ -391,26 +389,147 @@ const Aquecimento: React.FC = () => {
 				</div>
 
 				{/* Seletor de Instâncias */}
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 					{instances.map((instance) => (
 						<motion.div
-							key={instance.id}
-							whileHover={{ scale: 1.05 }}
-							className={`rounded-xl p-4 border ${
-								selectedInstances.has(instance.name)
-									? "border-whatsapp-eletrico"
-									: "border-transparent"
-							} hover:border-whatsapp-eletrico/50 transition-all cursor-pointer bg-white dark:bg-whatsapp-profundo`}
+							key={`instance-${instance.id}`}
+							whileHover={{ scale: 1.02 }}
+							className={`
+        relative backdrop-blur-lg rounded-xl p-6
+        ${
+					selectedInstances.has(instance.name)
+						? "bg-gradient-to-br from-whatsapp-eletrico/20 to-whatsapp-green/5 border-2 border-whatsapp-eletrico"
+						: "bg-gradient-to-br from-whatsapp-profundo/80 to-whatsapp-cinza/50 border border-whatsapp-green/30"
+				}
+        shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer
+        overflow-hidden group
+      `}
 							onClick={() => toggleInstanceSelection(instance.name)}
 						>
-							<div className="flex justify-between items-center">
-								<div>
-									<h3 className="font-bold text-lg">{instance.name}</h3>
-									<p className="text-sm text-gray-400">
-										{instance.profileName}
-									</p>
+							{/* Efeito de brilho no hover */}
+							<div className="absolute inset-0 bg-gradient-to-tr from-whatsapp-eletrico/10 to-whatsapp-luminoso/5 opacity-0 group-hover:opacity-50 transition-opacity duration-300" />
+
+							{/* Indicador de seleção */}
+							{selectedInstances.has(instance.name) && (
+								<motion.div
+									initial={{ scale: 0 }}
+									animate={{ scale: 1 }}
+									className="absolute -top-1 -right-1 bg-whatsapp-eletrico text-white p-2 rounded-bl-xl"
+								>
+									<svg
+										className="w-4 h-4"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M5 13l4 4L19 7"
+										/>
+									</svg>
+								</motion.div>
+							)}
+
+							<div className="relative z-10 space-y-4">
+								{/* Cabeçalho do Card */}
+								<div className="flex items-center justify-between">
+									<div className="flex items-center space-x-3">
+										<div
+											className={`
+                p-3 rounded-full
+                ${
+									instance.connectionStatus === "open"
+										? "bg-whatsapp-green/20"
+										: "bg-red-500/20"
+								}
+              `}
+										>
+											<FaWhatsapp
+												className={`
+                  w-6 h-6
+                  ${
+										instance.connectionStatus === "open"
+											? "text-whatsapp-green animate-pulse"
+											: "text-red-500"
+									}
+                `}
+											/>
+										</div>
+										<div>
+											<h3 className="text-xl font-bold text-whatsapp-branco">
+												{instance.name}
+											</h3>
+											<p className="text-sm text-whatsapp-cinzaClaro">
+												{instance.profileName || "Sem nome de perfil"}
+											</p>
+										</div>
+									</div>
+
+									<div
+										className={`
+              px-3 py-1 rounded-full text-sm
+              ${
+								instance.connectionStatus === "open"
+									? "bg-green-500/20 text-green-400"
+									: "bg-red-500/20 text-red-400"
+							}
+            `}
+									>
+										{instance.connectionStatus === "open"
+											? "Online"
+											: "Offline"}
+									</div>
 								</div>
-								{renderStatusIcon(instance.connectionStatus)}
+
+								{/* Status da Conexão */}
+								<div
+									className={`
+            flex items-center space-x-2 p-2 rounded-lg
+            ${
+							instance.connectionStatus === "open"
+								? "bg-green-500/10 text-green-400 border border-green-500/20"
+								: "bg-red-500/10 text-red-400 border border-red-500/20"
+						}
+          `}
+								>
+									<div
+										className={`
+              w-2 h-2 rounded-full
+              ${
+								instance.connectionStatus === "open"
+									? "bg-green-400 animate-pulse"
+									: "bg-red-400"
+							}
+            `}
+									/>
+									<span className="text-sm font-medium flex items-center gap-1">
+										{instance.connectionStatus === "open" ? (
+											<>
+												<BsWifi className="w-3 h-3" />
+												Conectado
+											</>
+										) : (
+											<>
+												<BsWifiOff className="w-3 h-3" />
+												Desconectado
+											</>
+										)}
+									</span>
+								</div>
+
+								{/* Número do WhatsApp */}
+								{instance.ownerJid && (
+									<div className="text-sm text-whatsapp-cinzaClaro/80 pt-2 border-t border-whatsapp-cinza/20">
+										<div className="flex items-center space-x-2">
+											<FaWhatsapp className="w-4 h-4 text-whatsapp-green/60" />
+											<p className="truncate">
+												{instance.ownerJid.split("@")[0]}
+											</p>
+										</div>
+									</div>
+								)}
 							</div>
 						</motion.div>
 					))}
@@ -446,7 +565,7 @@ const Aquecimento: React.FC = () => {
 							<div className="space-y-2 max-h-48 overflow-y-auto">
 								{texts.map((text, index) => (
 									<motion.div
-										key={index}
+										key={`text-${index}`}
 										initial={{ opacity: 0, x: -20 }}
 										animate={{ opacity: 1, x: 0 }}
 										className="flex justify-between items-center p-2 rounded bg-gray-200 dark:bg-whatsapp-cinza"
@@ -494,7 +613,7 @@ const Aquecimento: React.FC = () => {
 						<div className="grid grid-cols-3 gap-2">
 							{mediaType === "image" &&
 								images.map((img, index) => (
-									<div key={index} className="relative">
+									<div key={`image-${index}`} className="relative">
 										<img
 											src={img.preview}
 											alt={img.fileName}
@@ -510,7 +629,7 @@ const Aquecimento: React.FC = () => {
 								))}
 							{mediaType === "video" &&
 								videos.map((vid, index) => (
-									<div key={index} className="relative">
+									<div key={`video-${index}`} className="relative">
 										<video
 											src={vid.preview}
 											className="w-full h-24 object-cover rounded"
@@ -526,7 +645,7 @@ const Aquecimento: React.FC = () => {
 								))}
 							{mediaType === "audio" &&
 								audios.map((aud, index) => (
-									<div key={index} className="relative w-full">
+									<div key={`audio-${index}`} className="relative w-full">
 										<audio controls className="w-full">
 											<source src={aud.preview} type={aud.type} />
 										</audio>
@@ -540,7 +659,7 @@ const Aquecimento: React.FC = () => {
 								))}
 							{mediaType === "sticker" &&
 								stickers.map((sticker, index) => (
-									<div key={index} className="relative">
+									<div key={`sticker-${index}`} className="relative">
 										<img
 											src={sticker.preview}
 											alt={sticker.fileName}

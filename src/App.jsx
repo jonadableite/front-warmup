@@ -1,3 +1,4 @@
+import { useDarkMode } from "@/hooks/useDarkMode";
 import React from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
@@ -15,8 +16,19 @@ import Numeros from "./pages/Numeros";
 import PricingPage from "./pages/Pricing";
 import Register from "./pages/Register";
 import Return from "./pages/Return";
+import { useEffect } from "react";
 
 function App() {
+	const [isDarkMode] = useDarkMode();
+
+	useEffect(() => {
+		if (isDarkMode) {
+			document.documentElement.classList.add("dark");
+		} else {
+			document.documentElement.classList.remove("dark");
+		}
+	}, [isDarkMode]);
+
 	return (
 		<SidebarProvider>
 			<AppContent />
