@@ -5,10 +5,79 @@ import type React from "react";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { BsFileText, BsPlay, BsTrash, BsWifi, BsWifiOff } from "react-icons/bs";
-import { FaServer, FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp } from "react-icons/fa";
+
 // Configurações da API
 const API_BASE_URL = "http://localhost:3050";
 const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
+
+const SyncButton: React.FC<{ onClick: () => void; loading: boolean }> = ({
+	onClick,
+	loading,
+}) => {
+	return (
+		<motion.button
+			onClick={onClick}
+			whileHover={{ scale: 1.05 }}
+			whileTap={{ scale: 0.95 }}
+			className={`
+        flex items-center gap-2 px-4 py-2
+        rounded-lg text-sm font-medium
+        transition-all duration-300
+        bg-gradient-to-r from-whatsapp-eletrico/10 to-whatsapp-green/5
+        hover:from-whatsapp-eletrico/20 hover:to-whatsapp-green/10
+        border border-whatsapp-eletrico/30
+        text-whatsapp-eletrico
+        shadow-lg hover:shadow-xl
+        backdrop-blur-sm
+      `}
+			disabled={loading}
+		>
+			<motion.div
+				animate={loading ? { rotate: 360 } : { rotate: 0 }}
+				transition={{
+					duration: 1,
+					ease: "linear",
+					repeat: loading ? Number.POSITIVE_INFINITY : 0,
+					repeatType: "loop",
+				}}
+			>
+				<svg
+					className="w-5 h-5"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+				>
+					{loading ? (
+						// Ícone de loading circular
+						<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10">
+							<animateTransform
+								attributeName="transform"
+								type="rotate"
+								from="0 12 12"
+								to="360 12 12"
+								dur="1s"
+								repeatCount="indefinite"
+							/>
+						</path>
+					) : (
+						// Ícone de sincronização
+						<>
+							<path d="M21 2v6h-6" />
+							<path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+							<path d="M3 22v-6h6" />
+							<path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+						</>
+					)}
+				</svg>
+			</motion.div>
+			{loading ? "Sincronizando..." : "Sincronizar"}
+		</motion.button>
+	);
+};
 
 // Emojis para reações
 const REACTION_EMOJIS = [
@@ -33,10 +102,11 @@ interface Instancia {
 }
 
 interface MediaContent {
+	type: "image" | "video" | "audio" | "sticker";
 	base64: string;
-	type: string;
 	fileName: string;
-	preview?: string;
+	mimetype: string;
+	caption?: string;
 }
 
 interface PhoneInstance {
@@ -45,22 +115,45 @@ interface PhoneInstance {
 }
 
 export interface WarmupConfig {
+	sessionId: string;
 	phoneInstances: PhoneInstance[];
 	contents: {
 		texts: string[];
-		images: string[];
-		audios: string[];
+		images: {
+			type: string;
+			base64: string;
+			fileName: string;
+			mimetype: string;
+		}[];
+		audios: {
+			type: string;
+			base64: string;
+			fileName: string;
+			mimetype: string;
+		}[];
+		videos: {
+			type: string;
+			base64: string;
+			fileName: string;
+			mimetype: string;
+		}[];
+		stickers: {
+			type: string;
+			base64: string;
+			fileName: string;
+			mimetype: string;
+		}[];
 		emojis: string[];
-		videos: string[];
-		stickers: string[];
 	};
 	config: {
-		reactionChance: number;
+		textChance: number;
 		audioChance: number;
+		reactionChance: number;
 		stickerChance: number;
+		imageChance: number;
+		videoChance: number;
 		minDelay: number;
 		maxDelay: number;
-		videoChance: number;
 	};
 }
 
@@ -95,6 +188,30 @@ const Aquecimento: React.FC = () => {
 		}
 	}, [isDarkMode]);
 
+	axios.interceptors.request.use(
+		(config) => {
+			return config;
+		},
+		(error) => {
+			console.error("Erro na requisição:", error);
+			return Promise.reject(error);
+		},
+	);
+
+	axios.interceptors.response.use(
+		(response) => {
+			return response;
+		},
+		(error) => {
+			console.error("Erro na resposta:", {
+				status: error.response?.status,
+				data: error.response?.data,
+				message: error.message,
+			});
+			return Promise.reject(error);
+		},
+	);
+
 	const fetchInstances = async () => {
 		setLoading(true);
 		try {
@@ -121,10 +238,11 @@ const Aquecimento: React.FC = () => {
 				id: instance.instanceId || instance.id,
 				name: instance.instanceName,
 				connectionStatus: instance.connectionStatus,
-				ownerJid: instance.ownerJid || instance.number,
+				ownerJid: instance.ownerJid || instance.number || instance.phoneNumber,
 				profileName: instance.profileName,
 			}));
 
+			console.log("Instâncias brutas:", instancesData);
 			console.log("Instâncias processadas:", processedInstances);
 			setInstances(processedInstances);
 			setCurrentPlan(currentPlan);
@@ -138,62 +256,222 @@ const Aquecimento: React.FC = () => {
 		}
 	};
 
-	const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
-		const files = event.target.files;
-		if (files) {
-			Array.from(files).forEach((file) => {
-				if (mediaType === "image") {
-					new Compressor(file, {
-						quality: 0.6,
-						success(result) {
-							processFile(result);
-						},
-						error(err) {
-							console.error("Erro ao comprimir imagem:", err.message);
-						},
-					});
-				} else {
-					processFile(file);
-				}
+	const compressImage = async (file: File, maxSizeMB = 2): Promise<Blob> => {
+		return new Promise((resolve, reject) => {
+			new Compressor(file, {
+				quality: 0.8, // Qualidade inicial mais alta
+				maxWidth: 1920, // Resolução máxima mais alta
+				maxHeight: 1080,
+				success(result) {
+					if (result.size > maxSizeMB * 1024 * 1024) {
+						// Se ainda estiver muito grande, comprimir mais
+						new Compressor(file, {
+							quality: 0.6,
+							maxWidth: 1280,
+							maxHeight: 720,
+							success: resolve,
+							error: reject,
+						});
+					} else {
+						resolve(result);
+					}
+				},
+				error: reject,
 			});
+		});
+	};
+
+	const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+		const files = event.target.files;
+		if (!files) return;
+
+		const maxTotalSize = 50 * 1024 * 1024; // 50MB total
+		const maxFileSize = 10 * 1024 * 1024; // 10MB por arquivo
+
+		const totalSize = Array.from(files).reduce(
+			(acc, file) => acc + file.size,
+			0,
+		);
+		if (totalSize > maxTotalSize) {
+			toast.error("O tamanho total dos arquivos excede 50MB");
+			return;
+		}
+
+		setLoading(true);
+		try {
+			for (const file of Array.from(files)) {
+				if (file.size > maxFileSize) {
+					toast.error(`O arquivo ${file.name} excede 10MB`);
+					continue;
+				}
+
+				if (mediaType === "image") {
+					const compressedFile = await compressImage(file);
+					await processFile(compressedFile);
+				} else {
+					await processFile(file);
+				}
+			}
+			toast.success("Arquivos processados com sucesso!");
+		} catch (error) {
+			console.error("Erro ao processar arquivos:", error);
+			toast.error("Erro ao processar arquivos");
+		} finally {
+			setLoading(false);
 		}
 	};
 
-	const processFile = (file: Blob) => {
-		const reader = new FileReader();
-		reader.onloadend = () => {
-			const base64 = (reader.result as string).split(",")[1];
-			const preview = reader.result as string;
-			const newMedia: MediaContent = {
-				base64,
-				type: file.type,
-				fileName: (file as File).name,
-				preview,
+	const processFile = async (file: Blob): Promise<void> => {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onloadend = () => {
+				try {
+					const base64String = reader.result as string;
+					const base64Data = base64String.split(",")[1];
+
+					const getMimetype = (type: string) => {
+						switch (type) {
+							case "image":
+								return "image/jpeg";
+							case "video":
+								return "video/mp4";
+							case "audio":
+								return "audio/mp3";
+							case "sticker":
+								return "image/webp";
+							default:
+								return file.type;
+						}
+					};
+
+					const newMedia: MediaContent = {
+						type: mediaType as "image" | "video" | "audio" | "sticker",
+						base64: base64Data,
+						fileName: (file as File).name,
+						mimetype: getMimetype(mediaType),
+						preview: base64String,
+					};
+
+					switch (mediaType) {
+						case "image":
+							setImages((prev) => [...prev, newMedia]);
+							break;
+						case "video":
+							setVideos((prev) => [...prev, newMedia]);
+							break;
+						case "audio":
+							setAudios((prev) => [...prev, newMedia]);
+							break;
+						case "sticker":
+							setStickers((prev) => [...prev, newMedia]);
+							break;
+					}
+					resolve();
+				} catch (error) {
+					reject(error);
+				}
+			};
+			reader.onerror = reject;
+			reader.readAsDataURL(file);
+		});
+	};
+
+	const handleSaveContent = async () => {
+		try {
+			setLoading(true);
+			const token = localStorage.getItem("token");
+
+			if (!token) {
+				throw new Error("Token de autenticação não encontrado");
+			}
+
+			// Validações
+			if (selectedInstances.size < 2) {
+				toast.error("Selecione pelo menos duas instâncias");
+				return;
+			}
+
+			const phoneInstances = instances
+				.filter((instance) => {
+					const isSelected = selectedInstances.has(instance.name);
+					const hasValidPhoneNumber = instance.ownerJid?.trim();
+					return isSelected && hasValidPhoneNumber;
+				})
+				.map((instance) => ({
+					phoneNumber: instance.ownerJid!.trim().replace("@s.whatsapp.net", ""),
+					instanceId: instance.name,
+				}));
+
+			// Preparar textos (formato correto)
+			const prepareTexts = texts.map((text) => text); // Apenas o texto, sem objeto
+
+			const payload = {
+				phoneInstances,
+				contents: {
+					texts: prepareTexts,
+					images: images.map((img) => ({
+						type: "image",
+						base64: img.base64,
+						fileName: img.fileName,
+						mimetype: img.mimetype,
+					})),
+					audios: audios.map((audio) => ({
+						type: "audio",
+						base64: audio.base64,
+						fileName: audio.fileName,
+						mimetype: audio.mimetype,
+					})),
+					videos: videos.map((video) => ({
+						type: "video",
+						base64: video.base64,
+						fileName: video.fileName,
+						mimetype: video.mimetype,
+					})),
+					stickers: stickers.map((sticker) => ({
+						type: "sticker",
+						base64: sticker.base64,
+						fileName: sticker.fileName,
+						mimetype: sticker.mimetype,
+					})),
+					emojis: REACTION_EMOJIS,
+				},
+				config: {
+					textChance: 0.8,
+					audioChance: 0.3,
+					reactionChance: 0.4,
+					stickerChance: 0.2,
+					imageChance: 0.3,
+					videoChance: 0.1,
+					minDelay: 3000,
+					maxDelay: 90000,
+				},
 			};
 
-			switch (mediaType) {
-				case "image":
-					setImages((prev) => [...prev, newMedia]);
-					break;
-				case "video":
-					setVideos((prev) => [...prev, newMedia]);
-					break;
-				case "audio":
-					setAudios((prev) => [...prev, newMedia]);
-					break;
-				case "sticker":
-					setStickers((prev) => [...prev, newMedia]);
-					break;
-			}
-		};
-		reader.readAsDataURL(file);
-	};
+			console.log("Payload sendo enviado:", payload);
 
-	const processBase64 = (base64String: string, type: string) => {
-		if (!base64String.startsWith("data:")) {
-			return `data:${type};base64,${base64String}`;
+			const response = await axios.post(
+				`${API_BASE_URL}/api/warmup/config`,
+				payload,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+				},
+			);
+
+			if (response.data.success) {
+				setIsWarmingUp(true);
+				toast.success("Aquecimento iniciado com sucesso!");
+			}
+		} catch (error: any) {
+			console.error("Erro ao iniciar aquecimento:", error);
+			toast.error(
+				error.response?.data?.message || "Erro ao iniciar aquecimento",
+			);
+		} finally {
+			setLoading(false);
 		}
-		return base64String;
 	};
 
 	const removeMedia = (index: number, type: string) => {
@@ -213,121 +491,44 @@ const Aquecimento: React.FC = () => {
 		}
 	};
 
-	const handleSaveContent = async () => {
-		if (selectedInstances.size < 2) {
-			toast.error(
-				"Selecione pelo menos duas instâncias para conversar entre elas",
-			);
-			return;
-		}
+	useEffect(() => {
+		let interval: NodeJS.Timeout;
 
-		if (
-			texts.length === 0 &&
-			images.length === 0 &&
-			audios.length === 0 &&
-			videos.length === 0 &&
-			stickers.length === 0
-		) {
-			toast.error("Adicione pelo menos um tipo de conteúdo");
-			return;
-		}
+		const checkWarmupStatus = async () => {
+			try {
+				const token = localStorage.getItem("token");
+				if (!token) return;
 
-		try {
-			const token = localStorage.getItem("token");
-			if (!token) {
-				throw new Error("Token de autenticação não encontrado");
-			}
-
-			const phoneInstances: PhoneInstance[] = instances
-				.filter((instance) => {
-					const isSelected = selectedInstances.has(instance.name);
-					const hasValidPhoneNumber =
-						instance.ownerJid && instance.ownerJid.trim() !== "";
-					return isSelected && hasValidPhoneNumber;
-				})
-				.map((instance) => ({
-					phoneNumber: instance.ownerJid ? instance.ownerJid.trim() : "",
-					instanceId: instance.name,
-				}));
-
-			if (phoneInstances.length < 2) {
-				toast.error("Selecione pelo menos duas instâncias com números válidos");
-				return;
-			}
-
-			const payload = {
-				phoneInstances,
-				contents: {
-					texts,
-					images: images.map((img) => processBase64(img.base64, img.type)),
-					audios: audios.map((aud) => processBase64(aud.base64, aud.type)),
-					emojis: REACTION_EMOJIS,
-					videos: videos.map((vid) => processBase64(vid.base64, vid.type)),
-					stickers: stickers.map((sticker) =>
-						processBase64(sticker.base64, sticker.type),
-					),
-				},
-				config: {
-					reactionChance: 0.4,
-					audioChance: 0.3,
-					stickerChance: 0.2,
-					minDelay: 3000,
-					maxDelay: 90000,
-					videoChance: 0.2,
-				},
-			};
-
-			console.log("Iniciando aquecimento com payload:", payload);
-
-			const response = await axios.post(
-				`${API_BASE_URL}/warmup/config`,
-				payload,
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-						"Content-Type": "application/json",
-					},
-				},
-			);
-
-			if (response.status === 200) {
-				toast.success("Aquecimento iniciado com sucesso!");
-				setIsWarmingUp(true);
-			} else {
-				throw new Error("Erro ao iniciar aquecimento");
-			}
-		} catch (error: any) {
-			console.error("Erro ao iniciar aquecimento:", error);
-			toast.error(
-				error.response?.data?.message ||
-					error.message ||
-					"Erro ao iniciar aquecimento",
-			);
-		}
-	};
-
-	const handleStopWarmup = async () => {
-		try {
-			const token = localStorage.getItem("token");
-			if (!token) {
-				throw new Error("Token de autenticação não encontrado");
-			}
-			await axios.post(
-				`${API_BASE_URL}/warmup/stop-all`,
-				{},
-				{
+				const response = await axios.get(`${API_BASE_URL}/api/warmup/status`, {
 					headers: {
 						Authorization: `Bearer ${token}`,
 					},
-				},
-			);
-			toast.success("Aquecimento de todas as instâncias parado com sucesso!");
-			setIsWarmingUp(false);
-		} catch (error: any) {
-			console.error("Erro ao parar aquecimento:", error);
-			toast.error("Erro ao parar aquecimento de todas as instâncias");
+				});
+
+				if (response.data.globalStatus !== "active") {
+					setIsWarmingUp(false);
+					clearInterval(interval);
+				}
+			} catch (error) {
+				console.error("Erro ao verificar status:", error);
+			}
+		};
+
+		if (isWarmingUp) {
+			interval = setInterval(checkWarmupStatus, 5000);
+			checkWarmupStatus(); // Verificar imediatamente
+		} else {
+			if (interval) {
+				clearInterval(interval);
+			}
 		}
-	};
+
+		return () => {
+			if (interval) {
+				clearInterval(interval);
+			}
+		};
+	}, [isWarmingUp]);
 
 	const toggleInstanceSelection = (instanceName: string) => {
 		setSelectedInstances((prev) => {
@@ -361,6 +562,35 @@ const Aquecimento: React.FC = () => {
 		);
 	};
 
+	const handleStopWarmup = async () => {
+		try {
+			setLoading(true);
+			const token = localStorage.getItem("token");
+
+			if (!token) {
+				throw new Error("Token de autenticação não encontrado");
+			}
+
+			await axios.post(
+				`${API_BASE_URL}/api/warmup/stop-all`,
+				{},
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				},
+			);
+
+			setIsWarmingUp(false);
+			toast.success("Aquecimento parado com sucesso!");
+		} catch (error: any) {
+			console.error("Erro ao parar aquecimento:", error);
+			toast.error(error.response?.data?.message || "Erro ao parar aquecimento");
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	return (
 		<div className="min-h-screen p-6 bg-gray-100 dark:bg-whatsapp-profundo text-black dark:text-white">
 			<div className="max-w-7xl mx-auto space-y-6">
@@ -374,9 +604,11 @@ const Aquecimento: React.FC = () => {
 						<h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green to-whatsapp-light">
 							WhatsApp Warmer
 						</h1>
-						<p className="text-gray-400">Gerenciamento de Instâncias</p>
+						<h2 className="text-lg text-whatsapp-cinzaClaro">
+							Gerenciamento de Instâncias
+						</h2>
 					</div>
-					<FaServer className="text-4xl text-whatsapp-eletrico" />
+					<SyncButton onClick={fetchInstances} loading={loading} />
 				</motion.div>
 
 				{/* Informações de Plano */}
@@ -683,18 +915,76 @@ const Aquecimento: React.FC = () => {
 						whileHover={{ scale: 1.05 }}
 						whileTap={{ scale: 0.95 }}
 						onClick={handleSaveContent}
-						className="bg-gradient-to-r from-whatsapp-dark to-whatsapp-light/40 px-6 py-3 rounded-lg text-white font-bold hover:from-whatsapp-green/40 hover:to-whatsapp-green transition-all"
+						disabled={loading}
+						className={`
+            flex items-center gap-2 px-6 py-3 rounded-lg
+            ${
+							loading
+								? "bg-gray-500 cursor-not-allowed"
+								: "bg-gradient-to-r from-whatsapp-dark to-whatsapp-light/40"
+						}
+            text-white font-bold transition-all
+        `}
 					>
-						Iniciar Aquecimento
+						{loading ? (
+							<>
+								<svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+									<circle
+										className="opacity-25"
+										cx="12"
+										cy="12"
+										r="10"
+										stroke="currentColor"
+										strokeWidth="4"
+										fill="none"
+									/>
+									<path
+										className="opacity-75"
+										fill="currentColor"
+										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+									/>
+								</svg>
+								Iniciando...
+							</>
+						) : (
+							"Iniciar Aquecimento"
+						)}
 					</motion.button>
+
 					{isWarmingUp && (
 						<motion.button
 							whileHover={{ scale: 1.05 }}
 							whileTap={{ scale: 0.95 }}
 							onClick={handleStopWarmup}
 							className="bg-gradient-to-r from-red-500 to-orange-600 px-6 py-3 rounded-lg text-white font-bold hover:from-red-600 hover:to-orange-700 transition-all"
+							disabled={loading}
 						>
-							Parar Aquecimento
+							{loading ? (
+								<div className="flex items-center">
+									<svg
+										className="animate-spin h-5 w-5 mr-3"
+										viewBox="0 0 24 24"
+									>
+										<circle
+											className="opacity-25"
+											cx="12"
+											cy="12"
+											r="10"
+											stroke="currentColor"
+											strokeWidth="4"
+											fill="none"
+										/>
+										<path
+											className="opacity-75"
+											fill="currentColor"
+											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+										/>
+									</svg>
+									Parando...
+								</div>
+							) : (
+								"Parar Aquecimento"
+							)}
 						</motion.button>
 					)}
 				</div>

@@ -105,3 +105,16 @@ body {
 	margin-top: 64px;
 	flex: 1;
 }
+
+..status-active {
+  border-color: #4CAF50 !important;
+}
+
+.status-paused {
+  border-color: #FFC107 !important;
+}
+
+.status-inactive {
+  border-color: #9E9E9E !important;
+}
+
