@@ -1,21 +1,23 @@
-// axiosConfig.js
+// src/axiosConfig.ts
 import axios from "axios";
 
 const instance = axios.create({
-	baseURL: import.meta.env.VITE_API_BASE_URL,
+	baseURL: "http://localhost:3050",
+	headers: {
+		"Content-Type": "application/json",
+	},
 });
 
 // Interceptor para adicionar o token de autenticação
 instance.interceptors.request.use(
-	(config: { headers: { Authorization: string } }) => {
+	(config) => {
 		const token = localStorage.getItem("token");
 		if (token) {
 			config.headers.Authorization = `Bearer ${token}`;
 		}
 		return config;
 	},
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	(error: any) => {
+	(error) => {
 		return Promise.reject(error);
 	},
 );

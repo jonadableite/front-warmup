@@ -1,9 +1,10 @@
+// src/pages/Register.tsx
+import axios, { isAxiosError } from "axios";
 import { motion } from "framer-motion";
 import { AtSignIcon, LockIcon, UserIcon } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "../axiosConfig";
 
 const Register: React.FC = () => {
 	const [name, setName] = useState("");
@@ -13,29 +14,36 @@ const Register: React.FC = () => {
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 	const navigate = useNavigate();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError("");
 		setSuccess("");
+		setIsLoading(true);
 
 		if (!name || !email || !password || !confirmPassword) {
 			setError("Por favor, preencha todos os campos.");
+			setIsLoading(false);
 			return;
 		}
 
 		if (password !== confirmPassword) {
 			setError("As senhas não coincidem.");
+			setIsLoading(false);
 			return;
 		}
 
 		try {
-			const response = await axios.post("/users", {
-				name,
-				email,
-				password,
-			});
+			const response = await axios.post(
+				"http://localhost:3050/api/users/register",
+				{
+					name,
+					email,
+					password,
+				},
+			);
 
 			if (response.status === 201) {
 				setSuccess("Usuário registrado com sucesso! Redirecionando...");
@@ -44,11 +52,17 @@ const Register: React.FC = () => {
 				}, 2000);
 			}
 		} catch (err) {
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.error || "Erro ao registrar usuário.");
+			if (isAxiosError(err)) {
+				setError(
+					err.response?.data?.error ||
+						err.response?.data?.message ||
+						"Erro ao registrar usuário.",
+				);
 			} else {
 				setError("Erro ao registrar usuário.");
 			}
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -77,6 +91,16 @@ const Register: React.FC = () => {
 					</motion.div>
 				)}
 
+				{success && (
+					<motion.div
+						initial={{ opacity: 0, y: -20 }}
+						animate={{ opacity: 1, y: 0 }}
+						className="bg-green-500/20 border border-green-500/50 text-green-300 px-4 py-3 rounded-xl mb-6 text-center"
+					>
+						{success}
+					</motion.div>
+				)}
+
 				<form onSubmit={handleSubmit} className="space-y-6">
 					<div className="relative">
 						<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -87,7 +111,7 @@ const Register: React.FC = () => {
 							placeholder="Nome completo"
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus: ring-whatsapp-dark transition duration-300"
+							className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-whatsapp-dark transition duration-300"
 						/>
 					</div>
 
@@ -100,7 +124,7 @@ const Register: React.FC = () => {
 							placeholder="Seu melhor email"
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
-							className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus: ring-whatsapp-dark transition duration-300"
+							className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-whatsapp-dark transition duration-300"
 						/>
 					</div>
 
@@ -113,7 +137,7 @@ const Register: React.FC = () => {
 							placeholder="Senha"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
-							className="w-full pl-10 pr-10 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus: ring-whatsapp-dark transition duration-300"
+							className="w-full pl-10 pr-10 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-whatsapp-dark transition duration-300"
 						/>
 						<button
 							type="button"
@@ -133,15 +157,25 @@ const Register: React.FC = () => {
 							placeholder="Confirmar Senha"
 							value={confirmPassword}
 							onChange={(e) => setConfirmPassword(e.target.value)}
-							className="w-full pl-10 pr-10 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus: ring-whatsapp-dark transition duration-300"
+							className="w-full pl-10 pr-10 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-whatsapp-dark transition duration-300"
 						/>
 					</div>
 
 					<button
 						type="submit"
-						className="w-full py-3 bg-gradient-to-r from-whatsapp-green/30 to-whatsapp-green text-white rounded-xl hover:from-whatsapp-dark hover:to-whatsapp-profundo transition duration-300 transform hover:scale-105"
+						disabled={isLoading}
+						className={`w-full py-3 bg-gradient-to-r from-whatsapp-green/30 to-whatsapp-green text-white rounded-xl
+              hover:from-whatsapp-dark hover:to-whatsapp-profundo transition duration-300
+              transform hover:scale-105 ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
 					>
-						Criar Conta
+						{isLoading ? (
+							<div className="flex items-center justify-center">
+								<div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+								Registrando...
+							</div>
+						) : (
+							"Criar Conta"
+						)}
 					</button>
 
 					<div className="text-center mt-6">

@@ -170,11 +170,20 @@ const Aquecimento: React.FC = () => {
 	const [stickers, setStickers] = useState<MediaContent[]>([]);
 	const [mediaType, setMediaType] = useState("image");
 	const [loading, setLoading] = useState(false);
+	const [isStarting, setIsStarting] = useState(false);
 	const [isWarmingUp, setIsWarmingUp] = useState(false);
+
+	const [isStoppingWarmup, setIsStoppingWarmup] = useState<boolean>(false);
 	const [isDarkMode, setIsDarkMode] = useState(true);
 	const [instanceLimit, setInstanceLimit] = useState(0);
 	const [remainingSlots, setRemainingSlots] = useState(0);
-	const [currentPlan, setCurrentPlan] = useState("free");
+	const [showDailyLimitWarning, setShowDailyLimitWarning] = useState(false);
+	const [showDailyLimitModal, setShowDailyLimitModal] = useState(false);
+
+	const [currentPlan, setCurrentPlan] = useState("");
+	const [dailyMessageCount, setDailyMessageCount] = useState<{
+		[key: string]: number;
+	}>({});
 
 	useEffect(() => {
 		fetchInstances();
@@ -255,6 +264,96 @@ const Aquecimento: React.FC = () => {
 			setLoading(false);
 		}
 	};
+
+	const checkDailyLimit = async (instanceId: string) => {
+		try {
+			const token = localStorage.getItem("token");
+			const response = await axios.get(
+				`${API_BASE_URL}/api/instances/instance/${instanceId}/stats`,
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				},
+			);
+
+			const { totalDaily } = response.data;
+			return totalDaily < 20; // Retorna true se ainda não atingiu o limite
+		} catch (error) {
+			console.error("Erro ao verificar limite diário:", error);
+			return false;
+		}
+	};
+
+	const FreePlanWarning: React.FC<{
+		onClose: () => void;
+		onContinue: () => void;
+	}> = ({ onClose, onContinue }) => (
+		<motion.div
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+		>
+			<motion.div
+				initial={{ scale: 0.9 }}
+				animate={{ scale: 1 }}
+				className="bg-white dark:bg-whatsapp-cinza rounded-xl p-6 max-w-md mx-4 shadow-2xl"
+			>
+				<h3 className="text-xl font-bold mb-4 text-whatsapp-eletrico">
+					Informação do Plano Gratuito
+				</h3>
+				<p className="text-gray-700 dark:text-gray-300 mb-4">
+					Você está usando o plano gratuito, que permite enviar até 20 mensagens
+					por dia por instância. O aquecimento será interrompido automaticamente
+					quando atingir este limite.
+				</p>
+				<div className="space-y-2">
+					<button
+						onClick={() => {
+							onContinue();
+							onClose();
+						}}
+						className="w-full bg-whatsapp-eletrico text-white py-2 rounded-lg hover:bg-whatsapp-green transition-colors"
+					>
+						Continuar
+					</button>
+				</div>
+			</motion.div>
+		</motion.div>
+	);
+
+	const DailyLimitModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
+		<motion.div
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			exit={{ opacity: 0 }}
+			className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+		>
+			<motion.div
+				initial={{ scale: 0.9 }}
+				animate={{ scale: 1 }}
+				className="bg-white dark:bg-whatsapp-cinza p-6 rounded-lg max-w-md w-full"
+			>
+				<h2 className="text-2xl font-bold mb-4 text-whatsapp-eletrico">
+					Limite Diário Atingido
+				</h2>
+				<p className="mb-4">
+					Você atingiu o limite diário de 20 mensagens por instância para o
+					plano gratuito. O aquecimento foi interrompido automaticamente.
+				</p>
+				<p className="mb-4">
+					Considere atualizar para um plano premium para continuar o aquecimento
+					sem limites.
+				</p>
+				<div className="flex justify-end">
+					<button
+						onClick={onClose}
+						className="bg-whatsapp-eletrico text-white px-4 py-2 rounded hover:bg-whatsapp-green transition-colors"
+					>
+						Entendi
+					</button>
+				</div>
+			</motion.div>
+		</motion.div>
+	);
 
 	const compressImage = async (file: File, maxSizeMB = 2): Promise<Blob> => {
 		return new Promise((resolve, reject) => {
@@ -376,16 +475,58 @@ const Aquecimento: React.FC = () => {
 		});
 	};
 
+	const DailyLimitWarning = ({
+		onClose,
+		onContinue,
+	}: {
+		onClose: () => void;
+		onContinue: () => void;
+	}) => (
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+			<div className="bg-white dark:bg-whatsapp-profundo p-6 rounded-xl max-w-md">
+				<h3 className="text-xl font-bold mb-4">Aviso - Plano Gratuito</h3>
+				<p className="mb-4">
+					Você está usando o plano gratuito, que permite enviar até 20 mensagens
+					por dia por instância. O aquecimento será interrompido automaticamente
+					quando atingir este limite.
+				</p>
+				<div className="flex justify-end space-x-4">
+					<button
+						onClick={onClose}
+						className="px-4 py-2 bg-gray-500 text-white rounded-lg"
+					>
+						Cancelar
+					</button>
+					<button
+						onClick={onContinue}
+						className="px-4 py-2 bg-whatsapp-green text-white rounded-lg"
+					>
+						Continuar
+					</button>
+				</div>
+			</div>
+		</div>
+	);
+
+	const [startingWarmup, setStartingWarmup] = useState(false);
+
 	const handleSaveContent = async () => {
+		if (currentPlan === "free") {
+			setShowDailyLimitWarning(true);
+		} else {
+			await startWarmup();
+		}
+	};
+
+	const startWarmup = async () => {
 		try {
-			setLoading(true);
+			setIsStarting(true);
 			const token = localStorage.getItem("token");
 
 			if (!token) {
 				throw new Error("Token de autenticação não encontrado");
 			}
 
-			// Validações
 			if (selectedInstances.size < 2) {
 				toast.error("Selecione pelo menos duas instâncias");
 				return;
@@ -402,13 +543,11 @@ const Aquecimento: React.FC = () => {
 					instanceId: instance.name,
 				}));
 
-			// Preparar textos (formato correto)
-			const prepareTexts = texts.map((text) => text); // Apenas o texto, sem objeto
-
+			// Criação do payload
 			const payload = {
 				phoneInstances,
 				contents: {
-					texts: prepareTexts,
+					texts: texts,
 					images: images.map((img) => ({
 						type: "image",
 						base64: img.base64,
@@ -436,18 +575,16 @@ const Aquecimento: React.FC = () => {
 					emojis: REACTION_EMOJIS,
 				},
 				config: {
-					textChance: 0.8,
+					textChance: 0.3,
 					audioChance: 0.3,
-					reactionChance: 0.4,
-					stickerChance: 0.2,
-					imageChance: 0.3,
+					reactionChance: 0.3,
+					stickerChance: 0.4,
+					imageChance: 0.1,
 					videoChance: 0.1,
 					minDelay: 3000,
 					maxDelay: 90000,
 				},
 			};
-
-			console.log("Payload sendo enviado:", payload);
 
 			const response = await axios.post(
 				`${API_BASE_URL}/api/warmup/config`,
@@ -461,16 +598,49 @@ const Aquecimento: React.FC = () => {
 			);
 
 			if (response.data.success) {
-				setIsWarmingUp(true);
-				toast.success("Aquecimento iniciado com sucesso!");
+				// Aguardar um momento para o backend atualizar o status
+				await new Promise((resolve) => setTimeout(resolve, 2000));
+
+				// Verificar se o status foi realmente atualizado
+				const statusResponse = await axios.get(
+					`${API_BASE_URL}/api/warmup/status`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					},
+				);
+
+				if (statusResponse.data.globalStatus === "active") {
+					setIsWarmingUp(true);
+					toast.success("Aquecimento iniciado com sucesso!");
+				} else {
+					// Tentar novamente após mais alguns segundos
+					await new Promise((resolve) => setTimeout(resolve, 2000));
+					const finalCheck = await axios.get(
+						`${API_BASE_URL}/api/warmup/status`,
+						{
+							headers: {
+								Authorization: `Bearer ${token}`,
+							},
+						},
+					);
+
+					setIsWarmingUp(finalCheck.data.globalStatus === "active");
+				}
+			} else {
+				throw new Error(
+					response.data.message || "Falha ao iniciar aquecimento",
+				);
 			}
 		} catch (error: any) {
 			console.error("Erro ao iniciar aquecimento:", error);
 			toast.error(
 				error.response?.data?.message || "Erro ao iniciar aquecimento",
 			);
+			setIsWarmingUp(false);
 		} finally {
-			setLoading(false);
+			setIsStarting(false);
 		}
 	};
 
@@ -505,22 +675,51 @@ const Aquecimento: React.FC = () => {
 					},
 				});
 
-				if (response.data.globalStatus !== "active") {
+				console.log("Status do aquecimento:", response.data);
+
+				const isActive = response.data.globalStatus === "active";
+				setIsWarmingUp(isActive);
+
+				if (!isActive) {
+					setIsStarting(false);
+				}
+
+				// Verificar se todas as instâncias estão pausadas
+				const allPaused = Object.values(response.data.instances).every(
+					(instance: any) => instance.status === "paused",
+				);
+
+				if (allPaused && isWarmingUp) {
 					setIsWarmingUp(false);
-					clearInterval(interval);
+					setIsStarting(false);
+					toast.success("O aquecimento foi pausado", {
+						duration: 3000,
+						icon: "⏸️",
+					});
+				}
+
+				// Verificar limite diário
+				if (response.data.dailyLimitReached) {
+					toast.error("Limite diário de mensagens atingido!", {
+						duration: 5000,
+						icon: "⚠️",
+					});
+					setShowDailyLimitModal(true);
+					await handleStopWarmup();
 				}
 			} catch (error) {
 				console.error("Erro ao verificar status:", error);
+				setIsWarmingUp(false);
+				setIsStarting(false);
 			}
 		};
 
-		if (isWarmingUp) {
-			interval = setInterval(checkWarmupStatus, 5000);
-			checkWarmupStatus(); // Verificar imediatamente
-		} else {
-			if (interval) {
-				clearInterval(interval);
-			}
+		// Verificar status inicial na montagem do componente
+		checkWarmupStatus();
+
+		// Configurar intervalo se estiver aquecendo ou iniciando
+		if (isWarmingUp || isStarting) {
+			interval = setInterval(checkWarmupStatus, 2000);
 		}
 
 		return () => {
@@ -528,7 +727,7 @@ const Aquecimento: React.FC = () => {
 				clearInterval(interval);
 			}
 		};
-	}, [isWarmingUp]);
+	}, [isWarmingUp, isStarting]);
 
 	const toggleInstanceSelection = (instanceName: string) => {
 		setSelectedInstances((prev) => {
@@ -564,42 +763,72 @@ const Aquecimento: React.FC = () => {
 
 	const handleStopWarmup = async () => {
 		try {
-			setLoading(true);
+			setIsStoppingWarmup(true);
 			const token = localStorage.getItem("token");
 
 			if (!token) {
 				throw new Error("Token de autenticação não encontrado");
 			}
 
-			await axios.post(
+			const response = await axios.post(
 				`${API_BASE_URL}/api/warmup/stop-all`,
 				{},
 				{
 					headers: {
 						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
 					},
 				},
 			);
 
-			setIsWarmingUp(false);
-			toast.success("Aquecimento parado com sucesso!");
+			if (response.data.success) {
+				// Atualizar estados imediatamente
+				setIsWarmingUp(false);
+				setIsStarting(false);
+				toast.success("Aquecimento parado com sucesso!");
+
+				// Aguardar um momento para garantir que o backend atualizou os estados
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+
+				// Verificar o status atual após parar
+				const statusResponse = await axios.get(
+					`${API_BASE_URL}/api/warmup/status`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					},
+				);
+
+				// Forçar atualização do estado com base no status real
+				const isActive = statusResponse.data.globalStatus === "active";
+				setIsWarmingUp(isActive);
+				setIsStarting(false);
+			}
 		} catch (error: any) {
 			console.error("Erro ao parar aquecimento:", error);
 			toast.error(error.response?.data?.message || "Erro ao parar aquecimento");
 		} finally {
-			setLoading(false);
+			setIsStoppingWarmup(false);
 		}
 	};
 
 	return (
 		<div className="min-h-screen p-6 bg-gray-100 dark:bg-whatsapp-profundo text-black dark:text-white">
 			<div className="max-w-7xl mx-auto space-y-6">
-				{/* Cabeçalho */}
-				<motion.div
-					initial={{ opacity: 0, y: -20 }}
-					animate={{ opacity: 1, y: 0 }}
-					className="flex justify-between items-center border-b border-gray-700 pb-4"
-				>
+				{showDailyLimitWarning && (
+					<FreePlanWarning
+						onClose={() => setShowDailyLimitWarning(false)}
+						onContinue={async () => {
+							await startWarmup();
+							setShowDailyLimitWarning(false);
+						}}
+					/>
+				)}
+				{showDailyLimitModal && (
+					<DailyLimitModal onClose={() => setShowDailyLimitModal(false)} />
+				)}
+				<motion.div className="flex justify-between items-center border-b border-gray-700 pb-4">
 					<div>
 						<h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green to-whatsapp-light">
 							WhatsApp Warmer
@@ -612,11 +841,13 @@ const Aquecimento: React.FC = () => {
 				</motion.div>
 
 				{/* Informações de Plano */}
-				<div className="mb-4 bg-blue-100 dark:bg-whatsapp-cinza p-3 rounded text-black dark:text-white flex justify-between items-center">
-					<div className="flex space-x-3">
-						<span>Plano Atual: {currentPlan}</span>
-						<span>Limite de Instâncias: {instanceLimit}</span>
-						<span>Slots Restantes: {remainingSlots}</span>
+				<div className="mb-4 bg-blue-100 dark:bg-whatsapp-cinza p-3 rounded text-black dark:text-white">
+					<div className="flex justify-between items-center">
+						<div className="flex space-x-3">
+							<span>Plano Atual: {currentPlan}</span>
+							<span>Limite de Instâncias: {instanceLimit}</span>
+							<span>Slots Restantes: {remainingSlots}</span>
+						</div>
 					</div>
 				</div>
 
@@ -911,58 +1142,34 @@ const Aquecimento: React.FC = () => {
 
 				{/* Botões de Controle */}
 				<div className="flex justify-end space-x-4">
-					<motion.button
-						whileHover={{ scale: 1.05 }}
-						whileTap={{ scale: 0.95 }}
-						onClick={handleSaveContent}
-						disabled={loading}
-						className={`
-            flex items-center gap-2 px-6 py-3 rounded-lg
-            ${
-							loading
-								? "bg-gray-500 cursor-not-allowed"
-								: "bg-gradient-to-r from-whatsapp-dark to-whatsapp-light/40"
-						}
-            text-white font-bold transition-all
-        `}
-					>
-						{loading ? (
-							<>
-								<svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-									<circle
-										className="opacity-25"
-										cx="12"
-										cy="12"
-										r="10"
-										stroke="currentColor"
-										strokeWidth="4"
-										fill="none"
-									/>
-									<path
-										className="opacity-75"
-										fill="currentColor"
-										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-									/>
-								</svg>
-								Iniciando...
-							</>
-						) : (
-							"Iniciar Aquecimento"
-						)}
-					</motion.button>
-
-					{isWarmingUp && (
+					{!isWarmingUp && !isStarting ? (
 						<motion.button
 							whileHover={{ scale: 1.05 }}
 							whileTap={{ scale: 0.95 }}
-							onClick={handleStopWarmup}
-							className="bg-gradient-to-r from-red-500 to-orange-600 px-6 py-3 rounded-lg text-white font-bold hover:from-red-600 hover:to-orange-700 transition-all"
+							onClick={handleSaveContent}
 							disabled={loading}
+							className={`
+        flex items-center justify-center gap-2 px-8 py-3 rounded-lg
+        ${
+					loading
+						? "bg-gray-500 cursor-not-allowed"
+						: "bg-gradient-to-r from-whatsapp-dark to-whatsapp-green/80"
+				}
+        text-white font-bold transition-all duration-300
+        shadow-lg hover:shadow-xl
+        border border-whatsapp-eletrico/20
+        backdrop-blur-sm
+        relative overflow-hidden
+        group
+      `}
 						>
+							{/* Efeito de brilho no hover */}
+							<div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+
 							{loading ? (
-								<div className="flex items-center">
+								<>
 									<svg
-										className="animate-spin h-5 w-5 mr-3"
+										className="animate-spin h-5 w-5 mr-2"
 										viewBox="0 0 24 24"
 									>
 										<circle
@@ -980,10 +1187,68 @@ const Aquecimento: React.FC = () => {
 											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 										/>
 									</svg>
-									Parando...
-								</div>
+									<span className="relative">Iniciando...</span>
+								</>
 							) : (
-								"Parar Aquecimento"
+								<>
+									<FaWhatsapp className="w-5 h-5" />
+									<span className="relative">Iniciar Aquecimento</span>
+								</>
+							)}
+						</motion.button>
+					) : (
+						<motion.button
+							whileHover={{ scale: 1.05 }}
+							whileTap={{ scale: 0.95 }}
+							onClick={handleStopWarmup}
+							disabled={isStoppingWarmup}
+							className={`
+        flex items-center justify-center gap-2 px-8 py-3 rounded-lg
+        ${
+					isStoppingWarmup
+						? "bg-gray-500 cursor-not-allowed"
+						: "bg-gradient-to-r from-red-500 to-orange-600"
+				}
+        text-white font-bold transition-all duration-300
+        shadow-lg hover:shadow-xl
+        border border-red-500/20
+        backdrop-blur-sm
+        relative overflow-hidden
+        group
+        hover:from-red-600 hover:to-orange-700
+      `}
+						>
+							{/* Efeito de brilho no hover */}
+							<div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+
+							{isStoppingWarmup ? (
+								<>
+									<svg
+										className="animate-spin h-5 w-5 mr-2"
+										viewBox="0 0 24 24"
+									>
+										<circle
+											className="opacity-25"
+											cx="12"
+											cy="12"
+											r="10"
+											stroke="currentColor"
+											strokeWidth="4"
+											fill="none"
+										/>
+										<path
+											className="opacity-75"
+											fill="currentColor"
+											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+										/>
+									</svg>
+									<span className="relative">Parando...</span>
+								</>
+							) : (
+								<>
+									<FaWhatsapp className="w-5 h-5" />
+									<span className="relative">Parar Aquecimento</span>
+								</>
 							)}
 						</motion.button>
 					)}

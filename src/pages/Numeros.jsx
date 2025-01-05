@@ -1,12 +1,10 @@
 import { useDarkMode } from "@/hooks/useDarkMode";
-import { toast } from "react-hot-toast";
-
 /* eslint-disable react/prop-types */
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-	Activity,
 	Layers,
+	MessageSquareMore,
 	Plus,
 	Power,
 	RefreshCw,
@@ -16,7 +14,7 @@ import {
 	X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Toaster } from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 import { FaWhatsapp } from "react-icons/fa";
 import TypebotConfigForm from "../components/TypebotConfigForm";
 
@@ -28,6 +26,7 @@ const ConnectionStatus = ({ connected }) => (
 	<motion.div
 		initial={{ opacity: 0, scale: 0.8 }}
 		animate={{ opacity: 1, scale: 1 }}
+		transition={{ duration: 0.3 }}
 		className={`
       inline-flex items-center
       px-4 py-1.5
@@ -40,12 +39,51 @@ const ConnectionStatus = ({ connected }) => (
 			}
     `}
 	>
-		<Activity className={`w-3 h-3 mr-2 ${connected ? "animate-pulse" : ""}`} />
+		<motion.div
+			animate={{ scale: connected ? [1, 1.2, 1] : 1 }}
+			transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
+			className={`w-3 h-3 mr-2 rounded-full ${
+				connected ? "bg-green-500" : "bg-red-500"
+			}`}
+		/>
 		<span className="text-xs font-semibold">
 			{connected ? "Online" : "Offline"}
 		</span>
 	</motion.div>
 );
+
+const LoadingSpinner = () => (
+	<motion.div
+		animate={{ rotate: 360 }}
+		transition={{
+			duration: 1,
+			repeat: Number.POSITIVE_INFINITY,
+			ease: "linear",
+		}}
+		className="w-5 h-5 border-2 border-white rounded-full border-t-transparent"
+	/>
+);
+
+// Estilo base para botões atualizado
+const buttonBaseStyle = `
+  flex items-center justify-center
+  py-2.5 px-4 rounded-xl
+  shadow-lg hover:shadow-xl
+  transition-all duration-300
+  transform hover:scale-102
+  backdrop-blur-md
+  font-medium
+  text-sm
+`;
+
+// Variações de estilo para os botões
+const buttonVariants = {
+	connect: `${buttonBaseStyle} bg-gradient-to-r from-green-500/90 to-green-600/90 text-white`,
+	logout: `${buttonBaseStyle} bg-gradient-to-r from-yellow-500/90 to-yellow-600/90 text-white`,
+	typebot: `${buttonBaseStyle} bg-gradient-to-r from-blue-500/90 to-blue-600/90 text-white flex items-center justify-center`,
+	proxy: `${buttonBaseStyle} bg-gradient-to-r from-purple-500/90 to-purple-600/90 text-white`,
+	delete: `${buttonBaseStyle} bg-gradient-to-r from-red-500/90 to-red-600/90 text-white`,
+};
 
 const InstanceCard = ({
 	instance,
@@ -53,6 +91,7 @@ const InstanceCard = ({
 	onLogout,
 	onDelete,
 	onConfigureTypebot,
+	onConfigureProxy,
 	deletingInstance,
 }) => {
 	const isConnected = instance.connectionStatus === "open";
@@ -72,19 +111,37 @@ const InstanceCard = ({
 				{/* Cabeçalho do Card */}
 				<div className="flex justify-between items-center">
 					<div className="flex items-center space-x-4">
-						<FaWhatsapp
-							className={`w-10 h-10 p-2 rounded-full ${
-								isConnected
-									? "text-whatsapp-green bg-whatsapp-green/20"
-									: "text-red-500 bg-red-500/20"
-							}`}
-						/>
+						{/* Foto de perfil */}
+						<div className="relative">
+							{instance.profilePicUrl ? (
+								<img
+									src={instance.profilePicUrl}
+									alt="Profile"
+									className={`w-12 h-12 rounded-full object-cover border-2 ${
+										isConnected ? "border-green-500" : "border-red-500"
+									}`}
+								/>
+							) : (
+								<FaWhatsapp
+									className={`w-12 h-12 p-2 rounded-full ${
+										isConnected
+											? "text-whatsapp-green bg-whatsapp-green/20"
+											: "text-red-500 bg-red-500/20"
+									}`}
+								/>
+							)}
+							<div
+								className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
+									isConnected ? "bg-green-500" : "bg-red-500"
+								} border-2 border-whatsapp-profundo`}
+							/>
+						</div>
 						<div>
 							<h3 className="text-xl font-bold text-whatsapp-branco">
 								{instance.instanceName}
 							</h3>
 							<p className="text-sm text-whatsapp-cinzaClaro">
-								{instance.phoneNumber}
+								{instance.profileName || instance.phoneNumber || "Sem nome"}
 							</p>
 						</div>
 					</div>
@@ -92,73 +149,70 @@ const InstanceCard = ({
 				</div>
 
 				{/* Botões de Ação */}
-				<div className="grid grid-cols-2 gap-4">
-					{/* Botão de Conectar (condicional) */}
+				<div className="space-y-3">
+					{/* Primeira linha de botões */}
 					{!isConnected && (
 						<motion.button
 							onClick={() => onReconnect(instance.instanceName)}
-							whileHover={{
-								scale: 1.02,
-								boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
-							}}
+							className={`${buttonVariants.connect} w-full`}
+							whileHover={{ scale: 1.02 }}
 							whileTap={{ scale: 0.98 }}
-							className="col-span-2 flex items-center justify-center bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
 						>
 							<Wifi className="mr-2 w-5 h-5" /> Conectar
 						</motion.button>
 					)}
 
-					{/* Botão de Logout */}
-					<motion.button
-						onClick={() => onLogout(instance.instanceName)}
-						whileHover={{
-							scale: 1.02,
-							boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
-						}}
-						whileTap={{ scale: 0.98 }}
-						className="flex items-center justify-center bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300"
-					>
-						<Power className="mr-2 w-5 h-5" /> Logout
-					</motion.button>
+					{/* Segunda linha de botões - 3 botões */}
+					<div className="grid grid-cols-3 gap-3">
+						<motion.button
+							onClick={() => onLogout(instance.instanceName)}
+							className={buttonVariants.logout}
+							whileHover={{ scale: 1.02 }}
+							whileTap={{ scale: 0.98 }}
+						>
+							<Power className="mr-2 w-5 h-5" /> Logout
+						</motion.button>
 
-					{/* Botão do Typebot */}
-					<motion.button
-						onClick={() => onConfigureTypebot(instance)}
-						whileHover={{
-							scale: 1.02,
-							boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
-						}}
-						whileTap={{ scale: 0.98 }}
-						className={`flex items-center justify-center py-3 px-4 rounded-xl shadow-lg transition-all duration-300 ${
-							hasTypebot
-								? "bg-gradient-to-r from-blue-500 to-blue-600"
-								: "bg-gradient-to-r from-whatsapp-eletrico to-whatsapp-green"
-						} text-white`}
-					>
-						<Settings className="mr-2 w-5 h-5" />
-						{hasTypebot ? "Editar Fluxo" : "Adicionar Fluxo"}
-					</motion.button>
+						<motion.button
+							onClick={() => onConfigureTypebot(instance)}
+							className={`${
+								hasTypebot ? buttonVariants.typebot : buttonVariants.typebot
+							} col-span-2`}
+							whileHover={{ scale: 1.02 }}
+							whileTap={{ scale: 0.98 }}
+						>
+							<MessageSquareMore className="mr-2 w-5 h-5" />
+							{hasTypebot ? "Editar Fluxo" : "Adicionar Fluxo"}
+						</motion.button>
+					</div>
 
-					{/* Botão de Excluir */}
-					<motion.button
-						onClick={() => onDelete(instance.instanceId, instance.instanceName)}
-						disabled={deletingInstance === instance.instanceId}
-						whileHover={{
-							scale: 1.02,
-							boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
-						}}
-						whileTap={{ scale: 0.98 }}
-						className="col-span-2 flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-					>
-						{deletingInstance === instance.instanceId ? (
-							<div className="animate-spin rounded-full h-5 w-5 border-2 border-white mr-2" />
-						) : (
-							<Trash2 className="mr-2 w-5 h-5" />
-						)}
-						{deletingInstance === instance.instanceId
-							? "Excluindo..."
-							: "Excluir"}
-					</motion.button>
+					{/* Terceira linha de botões - 2 botões */}
+					<div className="grid grid-cols-2 gap-3">
+						<motion.button
+							onClick={() => onConfigureProxy(instance)}
+							className={buttonVariants.proxy}
+							whileHover={{ scale: 1.02 }}
+							whileTap={{ scale: 0.98 }}
+						>
+							<Settings className="mr-2 w-5 h-5" /> Proxy
+						</motion.button>
+
+						<motion.button
+							onClick={() => onDelete(instance.id, instance.instanceName)}
+							disabled={deletingInstance === instance.id}
+							className={buttonVariants.delete}
+							whileHover={{ scale: 1.02 }}
+							whileTap={{ scale: 0.98 }}
+						>
+							{deletingInstance === instance.id ? (
+								<LoadingSpinner />
+							) : (
+								<>
+									<Trash2 className="mr-2 w-5 h-5" /> Excluir
+								</>
+							)}
+						</motion.button>
+					</div>
 				</div>
 
 				{/* Informações do Typebot */}
@@ -201,6 +255,17 @@ const Numeros = () => {
 	const [showTypebotConfig, setShowTypebotConfig] = useState(false);
 	const [deletingInstance, setDeletingInstance] = useState(null);
 	const [isRefreshing, setIsRefreshing] = useState(false);
+
+	const [isCreatingInstance, setIsCreatingInstance] = useState(false);
+
+	const [showProxyConfig, setShowProxyConfig] = useState(false);
+	const [selectedInstanceForProxy, setSelectedInstanceForProxy] =
+		useState(null);
+
+	const handleConfigureProxy = (instance) => {
+		setSelectedInstanceForProxy(instance);
+		setShowProxyConfig(true);
+	};
 
 	const handleRefresh = async () => {
 		setIsRefreshing(true);
@@ -274,10 +339,14 @@ const Numeros = () => {
 	};
 
 	const handleCreateInstance = async () => {
+		if (isCreatingInstance || !newInstaceName.trim()) return;
+
 		if (remainingSlots <= 0) {
 			toast.error(`Limite de instâncias atingido para o plano ${currentPlan}`);
 			return;
 		}
+
+		setIsCreatingInstance(true);
 
 		try {
 			const token = localStorage.getItem("token");
@@ -294,7 +363,6 @@ const Numeros = () => {
 			console.log("Resposta da API:", response.data);
 			const { qrcode, instance } = response.data;
 
-			// Ajuste o tratamento do QR code
 			if (qrcode && (typeof qrcode === "string" || qrcode.base64)) {
 				setQrCode({
 					base64: typeof qrcode === "string" ? qrcode : qrcode.base64,
@@ -384,6 +452,8 @@ const Numeros = () => {
 			const errorMessage =
 				error.response?.data?.message || "Erro desconhecido ao criar instância";
 			toast.error(errorMessage);
+		} finally {
+			setIsCreatingInstance(false);
 		}
 	};
 
@@ -547,6 +617,11 @@ const Numeros = () => {
 	};
 
 	const handleConfigureTypebot = (instance) => {
+		console.log("Instance selected for typebot:", instance);
+		if (!instance.id) {
+			toast.error("ID da instância não encontrado");
+			return;
+		}
 		setSelectedInstance(instance);
 		setShowTypebotConfig(true);
 	};
@@ -555,13 +630,19 @@ const Numeros = () => {
 		try {
 			const token = localStorage.getItem("token");
 
+			if (!selectedInstance?.id) {
+				// Mudança aqui: de instanceId para id
+				toast.error("ID da instância não encontrado");
+				return;
+			}
+
 			// Primeiro, atualiza no banco local
 			await axios.put(
-				`${API_BASE_URL}/api/instances/instance/${selectedInstance.instanceId}/typebot`,
+				`${API_BASE_URL}/api/instances/instance/${selectedInstance.id}/typebot`, // Mudança aqui: de instanceId para id
 				{
 					typebot: {
 						...config,
-						description: config.description, // Garante que o campo description está sendo enviado
+						description: config.description,
 					},
 				},
 				{
@@ -577,7 +658,7 @@ const Numeros = () => {
 				`${API_URL}/typebot/create/${selectedInstance.instanceName}`,
 				{
 					...config,
-					description: config.description, // Garante que o campo description está sendo enviado
+					description: config.description,
 				},
 				{
 					headers: {
@@ -592,8 +673,13 @@ const Numeros = () => {
 			await fetchInstances();
 		} catch (error) {
 			console.error("Erro ao atualizar configurações do Typebot:", error);
-			if (error.response?.data?.error) {
-				toast.error(`Erro: ${error.response.data.error}`);
+
+			if (error.response) {
+				const errorMessage =
+					error.response.data?.error ||
+					error.response.data?.message ||
+					"Erro ao atualizar configurações do Typebot";
+				toast.error(`Erro: ${errorMessage}`);
 			} else {
 				toast.error("Erro ao atualizar configurações do Typebot");
 			}
@@ -816,10 +902,10 @@ const Numeros = () => {
 	}, []);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-whatsapp-profundo to-whatsapp-profundo px-8 py-10">
+		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-whatsapp-profundo to-whatsapp-profundo px-4 sm:px-6 lg:px-8 py-10">
 			<Toaster position="top-right" />
 
-			<div className="max-w-7xl mx-auto">
+			<div className="max-w-8xl mx-auto">
 				{/* Header */}
 				<div className="mb-10 flex justify-between items-center">
 					<h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green to-whatsapp-light">
@@ -869,17 +955,18 @@ const Numeros = () => {
 				) : (
 					<motion.div
 						layout
-						className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto"
+						className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto"
 					>
-						<AnimatePresence>
+						<AnimatePresence mode="popLayout">
 							{instances.map((instance) => (
 								<InstanceCard
-									key={instance.instanceId}
+									key={`instance-${instance.id}-${Date.now()}`}
 									instance={instance}
 									onReconnect={handleReconnectInstance}
 									onLogout={handleLogoutInstance}
 									onDelete={handleDeleteInstance}
 									onConfigureTypebot={handleConfigureTypebot}
+									onConfigureProxy={handleConfigureProxy}
 									deletingInstance={deletingInstance}
 								/>
 							))}
@@ -921,17 +1008,61 @@ const Numeros = () => {
 							<input
 								type="text"
 								id="instanceName"
-								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
+								className={`
+    shadow appearance-none border rounded w-full py-2 px-3
+    text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata
+    leading-tight focus:outline-none focus:shadow-outline
+    ${!newInstaceName.trim() ? "border-red-500" : "border-gray-300"}
+  `}
 								placeholder="Ex: Instância Principal"
 								value={newInstaceName}
 								onChange={(e) => setNewInstaceName(e.target.value)}
+								disabled={isCreatingInstance}
 							/>
+							{!newInstaceName.trim() && (
+								<p className="text-red-500 text-xs italic mt-1">
+									O nome da instância é obrigatório
+								</p>
+							)}
 						</div>
 						<motion.button
 							onClick={handleCreateInstance}
-							className="bg-gradient-to-r from-whatsapp-green to-whatsapp-dark text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl w-full"
+							disabled={isCreatingInstance || !newInstaceName.trim()}
+							className={`
+    bg-gradient-to-r from-whatsapp-green to-whatsapp-dark
+    text-white px-4 py-2 rounded-lg shadow-lg
+    hover:shadow-xl w-full
+    transition-all duration-300
+    ${isCreatingInstance || !newInstaceName.trim() ? "opacity-50 cursor-not-allowed" : ""}
+  `}
 						>
-							Criar Instância
+							{isCreatingInstance ? (
+								<div className="flex items-center justify-center">
+									<svg
+										className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+									>
+										<circle
+											className="opacity-25"
+											cx="12"
+											cy="12"
+											r="10"
+											stroke="currentColor"
+											strokeWidth="4"
+										/>
+										<path
+											className="opacity-75"
+											fill="currentColor"
+											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+										/>
+									</svg>
+									<span>Criando instância...</span>
+								</div>
+							) : (
+								"Criar Instância"
+							)}
 						</motion.button>
 					</motion.div>
 				</motion.div>
@@ -985,6 +1116,84 @@ const Numeros = () => {
 							className="mt-6 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg shadow-md hover:shadow-lg w-full"
 						>
 							Fechar
+						</motion.button>
+					</motion.div>
+				</motion.div>
+			)}
+			{showProxyConfig && selectedInstanceForProxy && (
+				<motion.div
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					exit={{ opacity: 0 }}
+					className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+				>
+					<motion.div
+						initial={{ y: 20, opacity: 0 }}
+						animate={{ y: 0, opacity: 1 }}
+						exit={{ y: 20, opacity: 0 }}
+						className="bg-white dark:bg-whatsapp-profundo p-8 rounded-xl shadow-2xl w-full max-w-md relative"
+					>
+						<button
+							onClick={() => setShowProxyConfig(false)}
+							className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+						>
+							<X className="w-6 h-6" />
+						</button>
+						<h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+							Configurar Proxy para {selectedInstanceForProxy.instanceName}
+						</h2>
+						<div className="mb-4">
+							<label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+								Host do Proxy
+							</label>
+							<input
+								type="text"
+								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
+								placeholder="Ex: proxy.example.com"
+								// Adicione o valor e o onChange para o estado do host do proxy
+							/>
+						</div>
+						<div className="mb-4">
+							<label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+								Porta do Proxy
+							</label>
+							<input
+								type="number"
+								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
+								placeholder="Ex: 8080"
+								// Adicione o valor e o onChange para o estado da porta do proxy
+							/>
+						</div>
+						<div className="mb-4">
+							<label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+								Usuário do Proxy
+							</label>
+							<input
+								type="text"
+								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
+								placeholder="Usuário (opcional)"
+								// Adicione o valor e o onChange para o estado do usuário do proxy
+							/>
+						</div>
+						<div className="mb-4">
+							<label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+								Senha do Proxy
+							</label>
+							<input
+								type="password"
+								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
+								placeholder="Senha (opcional)"
+								// Adicione o valor e o onChange para o estado da senha do proxy
+							/>
+						</div>
+						<motion.button
+							onClick={() => {
+								// Aqui você deve implementar a lógica para salvar as configurações do proxy
+								setShowProxyConfig(false);
+							}}
+							className="bg-gradient-to-r from-whatsapp-green to-whatsapp-dark text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl w-full"
+						>
+							Salvar Configurações
 						</motion.button>
 					</motion.div>
 				</motion.div>
