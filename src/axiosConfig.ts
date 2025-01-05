@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-	baseURL: "http://localhost:3050",
+	baseURL: "https://aquecerapi.whatlead.com.br",
 	headers: {
 		"Content-Type": "application/json",
 	},

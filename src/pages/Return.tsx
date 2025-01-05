@@ -17,7 +17,7 @@ const Return: React.FC = () => {
 
 		if (sessionId) {
 			fetch(
-				`http://localhost:3050/sessions/session-status?session_id=${sessionId}`,
+				`https://aquecerapi.whatlead.com.br/sessions/session-status?session_id=${sessionId}`,
 			)
 				.then((res) => res.json())
 				.then((data) => {

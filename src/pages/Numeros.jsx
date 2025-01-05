@@ -18,7 +18,7 @@ import { Toaster, toast } from "react-hot-toast";
 import { FaWhatsapp } from "react-icons/fa";
 import TypebotConfigForm from "../components/TypebotConfigForm";
 
-const API_BASE_URL = "http://localhost:3050";
+const API_BASE_URL = "https://aquecerapi.whatlead.com.br";
 const API_URL = "https://evo.whatlead.com.br";
 const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
 

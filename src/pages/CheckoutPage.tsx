@@ -42,7 +42,7 @@ const CheckoutPage: React.FC = () => {
 				return;
 			}
 			const response = await fetch(
-				"http://localhost:3050/users/create-checkout-session",
+				"https://aquecerapi.whatlead.com.br/users/create-checkout-session",
 				{
 					method: "POST",
 					headers: {

@@ -37,7 +37,7 @@ const Register: React.FC = () => {
 
 		try {
 			const response = await axios.post(
-				"http://localhost:3050/api/users/register",
+				"https://aquecerapi.whatlead.com.br/api/users/register",
 				{
 					name,
 					email,
