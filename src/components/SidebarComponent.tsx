@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
 import {
+	BookOpen,
 	CalendarIcon,
 	ChevronUp,
 	CreditCard,
@@ -219,10 +220,17 @@ const SidebarComponent: React.FC = () => {
 							<User2 className="mr-2" size={16} />
 							<span>Informações da Conta</span>
 						</DropdownMenuItem>
+
+						<DropdownMenuItem onClick={() => navigate("/tutorial")}>
+							<BookOpen className="mr-2" size={16} />
+							<span>Tutorial</span>
+						</DropdownMenuItem>
+
 						<DropdownMenuItem onClick={() => navigate("/pricing")}>
 							<CreditCard className="mr-2" size={16} />
 							<span>Gerenciar Plano</span>
 						</DropdownMenuItem>
+
 						{trialDaysLeft !== null && (
 							<DropdownMenuItem>
 								<CalendarIcon className="mr-2" size={16} />
@@ -233,6 +241,7 @@ const SidebarComponent: React.FC = () => {
 								</span>
 							</DropdownMenuItem>
 						)}
+
 						<DropdownMenuItem
 							onClick={() =>
 								window.open("mailto:suporte@whatlead.com.br", "_blank")
@@ -241,6 +250,7 @@ const SidebarComponent: React.FC = () => {
 							<LifeBuoy className="mr-2" size={16} />
 							<span>Requisito de Suporte</span>
 						</DropdownMenuItem>
+
 						<DropdownMenuItem
 							onClick={() => {
 								localStorage.removeItem("token");

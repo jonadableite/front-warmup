@@ -1,5 +1,5 @@
 import { useDarkMode } from "@/hooks/useDarkMode";
-import React from "react";
+import React, { useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -16,7 +16,7 @@ import Numeros from "./pages/Numeros";
 import PricingPage from "./pages/Pricing";
 import Register from "./pages/Register";
 import Return from "./pages/Return";
-import { useEffect } from "react";
+import TutorialPage from "./pages/TutorialPage";
 
 function App() {
 	const [isDarkMode] = useDarkMode();
@@ -90,6 +90,14 @@ function AppContent() {
 							element={
 								<PrivateRoute>
 									<Numeros />
+								</PrivateRoute>
+							}
+						/>
+						<Route
+							path="/tutorial"
+							element={
+								<PrivateRoute>
+									<TutorialPage />
 								</PrivateRoute>
 							}
 						/>
