@@ -1,11 +1,5 @@
 import { motion } from "framer-motion";
-import {
-	ActivityIcon,
-	ClockIcon,
-	EyeIcon,
-	MessageCircleIcon,
-	TrendingUpIcon,
-} from "lucide-react";
+import { ActivityIcon, ClockIcon, EyeIcon, TrendingUpIcon } from "lucide-react";
 import type React from "react";
 import { useLayoutEffect, useState } from "react";
 import {
@@ -37,45 +31,52 @@ interface WarmupStats {
 		sticker: number;
 		reaction: number;
 	};
+	receivedStats: {
+		text: number;
+		image: number;
+		video: number;
+		audio: number;
+		sticker: number;
+		reaction: number;
+		totalAllTime: number;
+	} | null;
 	warmupTime: number;
 	status: "active" | "paused";
 	lastActive: string;
 	startTime: string;
 	pauseTime: string;
 	progress: number;
-	mediaReceived: {
-		text: number;
-		image: number;
-		audio: number;
-		sticker: number;
-		reaction: number;
-	};
 }
 
 // Componente StatCard
-const StatCard = ({ icon: Icon, title, value, trend, color }) => (
+const StatCard = ({ icon: Icon, title, value, trend, color, description }) => (
 	<motion.div
-		whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(0,0,0,0.2)" }}
-		className={`relative overflow-hidden bg-gradient-to-br ${color} text-white rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl`}
+		whileHover={{ scale: 1.02 }}
+		className={`relative overflow-hidden bg-gradient-to-br ${color} rounded-2xl p-6 shadow-lg`}
 	>
-		<div className="flex justify-between items-center">
-			<div>
-				<div className="mb-4 bg-white/20 rounded-full p-3 inline-block">
-					<Icon className="w-8 h-8 text-white opacity-80" />
-				</div>
-				<h3 className="text-sm font-medium text-white mb-2">{title}</h3>
-				<p className="text-3xl font-bold text-white">{value}</p>
-			</div>
+		<div className="absolute top-0 right-0 mt-4 mr-4">
+			<Icon className="w-8 h-8 text-white/30" />
+		</div>
+		<div className="relative z-10">
+			<h3 className="text-sm font-medium text-white/80 mb-1">{title}</h3>
+			<p className="text-3xl font-bold text-white mb-2">{value}</p>
+			<p className="text-sm text-white/70">{description}</p>
 			{trend && (
-				<div
-					className={`flex items-center text-sm ${
-						trend.direction === "up" ? "text-green-300" : "text-red-300"
-					} bg-white/20 px-3 py-1 rounded-full`}
-				>
-					{trend.direction === "up" ? "▲" : "▼"}
-					{trend.percentage}%
+				<div className="mt-4 flex items-center gap-2">
+					<div
+						className={`flex items-center text-sm ${
+							trend.direction === "up" ? "text-green-200" : "text-red-200"
+						} bg-white/10 px-2 py-1 rounded-full`}
+					>
+						{trend.direction === "up" ? "↑" : "↓"}
+						<span className="ml-1">{trend.percentage}%</span>
+					</div>
+					<span className="text-xs text-white/60">vs. último período</span>
 				</div>
 			)}
+		</div>
+		<div className="absolute bottom-0 right-0 transform translate-y-1/3 translate-x-1/3">
+			<div className="w-24 h-24 bg-white/10 rounded-full" />
 		</div>
 	</motion.div>
 );
@@ -84,7 +85,7 @@ const StatCard = ({ icon: Icon, title, value, trend, color }) => (
 const ProgressBar = ({ label, value, color }) => (
 	<div className="mb-6">
 		<div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
-			<span className="font-medium">{label}</span>
+			<span className="font-medium text-gray-300">{label}</span>
 			<span className="font-bold">{value.toFixed(2)}%</span>
 		</div>
 		<div className="w-full bg-gray-200 dark:bg-whatsapp-profundo rounded-full h-3 overflow-hidden">
@@ -106,28 +107,24 @@ const Home: React.FC = () => {
 				title: "Total Warmups",
 				value: 0,
 				trend: { direction: "up", percentage: 0 },
-				color: "from-blue-500 to-blue-700",
+				color: "from-emerald-400 to-teal-600",
+				description: "Total de aquecimentos iniciados",
 			},
 			{
 				icon: ActivityIcon,
 				title: "Instâncias Ativas",
 				value: 0,
 				trend: { direction: "up", percentage: 0 },
-				color: "from-green-500 to-green-700",
-			},
-			{
-				icon: MessageCircleIcon,
-				title: "Mensagens Enviadas",
-				value: "0",
-				trend: { direction: "down", percentage: 0 },
-				color: "from-purple-500 to-purple-700",
+				color: "from-blue-400 to-indigo-600",
+				description: "Instâncias em aquecimento",
 			},
 			{
 				icon: ClockIcon,
 				title: "Tempo Médio",
 				value: "0h",
 				trend: { direction: "up", percentage: 0 },
-				color: "from-pink-500 to-pink-700",
+				color: "from-violet-400 to-purple-600",
+				description: "Média de tempo de aquecimento",
 			},
 		],
 		instanceProgress: [],
@@ -141,31 +138,59 @@ const Home: React.FC = () => {
 	useLayoutEffect(() => {
 		const fetchDashboardData = async () => {
 			try {
-				// Busca os dados do dashboard a partir da rota do backend
 				const response = await axios.get("/api/dashboard");
 				const {
 					totalWarmups,
 					activeInstances,
-					totalMessages,
 					averageTime,
 					instanceProgress,
 					messageTypes,
-					instances, // Adicionando a busca das instâncias
+					instances,
+					previousPeriod, // Adicione isso no backend
 				} = response.data;
+
+				// Calcular tendências
+				const calculateTrend = (current: number, previous: number) => {
+					if (previous === 0) return { direction: "up", percentage: 100 };
+					const percentage = ((current - previous) / previous) * 100;
+					return {
+						direction: percentage >= 0 ? "up" : "down",
+						percentage: Math.abs(Math.round(percentage)),
+					};
+				};
 
 				setDashboardData((prevState) => ({
 					...prevState,
 					stats: [
-						{ ...prevState.stats[0], value: totalWarmups },
-						{ ...prevState.stats[1], value: activeInstances },
-						{ ...prevState.stats[2], value: totalMessages },
-						{ ...prevState.stats[3], value: `${averageTime}h` },
+						{
+							...prevState.stats[0],
+							value: totalWarmups,
+							trend: calculateTrend(
+								totalWarmups,
+								previousPeriod?.totalWarmups || 0,
+							),
+						},
+						{
+							...prevState.stats[1],
+							value: activeInstances,
+							trend: calculateTrend(
+								activeInstances,
+								previousPeriod?.activeInstances || 0,
+							),
+						},
+						{
+							...prevState.stats[2],
+							value: `${averageTime}h`,
+							trend: calculateTrend(
+								Number.parseFloat(averageTime),
+								previousPeriod?.averageTime || 0,
+							),
+						},
 					],
 					instanceProgress,
 					messageTypes,
-					instanceDetails: instances, // Armazenando os detalhes das instâncias
+					instanceDetails: instances,
 				}));
-				console.log("Dados do Dashboard:", instances);
 			} catch (error) {
 				console.error("Erro ao buscar dados do dashboard:", error);
 			}
@@ -201,7 +226,7 @@ const Home: React.FC = () => {
 					</h1>
 				</header>
 
-				<div className="grid md:grid-cols-4 gap-6 mb-10">
+				<div className="grid md:grid-cols-3 gap-6 mb-10">
 					{dashboardData.stats.map((stat, index) => (
 						<StatCard key={index} {...stat} />
 					))}
@@ -317,48 +342,39 @@ const Home: React.FC = () => {
 
 				{selectedInstanceDetails && (
 					<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-						<div className="bg-white dark:bg-whatsapp-profundo rounded-lg p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+						<div className="bg-white dark:bg-whatsapp-profundo rounded-lg p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-lg">
 							<h3 className="text-2xl font-bold mb-6 text-whatsapp-profundo dark:text-gray-200">
 								Detalhes da Instância: {selectedInstanceDetails.instanceId}
 							</h3>
 
 							<div className="grid md:grid-cols-3 gap-6">
 								{/* Coluna de Informações Básicas */}
-								<div className="bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4">
+								<div className="bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4 shadow-md">
 									<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
 										Informações Básicas
 									</h4>
 									<div className="space-y-3">
 										<p className="flex justify-between">
-											<span className="font-medium">Status:</span>
+											<span className="font-medium text-gray-300">Status:</span>
 											<span
-												className={`
-                                                ${
-																									selectedInstanceDetails.status ===
-																									"active"
-																										? "text-green-600"
-																										: "text-red-600"
-																								} font-bold
-                                            `}
+												className={`font-bold ${selectedInstanceDetails.status === "active" ? "text-green-600" : "text-red-600"}`}
 											>
 												{selectedInstanceDetails.status.toUpperCase()}
 											</span>
 										</p>
 										<p className="flex justify-between">
-											<span>Mensagens Enviadas:</span>
-											<span className="font-bold">
+											<span className="text-gray-300">Mensagens Enviadas:</span>{" "}
+											{/* Alterado para text-gray-300 */}
+											<span className="font-bold text-gray-200">
 												{selectedInstanceDetails.messagesSent}
 											</span>
 										</p>
 										<p className="flex justify-between">
-											<span>Mensagens Recebidas:</span>
-											<span className="font-bold">
-												{selectedInstanceDetails.messagesReceived}
-											</span>
-										</p>
-										<p className="flex justify-between">
-											<span>Tempo de Aquecimento:</span>
-											<span className="font-bold">
+											<span className="text-gray-300">
+												Tempo de Aquecimento:
+											</span>{" "}
+											{/* Alterado para text-gray-300 */}
+											<span className="font-bold text-gray-200">
 												{selectedInstanceDetails.warmupTime} min
 											</span>
 										</p>
@@ -366,7 +382,7 @@ const Home: React.FC = () => {
 								</div>
 
 								{/* Coluna de Estatísticas de Mídia */}
-								<div className="bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4">
+								<div className="bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4 shadow-md">
 									<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
 										Estatísticas de Mídia
 									</h4>
@@ -377,8 +393,13 @@ const Home: React.FC = () => {
 													key={type}
 													className="flex justify-between items-center"
 												>
-													<span className="capitalize">{type}:</span>
-													<span className="font-bold">{count}</span>
+													<span className="capitalize text-gray-300">
+														{type}:
+													</span>{" "}
+													{/* Alterado para text-gray-300 */}
+													<span className="font-bold text-gray-200">
+														{count}
+													</span>
 												</div>
 											),
 										)}
@@ -386,7 +407,7 @@ const Home: React.FC = () => {
 								</div>
 
 								{/* Coluna de Gráfico de Progressão */}
-								<div className="bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4">
+								<div className="bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4 shadow-md">
 									<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
 										Progresso de Aquecimento
 									</h4>
@@ -430,14 +451,45 @@ const Home: React.FC = () => {
 								</div>
 							</div>
 
-							{/* Gráfico Completo de Progressão */}
-							<div className="mt-8 bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4">
+							{/* Gráfico Comparativo de Mensagens Enviadas e Recebidas */}
+							<div className="mt-8 bg-gray-100 dark:bg-whatsapp-profundo rounded-lg p-4 shadow-md">
 								<h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
-									Progressão Detalhada
+									Comparativo de Mensagens
 								</h4>
 								<ResponsiveContainer width="100%" height={300}>
 									<AreaChart
-										data={generateAreaChartData(selectedInstanceDetails)}
+										data={[
+											{
+												name: "Textos",
+												enviadas: selectedInstanceDetails.mediaStats.text,
+												recebidas:
+													selectedInstanceDetails.receivedStats?.text || 0,
+											},
+											{
+												name: "Imagens",
+												enviadas: selectedInstanceDetails.mediaStats.image,
+												recebidas:
+													selectedInstanceDetails.receivedStats?.image || 0,
+											},
+											{
+												name: "Vídeos",
+												enviadas: selectedInstanceDetails.mediaStats.video,
+												recebidas:
+													selectedInstanceDetails.receivedStats?.video || 0,
+											},
+											{
+												name: "Áudios",
+												enviadas: selectedInstanceDetails.mediaStats.audio,
+												recebidas:
+													selectedInstanceDetails.receivedStats?.audio || 0,
+											},
+											{
+												name: "Stickers",
+												enviadas: selectedInstanceDetails.mediaStats.sticker,
+												recebidas:
+													selectedInstanceDetails.receivedStats?.sticker || 0,
+											},
+										]}
 									>
 										<CartesianGrid strokeDasharray="3 3" />
 										<XAxis dataKey="name" />
@@ -445,10 +497,19 @@ const Home: React.FC = () => {
 										<Tooltip />
 										<Area
 											type="monotone"
-											dataKey="mensagens"
+											dataKey="enviadas"
 											stroke="#8884d8"
-											fill="url(#colorUv)"
-											fillOpacity={0.6}
+											fill="#8884d8"
+											fillOpacity={0.3}
+											name="Enviadas"
+										/>
+										<Area
+											type="monotone"
+											dataKey="recebidas"
+											stroke="#82ca9d"
+											fill="#82ca9d"
+											fillOpacity={0.3}
+											name="Recebidas"
 										/>
 									</AreaChart>
 								</ResponsiveContainer>

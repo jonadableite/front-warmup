@@ -11,6 +11,36 @@ import { FaWhatsapp } from "react-icons/fa";
 const API_BASE_URL = "http://localhost:3050";
 const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
 
+interface InstanceStatus {
+	status: string;
+	dailyTotal?: number;
+	lastActive?: string;
+}
+
+interface WarmupStatusResponse {
+	success: boolean;
+	instances: Record<string, InstanceStatus>;
+	globalStatus: string;
+}
+
+interface Instancia {
+	id: string;
+	name: string;
+	connectionStatus: string;
+	ownerJid: string | null;
+	profileName: string | null;
+}
+
+interface SyncButtonProps {
+	onClick: () => void;
+	loading: boolean;
+}
+
+interface FreePlanWarningProps {
+	onClose: () => void;
+	onContinue: () => Promise<void>;
+}
+
 const SyncButton: React.FC<{ onClick: () => void; loading: boolean }> = ({
 	onClick,
 	loading,
@@ -320,40 +350,71 @@ const Aquecimento: React.FC = () => {
 		</motion.div>
 	);
 
-	const DailyLimitModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-		<motion.div
-			initial={{ opacity: 0 }}
-			animate={{ opacity: 1 }}
-			exit={{ opacity: 0 }}
-			className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-		>
+	interface DailyLimitModalProps {
+		onClose: () => void;
+	}
+
+	const DailyLimitModal: FC<DailyLimitModalProps> = ({
+		onClose,
+	}): ReactElement => {
+		return (
 			<motion.div
-				initial={{ scale: 0.9 }}
-				animate={{ scale: 1 }}
-				className="bg-white dark:bg-whatsapp-cinza p-6 rounded-lg max-w-md w-full"
+				initial={{ opacity: 0 }}
+				animate={{ opacity: 1 }}
+				exit={{ opacity: 0 }}
+				className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
 			>
-				<h2 className="text-2xl font-bold mb-4 text-whatsapp-eletrico">
-					Limite Diário Atingido
-				</h2>
-				<p className="mb-4">
-					Você atingiu o limite diário de 20 mensagens por instância para o
-					plano gratuito. O aquecimento foi interrompido automaticamente.
-				</p>
-				<p className="mb-4">
-					Considere atualizar para um plano premium para continuar o aquecimento
-					sem limites.
-				</p>
-				<div className="flex justify-end">
-					<button
-						onClick={onClose}
-						className="bg-whatsapp-eletrico text-white px-4 py-2 rounded hover:bg-whatsapp-green transition-colors"
-					>
-						Entendi
-					</button>
-				</div>
+				<motion.div
+					initial={{ scale: 0.9 }}
+					animate={{ scale: 1 }}
+					className="bg-white dark:bg-whatsapp-cinza p-6 rounded-xl max-w-md w-full shadow-xl"
+				>
+					<div className="flex items-center mb-4">
+						<div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-full mr-3">
+							<svg
+								className="w-6 h-6 text-red-500"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+								xmlns="http://www.w3.org/2000/svg"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+								/>
+							</svg>
+						</div>
+						<h2 className="text-2xl font-bold text-red-500">
+							Limite Diário Atingido
+						</h2>
+					</div>
+
+					<p className="mb-4 text-gray-700 dark:text-gray-300">
+						Uma ou mais instâncias atingiram o limite diário de 20 mensagens do
+						plano gratuito. O processo de aquecimento foi automaticamente
+						interrompido.
+					</p>
+
+					<p className="mb-6 text-gray-600 dark:text-gray-400">
+						Para continuar usando o serviço sem limitações, considere fazer
+						upgrade para um plano premium.
+					</p>
+
+					<div className="flex justify-end">
+						<button
+							type="button"
+							onClick={onClose}
+							className="px-6 py-2 bg-whatsapp-eletrico text-white rounded-lg hover:bg-whatsapp-green transition-colors"
+						>
+							Entendi
+						</button>
+					</div>
+				</motion.div>
 			</motion.div>
-		</motion.div>
-	);
+		);
+	};
 
 	const compressImage = async (file: File, maxSizeMB = 2): Promise<Blob> => {
 		return new Promise((resolve, reject) => {
@@ -661,106 +722,6 @@ const Aquecimento: React.FC = () => {
 		}
 	};
 
-	useEffect(() => {
-		let interval: NodeJS.Timeout;
-
-		const checkWarmupStatus = async () => {
-			try {
-				const token = localStorage.getItem("token");
-				if (!token) return;
-
-				const response = await axios.get(`${API_BASE_URL}/api/warmup/status`, {
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				});
-
-				console.log("Status do aquecimento:", response.data);
-
-				const isActive = response.data.globalStatus === "active";
-				setIsWarmingUp(isActive);
-
-				if (!isActive) {
-					setIsStarting(false);
-				}
-
-				// Verificar se todas as instâncias estão pausadas
-				const allPaused = Object.values(response.data.instances).every(
-					(instance: any) => instance.status === "paused",
-				);
-
-				if (allPaused && isWarmingUp) {
-					setIsWarmingUp(false);
-					setIsStarting(false);
-					toast.success("O aquecimento foi pausado", {
-						duration: 3000,
-						icon: "⏸️",
-					});
-				}
-
-				// Verificar limite diário
-				if (response.data.dailyLimitReached) {
-					toast.error("Limite diário de mensagens atingido!", {
-						duration: 5000,
-						icon: "⚠️",
-					});
-					setShowDailyLimitModal(true);
-					await handleStopWarmup();
-				}
-			} catch (error) {
-				console.error("Erro ao verificar status:", error);
-				setIsWarmingUp(false);
-				setIsStarting(false);
-			}
-		};
-
-		// Verificar status inicial na montagem do componente
-		checkWarmupStatus();
-
-		// Configurar intervalo se estiver aquecendo ou iniciando
-		if (isWarmingUp || isStarting) {
-			interval = setInterval(checkWarmupStatus, 2000);
-		}
-
-		return () => {
-			if (interval) {
-				clearInterval(interval);
-			}
-		};
-	}, [isWarmingUp, isStarting]);
-
-	const toggleInstanceSelection = (instanceName: string) => {
-		setSelectedInstances((prev) => {
-			const newSelection = new Set(prev);
-			if (newSelection.has(instanceName)) {
-				newSelection.delete(instanceName);
-			} else {
-				newSelection.add(instanceName);
-			}
-			return newSelection;
-		});
-	};
-
-	const renderStatusIcon = (status: string) => {
-		const statusColors = {
-			open: "text-green-500",
-			connecting: "text-yellow-500",
-			disconnected: "text-red-500",
-		};
-
-		const StatusIcon = status === "open" ? BsWifi : BsWifiOff;
-
-		return (
-			<div
-				className={`${
-					statusColors[status as keyof typeof statusColors]
-				} text-2xl`}
-			>
-				<StatusIcon />
-			</div>
-		);
-	};
-
 	const handleStopWarmup = async () => {
 		try {
 			setIsStoppingWarmup(true);
@@ -813,6 +774,182 @@ const Aquecimento: React.FC = () => {
 		}
 	};
 
+	useEffect(() => {
+		let interval: number;
+
+		const checkWarmupStatus = async (): Promise<void> => {
+			try {
+				const token = localStorage.getItem("token");
+				if (!token) return;
+
+				const response = await axios.get<WarmupStatusResponse>(
+					`${API_BASE_URL}/api/warmup/status`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					},
+				);
+
+				console.log("Status do aquecimento:", response.data);
+
+				const instances = response.data.instances ?? {};
+				let limitReached = false;
+				const limitReachedInstances: string[] = [];
+
+				// Verificar cada instância
+				Object.entries(instances).forEach(([instanceName, instanceData]) => {
+					if (instanceData.dailyTotal >= 20) {
+						limitReached = true;
+						limitReachedInstances.push(instanceName);
+
+						// Notificação específica para cada instância
+						toast.error(
+							`Instância ${instanceName} atingiu o limite diário de 20 mensagens!`,
+							{
+								duration: 10000,
+								icon: "⚠️",
+								position: "top-center",
+							},
+						);
+					}
+				});
+
+				if (limitReached) {
+					// Parar o aquecimento
+					setIsWarmingUp(false);
+					await handleStopWarmup();
+
+					// Mostrar modal
+					setShowDailyLimitModal(true);
+
+					// Adicionar notificação fixa no topo
+					toast.error(
+						`Limite diário atingido! Instâncias afetadas: ${limitReachedInstances.join(", ")}`,
+						{
+							duration: Number.POSITIVE_INFINITY,
+							icon: "🚫",
+							position: "top-center",
+							style: {
+								background: "#ef4444",
+								color: "white",
+								fontWeight: "bold",
+							},
+						},
+					);
+
+					return;
+				}
+
+				const isActive = response.data.globalStatus === "active";
+				setIsWarmingUp(isActive);
+
+				if (!isActive) {
+					setIsStarting(false);
+				}
+
+				// Verificar se todas as instâncias estão pausadas
+				const allPaused = Object.values(instances).every(
+					(instance) => instance.status === "paused",
+				);
+
+				if (allPaused && isWarmingUp) {
+					setIsWarmingUp(false);
+					setIsStarting(false);
+					toast.success("O aquecimento foi pausado", {
+						duration: 3000,
+						icon: "⏸️",
+					});
+				}
+			} catch (error) {
+				console.error("Erro ao verificar status:", error);
+				setIsWarmingUp(false);
+				setIsStarting(false);
+			}
+		};
+
+		// Verificar status imediatamente
+		checkWarmupStatus();
+
+		// Configurar intervalo apenas se estiver aquecendo ou iniciando
+		if (isWarmingUp || isStarting) {
+			interval = window.setInterval(checkWarmupStatus, 2000);
+		}
+
+		return () => {
+			if (interval) {
+				window.clearInterval(interval);
+			}
+		};
+	}, [isWarmingUp, isStarting]);
+
+	const toggleInstanceSelection = (instanceName: string) => {
+		setSelectedInstances((prev) => {
+			const newSelection = new Set(prev);
+			if (newSelection.has(instanceName)) {
+				newSelection.delete(instanceName);
+			} else {
+				newSelection.add(instanceName);
+			}
+			return newSelection;
+		});
+	};
+
+	const renderStatusIcon = (status: string) => {
+		const statusColors = {
+			open: "text-green-500",
+			connecting: "text-yellow-500",
+			disconnected: "text-red-500",
+		};
+
+		const StatusIcon = status === "open" ? BsWifi : BsWifiOff;
+
+		return (
+			<div
+				className={`${
+					statusColors[status as keyof typeof statusColors]
+				} text-2xl`}
+			>
+				<StatusIcon />
+			</div>
+		);
+	};
+
+	// Modal para limite diário atingido
+	const DailyLimitReachedModal: React.FC<{ onClose: () => void }> = ({
+		onClose,
+	}) => (
+		<motion.div
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			exit={{ opacity: 0 }}
+			className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+		>
+			<motion.div
+				initial={{ scale: 0.9 }}
+				animate={{ scale: 1 }}
+				className="bg-white dark:bg-whatsapp-cinza p-6 rounded-xl max-w-md w-full"
+			>
+				<h2 className="text-2xl font-bold mb-4 text-whatsapp-eletrico">
+					Limite Diário Atingido
+				</h2>
+				<p className="mb-4">
+					Você atingiu o limite diário de 20 mensagens por instância para o
+					plano gratuito. O processo de aquecimento foi automaticamente
+					interrompido.
+				</p>
+				<div className="flex justify-end">
+					<button
+						onClick={onClose}
+						className="bg-whatsapp-eletrico text-white px-4 py-2 rounded hover:bg-whatsapp-green transition-colors"
+					>
+						Entendi
+					</button>
+				</div>
+			</motion.div>
+		</motion.div>
+	);
+
 	return (
 		<div className="min-h-screen p-6 bg-gray-100 dark:bg-whatsapp-profundo text-black dark:text-white">
 			<div className="max-w-7xl mx-auto space-y-6">
@@ -825,10 +962,16 @@ const Aquecimento: React.FC = () => {
 						}}
 					/>
 				)}
+
 				{showDailyLimitModal && (
 					<DailyLimitModal onClose={() => setShowDailyLimitModal(false)} />
 				)}
-				<motion.div className="flex justify-between items-center border-b border-gray-700 pb-4">
+
+				<motion.div
+					className="flex justify-between items-center border-b border-gray-700 pb-4"
+					initial={{ opacity: 0, y: -20 }}
+					animate={{ opacity: 1, y: 0 }}
+				>
 					<div>
 						<h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green to-whatsapp-light">
 							WhatsApp Warmer
@@ -841,7 +984,11 @@ const Aquecimento: React.FC = () => {
 				</motion.div>
 
 				{/* Informações de Plano */}
-				<div className="mb-4 bg-blue-100 dark:bg-whatsapp-cinza p-3 rounded text-black dark:text-white">
+				<motion.div
+					className="mb-4 bg-blue-100 dark:bg-whatsapp-cinza p-3 rounded text-black dark:text-white"
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+				>
 					<div className="flex justify-between items-center">
 						<div className="flex space-x-3">
 							<span>Plano Atual: {currentPlan}</span>
@@ -849,24 +996,27 @@ const Aquecimento: React.FC = () => {
 							<span>Slots Restantes: {remainingSlots}</span>
 						</div>
 					</div>
-				</div>
+				</motion.div>
 
 				{/* Seletor de Instâncias */}
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-					{instances.map((instance) => (
+					{instances.map((instance: Instancia) => (
 						<motion.div
 							key={`instance-${instance.id}`}
 							whileHover={{ scale: 1.02 }}
+							initial={{ opacity: 0, scale: 0.9 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{ duration: 0.2 }}
 							className={`
-        relative backdrop-blur-lg rounded-xl p-6
-        ${
-					selectedInstances.has(instance.name)
-						? "bg-gradient-to-br from-whatsapp-eletrico/20 to-whatsapp-green/5 border-2 border-whatsapp-eletrico"
-						: "bg-gradient-to-br from-whatsapp-profundo/80 to-whatsapp-cinza/50 border border-whatsapp-green/30"
-				}
-        shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer
-        overflow-hidden group
-      `}
+              relative backdrop-blur-lg rounded-xl p-6
+              ${
+								selectedInstances.has(instance.name)
+									? "bg-gradient-to-br from-whatsapp-eletrico/20 to-whatsapp-green/5 border-2 border-whatsapp-eletrico"
+									: "bg-gradient-to-br from-whatsapp-profundo/80 to-whatsapp-cinza/50 border border-whatsapp-green/30"
+							}
+              shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer
+              overflow-hidden group
+            `}
 							onClick={() => toggleInstanceSelection(instance.name)}
 						>
 							{/* Efeito de brilho no hover */}
@@ -884,6 +1034,7 @@ const Aquecimento: React.FC = () => {
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
+										xmlns="http://www.w3.org/2000/svg"
 									>
 										<path
 											strokeLinecap="round"
@@ -901,23 +1052,23 @@ const Aquecimento: React.FC = () => {
 									<div className="flex items-center space-x-3">
 										<div
 											className={`
-                p-3 rounded-full
-                ${
-									instance.connectionStatus === "open"
-										? "bg-whatsapp-green/20"
-										: "bg-red-500/20"
-								}
-              `}
+                      p-3 rounded-full
+                      ${
+												instance.connectionStatus === "open"
+													? "bg-whatsapp-green/20"
+													: "bg-red-500/20"
+											}
+                    `}
 										>
 											<FaWhatsapp
 												className={`
-                  w-6 h-6
-                  ${
-										instance.connectionStatus === "open"
-											? "text-whatsapp-green animate-pulse"
-											: "text-red-500"
-									}
-                `}
+                        w-6 h-6
+                        ${
+													instance.connectionStatus === "open"
+														? "text-whatsapp-green animate-pulse"
+														: "text-red-500"
+												}
+                      `}
 											/>
 										</div>
 										<div>

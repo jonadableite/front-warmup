@@ -94,7 +94,7 @@ const PricingPage: React.FC = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white p-8">
+		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo to-black text-white p-8">
 			<div className="max-w-7xl mx-auto">
 				<div className="text-center mb-12">
 					<motion.h1
@@ -110,7 +110,7 @@ const PricingPage: React.FC = () => {
 				</div>
 
 				<div className="flex justify-center mb-8">
-					<div className="bg-gray-800 rounded-full p-1 flex items-center">
+					<div className="bg-whatsapp-cinza rounded-full p-1 flex items-center">
 						<button
 							onClick={() => setBillingCycle("monthly")}
 							className={`px-4 py-2 rounded-full transition-colors ${
@@ -142,7 +142,7 @@ const PricingPage: React.FC = () => {
 							animate={{ opacity: 1, scale: 1 }}
 							whileHover={{ scale: 1.05 }}
 							className={`
-                        bg-gray-800 rounded-2xl p-6
+                        bg-whatsapp-cinza rounded-2xl p-6
                         border border-opacity-20
                         ${
 													plan.recommended
