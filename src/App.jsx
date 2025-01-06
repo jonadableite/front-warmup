@@ -13,6 +13,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Numeros from "./pages/Numeros";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import PricingPage from "./pages/Pricing";
 import Register from "./pages/Register";
 import Return from "./pages/Return";
@@ -98,6 +99,14 @@ function AppContent() {
 							element={
 								<PrivateRoute>
 									<TutorialPage />
+								</PrivateRoute>
+							}
+						/>
+						<Route
+							path="/payment-success"
+							element={
+								<PrivateRoute>
+									<PaymentSuccess />
 								</PrivateRoute>
 							}
 						/>
