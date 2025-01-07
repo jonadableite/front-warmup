@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ActivityIcon, ClockIcon, EyeIcon, TrendingUpIcon } from "lucide-react";
 import type React from "react";
 import { useLayoutEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
 	Area,
 	AreaChart,
@@ -16,6 +17,7 @@ import {
 	YAxis,
 } from "recharts";
 import axios from "../axiosConfig";
+import { getToken, isAuthenticated } from "../utils/auth";
 
 // Interface para tipagem dos dados
 interface WarmupStats {
@@ -100,6 +102,36 @@ const ProgressBar = ({ label, value, color }) => (
 );
 
 const Home: React.FC = () => {
+	const navigate = useNavigate();
+
+	useLayoutEffect(() => {
+		const checkAuthAndFetchData = async () => {
+			if (!isAuthenticated()) {
+				navigate("/login");
+				return;
+			}
+
+			const token = getToken();
+			console.log("Token atual:", token); // Para debug
+
+			try {
+				const response = await axios.get("/api/dashboard");
+				console.log("Dashboard response:", response.data);
+				// Processar dados do dashboard...
+			} catch (error) {
+				console.error("Erro ao buscar dados do dashboard:", error);
+				if (axios.isAxiosError(error) && error.response?.status === 401) {
+					navigate("/login");
+				}
+			}
+		};
+
+		checkAuthAndFetchData();
+		const intervalId = setInterval(checkAuthAndFetchData, 30000);
+
+		return () => clearInterval(intervalId);
+	}, [navigate]);
+
 	const [dashboardData, setDashboardData] = useState({
 		stats: [
 			{
@@ -146,7 +178,7 @@ const Home: React.FC = () => {
 					instanceProgress,
 					messageTypes,
 					instances,
-					previousPeriod, // Adicione isso no backend
+					previousPeriod,
 				} = response.data;
 
 				// Calcular tendências

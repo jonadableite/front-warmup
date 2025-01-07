@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "../axiosConfig";
+import MatrixRain from "../components/MatrixRain";
 import { API_BASE_URL } from "../config";
 
 const Login: React.FC = () => {
@@ -47,8 +48,8 @@ const Login: React.FC = () => {
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-black to-whatsapp-green/5 flex items-center justify-center px-4 py-8 overflow-hidden">
+			<MatrixRain /> {/* Adiciona o efeito Matrix */}
 			<div className="absolute inset-0 bg-gradient-to-r from-whatsapp-green/5 to-whatsapp-profundo/20 blur-3xl animate-pulse"></div>
-
 			<motion.div
 				initial={{ opacity: 0, scale: 0.9 }}
 				animate={{ opacity: 1, scale: 1 }}

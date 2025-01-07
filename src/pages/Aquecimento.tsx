@@ -19,8 +19,14 @@ interface InstanceStatus {
 
 interface WarmupStatusResponse {
 	success: boolean;
-	instances: Record<string, InstanceStatus>;
-	globalStatus: string;
+	instances: {
+		[key: string]: {
+			status: "active" | "paused" | "stopped";
+			dailyTotal?: number;
+			lastActive?: string;
+		};
+	};
+	globalStatus: "active" | "inactive" | "paused";
 }
 
 interface Instancia {
@@ -659,11 +665,10 @@ const Aquecimento: React.FC = () => {
 			);
 
 			if (response.data.success) {
-				// Aguardar um momento para o backend atualizar o status
-				await new Promise((resolve) => setTimeout(resolve, 2000));
+				// Aguardar confirmação do status
+				await new Promise((resolve) => setTimeout(resolve, 1000));
 
-				// Verificar se o status foi realmente atualizado
-				const statusResponse = await axios.get(
+				const statusResponse = await axios.get<WarmupStatusResponse>(
 					`${API_BASE_URL}/api/warmup/status`,
 					{
 						headers: {
@@ -672,29 +677,16 @@ const Aquecimento: React.FC = () => {
 					},
 				);
 
-				if (statusResponse.data.globalStatus === "active") {
-					setIsWarmingUp(true);
+				const isActive = statusResponse.data.globalStatus === "active";
+				setIsWarmingUp(isActive);
+
+				if (isActive) {
 					toast.success("Aquecimento iniciado com sucesso!");
 				} else {
-					// Tentar novamente após mais alguns segundos
-					await new Promise((resolve) => setTimeout(resolve, 2000));
-					const finalCheck = await axios.get(
-						`${API_BASE_URL}/api/warmup/status`,
-						{
-							headers: {
-								Authorization: `Bearer ${token}`,
-							},
-						},
-					);
-
-					setIsWarmingUp(finalCheck.data.globalStatus === "active");
+					throw new Error("Falha ao iniciar aquecimento");
 				}
-			} else {
-				throw new Error(
-					response.data.message || "Falha ao iniciar aquecimento",
-				);
 			}
-		} catch (error: any) {
+		} catch (error) {
 			console.error("Erro ao iniciar aquecimento:", error);
 			toast.error(
 				error.response?.data?.message || "Erro ao iniciar aquecimento",
@@ -731,7 +723,7 @@ const Aquecimento: React.FC = () => {
 				throw new Error("Token de autenticação não encontrado");
 			}
 
-			const response = await axios.post(
+			await axios.post(
 				`${API_BASE_URL}/api/warmup/stop-all`,
 				{},
 				{
@@ -742,31 +734,25 @@ const Aquecimento: React.FC = () => {
 				},
 			);
 
-			if (response.data.success) {
-				// Atualizar estados imediatamente
-				setIsWarmingUp(false);
-				setIsStarting(false);
-				toast.success("Aquecimento parado com sucesso!");
+			// Aguardar confirmação do status
+			await new Promise((resolve) => setTimeout(resolve, 1000));
 
-				// Aguardar um momento para garantir que o backend atualizou os estados
-				await new Promise((resolve) => setTimeout(resolve, 1000));
-
-				// Verificar o status atual após parar
-				const statusResponse = await axios.get(
-					`${API_BASE_URL}/api/warmup/status`,
-					{
-						headers: {
-							Authorization: `Bearer ${token}`,
-						},
+			const statusResponse = await axios.get<WarmupStatusResponse>(
+				`${API_BASE_URL}/api/warmup/status`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
 					},
-				);
+				},
+			);
 
-				// Forçar atualização do estado com base no status real
-				const isActive = statusResponse.data.globalStatus === "active";
-				setIsWarmingUp(isActive);
-				setIsStarting(false);
+			const isActive = statusResponse.data.globalStatus === "active";
+			setIsWarmingUp(isActive);
+
+			if (!isActive) {
+				toast.success("Aquecimento parado com sucesso!");
 			}
-		} catch (error: any) {
+		} catch (error) {
 			console.error("Erro ao parar aquecimento:", error);
 			toast.error(error.response?.data?.message || "Erro ao parar aquecimento");
 		} finally {
@@ -775,9 +761,9 @@ const Aquecimento: React.FC = () => {
 	};
 
 	useEffect(() => {
-		let interval: number;
+		let interval: NodeJS.Timeout;
 
-		const checkWarmupStatus = async (): Promise<void> => {
+		const checkWarmupStatus = async () => {
 			try {
 				const token = localStorage.getItem("token");
 				if (!token) return;
@@ -793,73 +779,35 @@ const Aquecimento: React.FC = () => {
 
 				console.log("Status do aquecimento:", response.data);
 
+				// Atualizar estado com base no status global
+				const isActive = response.data.globalStatus === "active";
+				setIsWarmingUp(isActive);
+				setIsStarting(false);
+
+				// Verificar limites diários
 				const instances = response.data.instances ?? {};
 				let limitReached = false;
 				const limitReachedInstances: string[] = [];
 
-				// Verificar cada instância
 				Object.entries(instances).forEach(([instanceName, instanceData]) => {
-					if (instanceData.dailyTotal >= 20) {
+					if (instanceData.dailyTotal && instanceData.dailyTotal >= 20) {
 						limitReached = true;
 						limitReachedInstances.push(instanceName);
-
-						// Notificação específica para cada instância
-						toast.error(
-							`Instância ${instanceName} atingiu o limite diário de 20 mensagens!`,
-							{
-								duration: 10000,
-								icon: "⚠️",
-								position: "top-center",
-							},
-						);
 					}
 				});
 
 				if (limitReached) {
-					// Parar o aquecimento
-					setIsWarmingUp(false);
+					// Parar o aquecimento automaticamente
 					await handleStopWarmup();
-
-					// Mostrar modal
 					setShowDailyLimitModal(true);
 
-					// Adicionar notificação fixa no topo
 					toast.error(
-						`Limite diário atingido! Instâncias afetadas: ${limitReachedInstances.join(", ")}`,
+						`Limite diário atingido nas instâncias: ${limitReachedInstances.join(", ")}`,
 						{
-							duration: Number.POSITIVE_INFINITY,
-							icon: "🚫",
+							duration: 10000,
 							position: "top-center",
-							style: {
-								background: "#ef4444",
-								color: "white",
-								fontWeight: "bold",
-							},
 						},
 					);
-
-					return;
-				}
-
-				const isActive = response.data.globalStatus === "active";
-				setIsWarmingUp(isActive);
-
-				if (!isActive) {
-					setIsStarting(false);
-				}
-
-				// Verificar se todas as instâncias estão pausadas
-				const allPaused = Object.values(instances).every(
-					(instance) => instance.status === "paused",
-				);
-
-				if (allPaused && isWarmingUp) {
-					setIsWarmingUp(false);
-					setIsStarting(false);
-					toast.success("O aquecimento foi pausado", {
-						duration: 3000,
-						icon: "⏸️",
-					});
 				}
 			} catch (error) {
 				console.error("Erro ao verificar status:", error);
@@ -871,14 +819,14 @@ const Aquecimento: React.FC = () => {
 		// Verificar status imediatamente
 		checkWarmupStatus();
 
-		// Configurar intervalo apenas se estiver aquecendo ou iniciando
+		// Configurar intervalo se estiver aquecendo ou iniciando
 		if (isWarmingUp || isStarting) {
-			interval = window.setInterval(checkWarmupStatus, 2000);
+			interval = setInterval(checkWarmupStatus, 2000);
 		}
 
 		return () => {
 			if (interval) {
-				window.clearInterval(interval);
+				clearInterval(interval);
 			}
 		};
 	}, [isWarmingUp, isStarting]);

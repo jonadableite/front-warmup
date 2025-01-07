@@ -148,9 +148,28 @@ const InstanceCard = ({
 					<ConnectionStatus connected={isConnected} />
 				</div>
 
+				{/* Informações do Proxy */}
+				{instance.proxyConfig && (
+					<div className="mt-4 p-4 bg-black/20 backdrop-blur-md rounded-xl border border-purple-500/20">
+						<div className="flex items-center space-x-2 mb-2">
+							<div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+							<p className="text-sm font-semibold text-purple-400">
+								Proxy Configurado
+							</p>
+						</div>
+						<p className="text-sm text-whatsapp-branco">
+							{instance.proxyConfig.host}:{instance.proxyConfig.port}
+						</p>
+						{instance.proxyConfig.username && (
+							<p className="text-xs text-whatsapp-cinzaClaro mt-1">
+								Usuário: {instance.proxyConfig.username}
+							</p>
+						)}
+					</div>
+				)}
+
 				{/* Botões de Ação */}
 				<div className="space-y-3">
-					{/* Primeira linha de botões */}
 					{!isConnected && (
 						<motion.button
 							onClick={() => onReconnect(instance.instanceName)}
@@ -162,7 +181,6 @@ const InstanceCard = ({
 						</motion.button>
 					)}
 
-					{/* Segunda linha de botões - 3 botões */}
 					<div className="grid grid-cols-3 gap-3">
 						<motion.button
 							onClick={() => onLogout(instance.instanceName)}
@@ -186,7 +204,6 @@ const InstanceCard = ({
 						</motion.button>
 					</div>
 
-					{/* Terceira linha de botões - 2 botões */}
 					<div className="grid grid-cols-2 gap-3">
 						<motion.button
 							onClick={() => onConfigureProxy(instance)}
@@ -240,6 +257,10 @@ const InstanceCard = ({
 };
 
 const Numeros = () => {
+	const [proxyHost, setProxyHost] = useState("");
+	const [proxyPort, setProxyPort] = useState("");
+	const [proxyUsername, setProxyUsername] = useState("");
+	const [proxyPassword, setProxyPassword] = useState("");
 	const [isDarkMode] = useDarkMode();
 	const [instances, setInstances] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -616,6 +637,63 @@ const Numeros = () => {
 		}
 	};
 
+	const saveProxyConfig = async () => {
+		try {
+			const token = localStorage.getItem("token");
+			if (!selectedInstanceForProxy?.id) {
+				toast.error("ID da instância não encontrado");
+				return;
+			}
+
+			const proxyConfig = {
+				host: proxyHost,
+				port: Number.parseInt(proxyPort),
+				username: proxyUsername || undefined,
+				password: proxyPassword || undefined,
+			};
+
+			// Atualiza no banco local
+			await axios.put(
+				`${API_BASE_URL}/api/instances/instance/${selectedInstanceForProxy.id}/proxy`,
+				proxyConfig,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+				},
+			);
+
+			// Atualiza na API externa
+			await axios.post(
+				`${API_URL}/api/instance/proxy/${selectedInstanceForProxy.instanceName}`,
+				proxyConfig,
+				{
+					headers: {
+						apikey: API_KEY,
+						"Content-Type": "application/json",
+					},
+				},
+			);
+
+			toast.success("Configurações de proxy salvas com sucesso!");
+			setShowProxyConfig(false);
+			await fetchInstances();
+
+			// Limpa os campos
+			setProxyHost("");
+			setProxyPort("");
+			setProxyUsername("");
+			setProxyPassword("");
+		} catch (error) {
+			console.error("Erro ao salvar configurações de proxy:", error);
+			toast.error(
+				error.response?.data?.message ||
+					"Erro ao salvar configurações de proxy",
+			);
+		}
+	};
+
 	const handleConfigureTypebot = (instance) => {
 		console.log("Instance selected for typebot:", instance);
 		if (!instance.id) {
@@ -936,7 +1014,7 @@ const Numeros = () => {
 				{/* Status Bar */}
 				<div className="mb-4 bg-blue-100 dark:bg-whatsapp-prata/20 p-3 rounded text-black dark:text-white flex justify-between items-center">
 					<div className="flex space-x-4">
-						<span>Plano Atual: {currentPlan || "Free"}</span>
+						<span>Plano Atual: {currentPlan || ""}</span>
 						<span>Limite de Instâncias: {instanceLimit || 0}</span>
 						<span>Slots Restantes: {remainingSlots || 0}</span>
 					</div>
@@ -1148,9 +1226,10 @@ const Numeros = () => {
 							</label>
 							<input
 								type="text"
+								value={proxyHost}
+								onChange={(e) => setProxyHost(e.target.value)}
 								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
 								placeholder="Ex: proxy.example.com"
-								// Adicione o valor e o onChange para o estado do host do proxy
 							/>
 						</div>
 						<div className="mb-4">
@@ -1159,9 +1238,10 @@ const Numeros = () => {
 							</label>
 							<input
 								type="number"
+								value={proxyPort}
+								onChange={(e) => setProxyPort(e.target.value)}
 								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
 								placeholder="Ex: 8080"
-								// Adicione o valor e o onChange para o estado da porta do proxy
 							/>
 						</div>
 						<div className="mb-4">
@@ -1170,9 +1250,10 @@ const Numeros = () => {
 							</label>
 							<input
 								type="text"
+								value={proxyUsername}
+								onChange={(e) => setProxyUsername(e.target.value)}
 								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
 								placeholder="Usuário (opcional)"
-								// Adicione o valor e o onChange para o estado do usuário do proxy
 							/>
 						</div>
 						<div className="mb-4">
@@ -1181,16 +1262,14 @@ const Numeros = () => {
 							</label>
 							<input
 								type="password"
+								value={proxyPassword}
+								onChange={(e) => setProxyPassword(e.target.value)}
 								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
 								placeholder="Senha (opcional)"
-								// Adicione o valor e o onChange para o estado da senha do proxy
 							/>
 						</div>
 						<motion.button
-							onClick={() => {
-								// Aqui você deve implementar a lógica para salvar as configurações do proxy
-								setShowProxyConfig(false);
-							}}
+							onClick={saveProxyConfig}
 							className="bg-gradient-to-r from-whatsapp-green to-whatsapp-dark text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl w-full"
 						>
 							Salvar Configurações

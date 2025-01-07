@@ -1,107 +1,107 @@
 // src/pages/PaymentSuccess.tsx
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle } from "lucide-react";
+import { ArrowRight, CheckCircle, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import axios from "../axiosConfig";
 
 const PaymentSuccess = () => {
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
 	const [status, setStatus] = useState("loading");
-	const [subscription, setSubscription] = useState(null);
+	const [subscriptionData, setSubscriptionData] = useState<any>(null);
+	const [attempts, setAttempts] = useState(0);
+	const MAX_ATTEMPTS = 20;
 
-	useEffect(() => {
-		const checkSubscription = async () => {
-			try {
-				const token = localStorage.getItem("token");
-				const response = await fetch(
-					"https://aquecerapi.whatlead.com.br/api/stripe/subscription/status",
-					{
-						headers: {
-							Authorization: `Bearer ${token}`,
-							"Content-Type": "application/json",
-						},
-					},
-				);
-
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-
-				const data = await response.json();
-				console.log("Subscription data:", data);
-
-				if (data.status === "active" || data.plan !== "free") {
-					setStatus("success");
-					setSubscription(data);
-				} else {
-					// Aguardar um pouco e tentar novamente
-					await new Promise((resolve) => setTimeout(resolve, 2000));
-					await checkSubscription();
-				}
-			} catch (error) {
-				console.error("Erro ao verificar assinatura:", error);
-				setStatus("error");
+	const checkPlanUpdate = async () => {
+		try {
+			const token = localStorage.getItem("token");
+			if (!token) {
+				console.log("Token não encontrado, tentando novamente...");
+				return false;
 			}
-		};
 
-		checkSubscription();
-	}, []);
+			const response = await axios.get("/api/users/plan-status", {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
 
-	useEffect(() => {
-		if (status === "success") {
-			navigate("/");
+			if (response.data.success) {
+				const { user, subscription } = response.data;
+				setSubscriptionData(subscription);
+
+				if (user.plan !== "free") {
+					setStatus("success");
+					toast.success("Seu plano foi atualizado com sucesso!");
+					return true;
+				}
+			}
+
+			setAttempts((prev) => prev + 1);
+			return false;
+		} catch (error) {
+			console.error("Erro ao verificar atualização do plano:", error);
+			setAttempts((prev) => prev + 1);
+			return false;
 		}
-	}, [status, navigate]);
+	};
 
 	useEffect(() => {
-		const checkSubscription = async () => {
-			try {
-				const token = localStorage.getItem("token");
-				const response = await fetch(
-					"https://aquecerapi.whatlead.com.br/api/stripe/subscription/status",
-					{
-						headers: {
-							Authorization: `Bearer ${token}`,
-							"Content-Type": "application/json",
-						},
-					},
-				);
-
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-
-				const data = await response.json();
-				console.log("Subscription data:", data);
-
-				if (data.status === "active" || data.plan !== "free") {
-					setStatus("success");
-					setSubscription(data);
-				} else {
-					// Aguardar um pouco e tentar novamente
-					await new Promise((resolve) => setTimeout(resolve, 2000));
-					await checkSubscription();
-				}
-			} catch (error) {
-				console.error("Erro ao verificar assinatura:", error);
-				setStatus("error");
-			}
-		};
-
-		// Verificar se há um payment_intent ou session_id nos parâmetros
 		const paymentIntent = searchParams.get("payment_intent");
 		const sessionId = searchParams.get("session_id");
 
-		if (paymentIntent || sessionId) {
-			checkSubscription();
-		} else {
-			setStatus("error");
+		if (!paymentIntent && !sessionId) {
+			navigate("/pricing");
+			return;
 		}
-	}, [searchParams]);
+
+		let checkInterval: NodeJS.Timeout;
+
+		const startChecking = () => {
+			checkInterval = setInterval(async () => {
+				const success = await checkPlanUpdate();
+
+				if (success || attempts >= MAX_ATTEMPTS) {
+					clearInterval(checkInterval);
+					if (!success && attempts >= MAX_ATTEMPTS) {
+						setStatus("error");
+					}
+				}
+			}, 3000); // Aumentado o intervalo para 3 segundos
+		};
+
+		startChecking();
+
+		return () => {
+			if (checkInterval) {
+				clearInterval(checkInterval);
+			}
+		};
+	}, [searchParams, attempts]);
+
+	// Efeito para verificação periódica
+	useEffect(() => {
+		const interval = setInterval(checkPlanUpdate, 5000);
+		return () => clearInterval(interval);
+	}, []);
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-whatsapp-profundo to-whatsapp-profundo p-4">
+			<ToastContainer
+				position="top-right"
+				autoClose={5000}
+				hideProgressBar={false}
+				newestOnTop
+				closeOnClick
+				rtl={false}
+				pauseOnFocusLoss
+				draggable
+				pauseOnHover
+				theme="dark"
+			/>
 			<div className="max-w-2xl mx-auto">
 				{status === "loading" ? (
 					<motion.div
@@ -134,8 +134,27 @@ const PaymentSuccess = () => {
 							</h1>
 
 							<p className="text-whatsapp-cinzaClaro mb-8">
-								Seu plano foi ativado e você já pode começar a usar todos os
-								recursos.
+								Parabéns! Seu plano foi ativado e agora você está entre aqueles
+								que realmente estão prontos para alcançar o sucesso em seus
+								negócios. Aqui é onde encontra-se pessoas que estão alavancando
+								seus resultados e garantindo total segurança em suas operações.
+							</p>
+
+							{subscriptionData && (
+								<div className="mt-6 p-4 bg-whatsapp-green/10 rounded-lg">
+									<h2 className="text-xl font-semibold mb-2">
+										Detalhes do Plano
+									</h2>
+									<p>Plano: {subscriptionData.plan}</p>
+									<p>Instâncias: {subscriptionData.maxInstances}</p>
+									<p>Mensagens/dia: {subscriptionData.messagesPerDay}</p>
+								</div>
+							)}
+
+							<p className="text-whatsapp-cinzaClaro mb-8">
+								Não estou dizendo que será fácil. Mas com certeza, esse é o
+								melhor caminho para você ter resultados e construir riqueza de
+								verdade. A jornada começa agora.
 							</p>
 
 							<motion.button
@@ -147,6 +166,24 @@ const PaymentSuccess = () => {
 								Ir para o Dashboard
 								<ArrowRight className="ml-2 w-5 h-5" />
 							</motion.button>
+
+							<div className="mt-8 text-whatsapp-cinzaClaro">
+								<motion.div
+									initial={{ scale: 0 }}
+									animate={{ scale: 1 }}
+									className="inline-block p-3 bg-whatsapp-green/20 rounded-full mb-4"
+								>
+									<Star className="w-6 h-6 text-whatsapp-green" />
+								</motion.div>
+								<p>
+									Se tiver alguma dúvida, nosso time de suporte está aqui para
+									ajudar. Visite nossa{" "}
+									<a href="/tutorial" className="text-whatsapp-green underline">
+										Central de Ajuda
+									</a>{" "}
+									ou entre em contato diretamente.
+								</p>
+							</div>
 						</div>
 					</motion.div>
 				) : (

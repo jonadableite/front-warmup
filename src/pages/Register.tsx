@@ -5,6 +5,7 @@ import { AtSignIcon, LockIcon, UserIcon } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import MatrixRain from "../components/MatrixRain";
 
 const Register: React.FC = () => {
 	const [name, setName] = useState("");
@@ -67,9 +68,9 @@ const Register: React.FC = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-black to-whatsapp-green flex items-center justify-center px-4 py-8 overflow-hidden">
-			<div className="absolute inset-0 bg-gradient-to-r from-whatsapp-green/20 to-whatsapp-profundo/20 blur-3xl animate-pulse"></div>
-
+		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-black to-whatsapp-green/5 flex items-center justify-center px-4 py-8 overflow-hidden">
+			<MatrixRain /> {/* Adiciona o efeito Matrix */}
+			<div className="absolute inset-0 bg-gradient-to-r from-whatsapp-green/5 to-whatsapp-profundo/20 blur-3xl animate-pulse"></div>
 			<motion.div
 				initial={{ opacity: 0, scale: 0.9 }}
 				animate={{ opacity: 1, scale: 1 }}
@@ -191,7 +192,6 @@ const Register: React.FC = () => {
 					</div>
 				</form>
 			</motion.div>
-
 			{/* Efeitos de fundo animados */}
 			<div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-purple-900/30 to-transparent pointer-events-none"></div>
 		</div>

@@ -7,34 +7,62 @@ import {
 import { motion } from "framer-motion";
 import { LockIcon } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const CheckoutForm = ({ clientSecret, plan, price }) => {
 	const stripe = useStripe();
 	const elements = useElements();
-	const [message, setMessage] = useState(null);
-	const [isProcessing, setIsProcessing] = useState(false);
+	const navigate = useNavigate();
+	const [processing, setProcessing] = useState(false);
+	const [error, setError] = useState("");
+	const [message, setMessage] = useState(""); // Adicione esta linha
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		if (!stripe || !elements) return;
 
-		setIsProcessing(true);
+		setProcessing(true);
+		setError("");
+		setMessage("");
 
-		const protocol = window.location.protocol;
-		const host = window.location.host;
+		try {
+			const { error: submitError } = await elements.submit();
+			if (submitError) {
+				setError(submitError.message);
+				setMessage(submitError.message);
+				return;
+			}
 
-		const { error } = await stripe.confirmPayment({
-			elements,
-			confirmParams: {
-				return_url: `${protocol}//${host}/payment-success`,
-			},
-		});
+			const token = localStorage.getItem("token");
+			if (!token) {
+				setError("Sessão expirada. Por favor, faça login novamente.");
+				navigate("/login");
+				return;
+			}
 
-		if (error) {
-			setMessage(error.message);
+			const { error: paymentError } = await stripe.confirmPayment({
+				elements,
+				confirmParams: {
+					return_url: `${window.location.origin}/payment-success`,
+					payment_method_data: {
+						billing_details: {
+							// Adicione quaisquer detalhes adicionais necessários
+						},
+					},
+				},
+			});
+
+			if (paymentError) {
+				setError(paymentError.message);
+				setMessage(paymentError.message);
+			}
+		} catch (err) {
+			console.error("Erro no pagamento:", err);
+			setError("Erro ao processar pagamento");
+			setMessage("Erro ao processar pagamento");
+		} finally {
+			setProcessing(false);
 		}
-
-		setIsProcessing(false);
 	};
 
 	return (
@@ -60,21 +88,21 @@ export const CheckoutForm = ({ clientSecret, plan, price }) => {
 				<div className="space-y-4">
 					<motion.button
 						type="submit"
-						disabled={isProcessing}
+						disabled={processing}
 						whileHover={{ scale: 1.02 }}
 						whileTap={{ scale: 0.98 }}
 						className={`
-                            w-full py-4 px-6 rounded-xl
-                            bg-gradient-to-r from-whatsapp-green to-whatsapp-dark
-                            text-white font-medium text-lg
-                            disabled:opacity-50
-                            transition-all duration-300
-                            flex items-center justify-center
-                            shadow-lg shadow-whatsapp-green/20
-                        `}
+              w-full py-4 px-6 rounded-xl
+              bg-gradient-to-r from-whatsapp-green to-whatsapp-dark
+              text-white font-medium text-lg
+              disabled:opacity-50
+              transition-all duration-300
+              flex items-center justify-center
+              shadow-lg shadow-whatsapp-green/20
+            `}
 					>
 						<LockIcon className="w-5 h-5 mr-2" />
-						{isProcessing ? "Processando..." : `Pagar R$ ${price.toFixed(2)}`}
+						{processing ? "Processando..." : `Pagar R$ ${price.toFixed(2)}`}
 					</motion.button>
 
 					<p className="text-center text-whatsapp-cinzaClaro text-sm">

@@ -1,4 +1,3 @@
-import LogoWhatsapp from "@/assets/logo-whatsapp.svg";
 import {
 	DropdownMenuContent,
 	DropdownMenuItem,
@@ -20,6 +19,7 @@ import {
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import LogoWhatsapp from "../../public/icons8-whatsapp.gif";
 
 const SidebarComponent: React.FC = () => {
 	const navigate = useNavigate();

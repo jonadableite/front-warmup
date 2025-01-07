@@ -1,14 +1,14 @@
 // src/axiosConfig.ts
 import axios from "axios";
+import { API_BASE_URL } from "./config";
 
 const instance = axios.create({
-	baseURL: "https://aquecerapi.whatlead.com.br",
+	baseURL: API_BASE_URL,
 	headers: {
 		"Content-Type": "application/json",
 	},
 });
 
-// Interceptor para adicionar o token de autenticação
 instance.interceptors.request.use(
 	(config) => {
 		const token = localStorage.getItem("token");
@@ -18,6 +18,21 @@ instance.interceptors.request.use(
 		return config;
 	},
 	(error) => {
+		return Promise.reject(error);
+	},
+);
+
+instance.interceptors.response.use(
+	(response) => response,
+	(error) => {
+		// Não redirecionar automaticamente para login em caso de erro 401
+		if (
+			error.response?.status === 401 &&
+			!window.location.pathname.includes("/payment-success")
+		) {
+			localStorage.removeItem("token");
+			window.location.href = "/login";
+		}
 		return Promise.reject(error);
 	},
 );
