@@ -1,24 +1,16 @@
-// src/hooks/useDarkMode.js
+// src/hooks/useDarkMode.ts
 import { useEffect, useState } from "react";
 
 export function useDarkMode() {
-	const [isDarkMode, setIsDarkMode] = useState(() => {
-		const savedMode = localStorage.getItem("dark-mode");
-		return savedMode ? JSON.parse(savedMode) : false;
-	});
+	// Sempre retorna true para isDarkMode
+	const [isDarkMode] = useState(true);
 
 	useEffect(() => {
-		const className = "dark";
-		const bodyClass = window.document.documentElement.classList;
+		// Sempre adiciona a classe dark
+		document.documentElement.classList.add("dark");
+		localStorage.setItem("dark-mode", "true");
+	}, []);
 
-		if (isDarkMode) {
-			bodyClass.add(className);
-		} else {
-			bodyClass.remove(className);
-		}
-
-		localStorage.setItem("dark-mode", JSON.stringify(isDarkMode));
-	}, [isDarkMode]);
-
-	return [isDarkMode, setIsDarkMode];
+	// Retorna apenas o estado, sem a função de alteração
+	return [isDarkMode];
 }

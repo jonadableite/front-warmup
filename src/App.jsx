@@ -6,6 +6,7 @@ import PublicRoute from "./components/PublicRoute";
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
 import { SidebarProvider, useSidebar } from "./components/ui/sidebar";
+import AccountInfoPage from "./pages/AccountInfoPage";
 import Aquecimento from "./pages/Aquecimento";
 import CheckoutPage from "./pages/CheckoutPage";
 import Configuracoes from "./pages/Configuracoes";
@@ -76,6 +77,14 @@ function AppContent() {
 								<PublicRoute>
 									<ForgotPassword />
 								</PublicRoute>
+							}
+						/>
+						<Route
+							path="/account-info"
+							element={
+								<PrivateRoute>
+									<AccountInfoPage />
+								</PrivateRoute>
 							}
 						/>
 						<Route

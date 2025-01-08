@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const API_BASE_URL = "https://back.whatlead.com.br";
+const API_BASE_URL = "https://aquecerapi.whatlead.com.br";
 
 // Componente de Cartão de Estatística
 const StatCard = ({ icon: Icon, title, value, trend, color }) => (

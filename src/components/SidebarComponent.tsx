@@ -8,7 +8,6 @@ import {
 	BookOpen,
 	CalendarIcon,
 	ChevronUp,
-	CreditCard,
 	FlameIcon,
 	HomeIcon,
 	LifeBuoy,
@@ -19,7 +18,7 @@ import {
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import LogoWhatsapp from "../../public/icons8-whatsapp.gif";
+import LogoWhatsapp from "/icons8-whatsapp.gif";
 
 const SidebarComponent: React.FC = () => {
 	const navigate = useNavigate();
@@ -216,7 +215,7 @@ const SidebarComponent: React.FC = () => {
 						align="start"
 						className="w-56 bg-whatsapp-profundo border border-whatsapp-cinza text-gray-300"
 					>
-						<DropdownMenuItem onClick={() => {}}>
+						<DropdownMenuItem onClick={() => navigate("/account-info")}>
 							<User2 className="mr-2" size={16} />
 							<span>Informações da Conta</span>
 						</DropdownMenuItem>
@@ -224,11 +223,6 @@ const SidebarComponent: React.FC = () => {
 						<DropdownMenuItem onClick={() => navigate("/tutorial")}>
 							<BookOpen className="mr-2" size={16} />
 							<span>Tutorial</span>
-						</DropdownMenuItem>
-
-						<DropdownMenuItem onClick={() => navigate("/pricing")}>
-							<CreditCard className="mr-2" size={16} />
-							<span>Gerenciar Plano</span>
 						</DropdownMenuItem>
 
 						{trialDaysLeft !== null && (
