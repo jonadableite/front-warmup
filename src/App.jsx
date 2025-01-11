@@ -1,6 +1,7 @@
 import { useDarkMode } from "@/hooks/useDarkMode";
 import React, { useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
+import CompanyRequiredRoute from "./components/CompanyRequiredRoute";
 import PrivateRoute from "./components/PrivateRoute";
 import PublicRoute from "./components/PublicRoute";
 import Header from "./components/layout/Header";
@@ -9,7 +10,9 @@ import { SidebarProvider, useSidebar } from "./components/ui/sidebar";
 import AccountInfoPage from "./pages/AccountInfoPage";
 import Aquecimento from "./pages/Aquecimento";
 import CheckoutPage from "./pages/CheckoutPage";
+import CompanySetup from "./pages/CompanySetup";
 import Configuracoes from "./pages/Configuracoes";
+import FileUpload from "./pages/FileUpload";
 import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -45,7 +48,11 @@ function AppContent() {
 	const isPublicRoute =
 		location.pathname === "/login" ||
 		location.pathname === "/register" ||
-		location.pathname === "/forgot-password";
+		location.pathname === "/forgot-password" ||
+		location.pathname === "/company-setup" ||
+		location.pathname === "/pricing" ||
+		location.pathname === "/checkout" ||
+		location.pathname === "/return";
 
 	return (
 		<div className="flex min-h-screen">
@@ -54,6 +61,7 @@ function AppContent() {
 				{!isPublicRoute && <Header isSidebarOpen={open} />}
 				<main className={`${!isPublicRoute ? "pt-16" : ""}`}>
 					<Routes>
+						{/* Rotas públicas */}
 						<Route
 							path="/login"
 							element={
@@ -70,7 +78,6 @@ function AppContent() {
 								</PublicRoute>
 							}
 						/>
-						<Route path="/pricing" element={<PricingPage />} />
 						<Route
 							path="/forgot-password"
 							element={
@@ -79,19 +86,28 @@ function AppContent() {
 								</PublicRoute>
 							}
 						/>
+						<Route path="/pricing" element={<PricingPage />} />
+						<Route path="/checkout" element={<CheckoutPage />} />
+						<Route path="/return" element={<Return />} />
+
+						{/* Rota de configuração da empresa - requer apenas autenticação */}
 						<Route
-							path="/account-info"
+							path="/company-setup"
 							element={
 								<PrivateRoute>
-									<AccountInfoPage />
+									<CompanySetup />
 								</PrivateRoute>
 							}
 						/>
+
+						{/* Rotas que requerem autenticação e empresa configurada */}
 						<Route
 							path="/"
 							element={
 								<PrivateRoute>
-									<Home />
+									<CompanyRequiredRoute>
+										<Home />
+									</CompanyRequiredRoute>
 								</PrivateRoute>
 							}
 						/>
@@ -99,7 +115,19 @@ function AppContent() {
 							path="/numeros"
 							element={
 								<PrivateRoute>
-									<Numeros />
+									<CompanyRequiredRoute>
+										<Numeros />
+									</CompanyRequiredRoute>
+								</PrivateRoute>
+							}
+						/>
+						<Route
+							path="/upload"
+							element={
+								<PrivateRoute>
+									<CompanyRequiredRoute>
+										<FileUpload />
+									</CompanyRequiredRoute>
 								</PrivateRoute>
 							}
 						/>
@@ -107,7 +135,9 @@ function AppContent() {
 							path="/tutorial"
 							element={
 								<PrivateRoute>
-									<TutorialPage />
+									<CompanyRequiredRoute>
+										<TutorialPage />
+									</CompanyRequiredRoute>
 								</PrivateRoute>
 							}
 						/>
@@ -115,7 +145,9 @@ function AppContent() {
 							path="/payment-success"
 							element={
 								<PrivateRoute>
-									<PaymentSuccess />
+									<CompanyRequiredRoute>
+										<PaymentSuccess />
+									</CompanyRequiredRoute>
 								</PrivateRoute>
 							}
 						/>
@@ -123,7 +155,9 @@ function AppContent() {
 							path="/aquecimento"
 							element={
 								<PrivateRoute>
-									<Aquecimento />
+									<CompanyRequiredRoute>
+										<Aquecimento />
+									</CompanyRequiredRoute>
 								</PrivateRoute>
 							}
 						/>
@@ -131,12 +165,22 @@ function AppContent() {
 							path="/configuracoes"
 							element={
 								<PrivateRoute>
-									<Configuracoes />
+									<CompanyRequiredRoute>
+										<Configuracoes />
+									</CompanyRequiredRoute>
 								</PrivateRoute>
 							}
 						/>
-						<Route path="/checkout" element={<CheckoutPage />} />
-						<Route path="/return" element={<Return />} />
+						<Route
+							path="/account-info"
+							element={
+								<PrivateRoute>
+									<CompanyRequiredRoute>
+										<AccountInfoPage />
+									</CompanyRequiredRoute>
+								</PrivateRoute>
+							}
+						/>
 					</Routes>
 				</main>
 			</div>

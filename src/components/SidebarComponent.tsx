@@ -13,6 +13,7 @@ import {
 	LifeBuoy,
 	PhoneIcon,
 	RocketIcon,
+	UploadIcon, // Importe o ícone para a nova rota
 	User2,
 } from "lucide-react";
 import type React from "react";
@@ -55,10 +56,16 @@ const SidebarComponent: React.FC = () => {
 		fetchTrialInfo();
 	}, []);
 
+	const allowedEmails = ["jonadab.leite@gmail.com", "lucaslopes0108@gmail.com"];
+	const isUploadAllowed = user && allowedEmails.includes(user.email);
+
 	const sidebarItems = [
 		{ id: 1, icon: HomeIcon, label: "Início", path: "/" },
 		{ id: 2, icon: FlameIcon, label: "Aquecimento", path: "/aquecimento" },
 		{ id: 3, icon: PhoneIcon, label: "Números", path: "/numeros" },
+		...(isUploadAllowed
+			? [{ id: 4, icon: UploadIcon, label: "Upload", path: "/upload" }]
+			: []),
 	];
 
 	const handleUpgrade = () => {
@@ -115,7 +122,7 @@ const SidebarComponent: React.FC = () => {
 											isActive
 												? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400"
 												: "text-gray-400 hover:text-white hover:bg-white/5"
-										} transition-colors duration-200`}
+										} transition-colors duration:200`}
 									>
 										<item.icon size={20} />
 										<motion.span

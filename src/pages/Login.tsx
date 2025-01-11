@@ -1,3 +1,4 @@
+// src/pages/Login.tsx
 import { motion } from "framer-motion";
 import type React from "react";
 import { useState } from "react";
@@ -16,6 +17,13 @@ const Login: React.FC = () => {
 	const [loading, setLoading] = useState(false);
 	const navigate = useNavigate();
 
+	const isTemporaryCompanyName = (companyName: string, userName: string) => {
+		return (
+			companyName === "Temporary Company" ||
+			companyName === `${userName}'s Company`
+		);
+	};
+
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError(null);
@@ -28,11 +36,28 @@ const Login: React.FC = () => {
 			});
 
 			const { token, user } = response.data;
+
+			// Adicione um log para debug
+			console.log("Token recebido:", token);
+
 			localStorage.setItem("token", token);
 			localStorage.setItem("user", JSON.stringify(user));
 
-			toast.success("Login realizado com sucesso!");
-			navigate("/");
+			// Verificar o status da empresa
+			const companyStatus = await axios.get(
+				`${API_BASE_URL}/api/users/company/status`,
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				},
+			);
+
+			if (companyStatus.data.isTemporaryCompany) {
+				toast.info("Por favor, configure sua empresa para continuar.");
+				navigate("/company-setup");
+			} else {
+				toast.success("Login realizado com sucesso!");
+				navigate("/");
+			}
 		} catch (err: any) {
 			if (err.response) {
 				setError(err.response.data.error || "Erro ao fazer login");
@@ -48,7 +73,7 @@ const Login: React.FC = () => {
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-black to-whatsapp-green/5 flex items-center justify-center px-4 py-8 overflow-hidden">
-			<MatrixRain /> {/* Adiciona o efeito Matrix */}
+			<MatrixRain />
 			<div className="absolute inset-0 bg-gradient-to-r from-whatsapp-green/5 to-whatsapp-profundo/20 blur-3xl animate-pulse"></div>
 			<motion.div
 				initial={{ opacity: 0, scale: 0.9 }}
