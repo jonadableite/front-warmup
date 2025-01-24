@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Check, MessageSquare, Settings2, Zap } from "lucide-react";
+import PropTypes from "prop-types";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 
@@ -122,7 +123,7 @@ const TypebotConfigForm = ({
 				value={config[name]}
 				onChange={handleChange}
 				placeholder={placeholder}
-				className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+				className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-dark focus:border-transparent"
 			/>
 		</div>
 	);
@@ -136,7 +137,7 @@ const TypebotConfigForm = ({
 				name={name}
 				value={config[name]}
 				onChange={handleChange}
-				className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+				className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-dark focus:border-transparent"
 			>
 				{options.map((option) => (
 					<option key={option.value} value={option.value}>
@@ -146,6 +147,16 @@ const TypebotConfigForm = ({
 			</select>
 		</div>
 	);
+
+	const handleDelete = async () => {
+		try {
+			await onDelete(instance.id);
+			// A notificação de sucesso será mostrada no componente pai
+		} catch (error) {
+			console.error("Erro ao excluir as configurações:", error);
+			// A notificação de erro será mostrada no componente pai
+		}
+	};
 
 	const handleSave = async () => {
 		if (!validateForm()) {
@@ -176,12 +187,12 @@ const TypebotConfigForm = ({
 	);
 
 	return (
-		<div className="max-w-3xl mx-auto bg-whatsapp-profundo rounded-xl shadow-lg p-6">
+		<div className="max-w-3xl mx-auto bg-whatsapp-dark/10 rounded-xl shadow-lg p-6">
 			<ActionButtons />
 
 			{/* Progress Steps */}
 			<div className="flex justify-between mb-8 relative">
-				<div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 -z-10" />
+				<div className="absolute top-5 left-0 right-0 h-0.5 bg-whatsapp-green -z-10" />
 				{steps.map((step, idx) => (
 					<StepIndicator
 						key={step.id}
@@ -210,7 +221,7 @@ const TypebotConfigForm = ({
 									value={config.url}
 									onChange={handleChange}
 									placeholder="https://seu-typebot.com"
-									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-dark focus:border-transparent"
 								/>
 							</div>
 							<div className="mb-4">
@@ -223,7 +234,7 @@ const TypebotConfigForm = ({
 									value={config.typebot}
 									onChange={handleChange}
 									placeholder="Nome do seu fluxo"
-									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-dark focus:border-transparent"
 								/>
 							</div>
 							<div className="mb-4">
@@ -236,7 +247,7 @@ const TypebotConfigForm = ({
 									value={config.description}
 									onChange={handleChange}
 									placeholder="Breve descrição do fluxo"
-									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-dark focus:border-transparent"
 								/>
 							</div>
 						</div>
@@ -252,7 +263,7 @@ const TypebotConfigForm = ({
 									name="triggerType"
 									value={config.triggerType}
 									onChange={handleChange}
-									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-dark focus:border-transparent"
 								>
 									<option value="keyword">Palavra-chave</option>
 									<option value="all">Todas mensagens</option>
@@ -267,7 +278,7 @@ const TypebotConfigForm = ({
 									name="triggerOperator"
 									value={config.triggerOperator}
 									onChange={handleChange}
-									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-dark focus:border-transparent"
 								>
 									<option value="contains">Contém</option>
 									<option value="equals">Igual</option>
@@ -285,7 +296,7 @@ const TypebotConfigForm = ({
 									value={config.triggerValue}
 									onChange={handleChange}
 									placeholder="Digite a palavra-chave"
-									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-dark focus:border-transparent"
 								/>
 							</div>
 						</div>
@@ -303,7 +314,7 @@ const TypebotConfigForm = ({
 									value={config.unknownMessage}
 									onChange={handleChange}
 									placeholder="Mensagem não reconhecida"
-									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-dark focus:border-transparent"
 								/>
 							</div>
 							<div className="mb-4">
@@ -315,7 +326,7 @@ const TypebotConfigForm = ({
 									name="delayMessage"
 									value={config.delayMessage}
 									onChange={handleChange}
-									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-dark focus:border-transparent"
 								/>
 							</div>
 							<div className="mb-4">
@@ -327,7 +338,7 @@ const TypebotConfigForm = ({
 									name="expire"
 									value={config.expire}
 									onChange={handleChange}
-									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+									className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-whatsapp-dark focus:border-transparent"
 								/>
 							</div>
 						</div>
@@ -351,7 +362,7 @@ const TypebotConfigForm = ({
 						<button
 							type="button"
 							onClick={handleNextStep}
-							className="px-6 py-2 rounded-lg bg-whatsapp-green text-white hover:bg-whatsapp-green/90"
+							className="px-6 py-2 rounded-lg bg-whatsapp-green text-white hover:bg-whatsapp-green/50"
 						>
 							Próximo
 						</button>
@@ -360,7 +371,7 @@ const TypebotConfigForm = ({
 							type="button" // Mudado para type="button"
 							onClick={handleSave} // Usa handleSave em vez de submit
 							disabled={isSaving}
-							className="px-6 py-2 rounded-lg bg-whatsapp-green text-white hover:bg-whatsapp-green/90 disabled:opacity-50"
+							className="px-6 py-2 rounded-lg bg-whatsapp-green text-white hover:bg-whatsapp-green/50 disabled:opacity-50"
 						>
 							{isSaving ? "Salvando..." : "Salvar Configurações"}
 						</button>
@@ -370,5 +381,12 @@ const TypebotConfigForm = ({
 		</div>
 	);
 };
+TypebotConfigForm.propTypes = {
+	instance: PropTypes.object,
+	onUpdate: PropTypes.func.isRequired,
+	onDelete: PropTypes.func.isRequired,
+	isEditing: PropTypes.bool,
+};
 
+export default TypebotConfigForm;
 export default TypebotConfigForm;
