@@ -389,4 +389,3 @@ TypebotConfigForm.propTypes = {
 };
 
 export default TypebotConfigForm;
-export default TypebotConfigForm;

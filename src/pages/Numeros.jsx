@@ -716,35 +716,25 @@ const Numeros = () => {
 
 			// Primeiro, atualiza no banco local
 			await axios.put(
-				`${API_BASE_URL}/api/instances/instance/${selectedInstance.id}/typebot`, // Mudança aqui: de instanceId para id
-				{
-					typebot: {
-						...config,
-						description: config.description,
-					},
-				},
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-						"Content-Type": "application/json",
-					},
-				},
+				`${API_BASE_URL}/api/instances/instance/${selectedInstance.id}/typebot`,
+				config,
+				{ headers: { Authorization: `Bearer ${token}` } },
 			);
 
 			// Depois, atualiza na API externa
-			await axios.post(
-				`${API_URL}/typebot/create/${selectedInstance.instanceName}`,
-				{
-					...config,
-					description: config.description,
-				},
-				{
-					headers: {
-						apikey: API_KEY,
-						"Content-Type": "application/json",
-					},
-				},
-			);
+			// await axios.post(
+			// 	`${API_URL}/typebot/create/${selectedInstance.instanceName}`,
+			// 	{
+			// 		...config,
+			// 		description: config.description,
+			// 	},
+			// 	{
+			// 		headers: {
+			// 			apikey: API_KEY,
+			// 			"Content-Type": "application/json",
+			// 		},
+			// 	},
+			// );
 
 			toast.success("Configurações do Typebot atualizadas com sucesso!");
 			setShowTypebotConfig(false);
