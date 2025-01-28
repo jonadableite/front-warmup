@@ -19,7 +19,7 @@ import {
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import LogoWhatsapp from "/icons8-whatsapp.gif";
+import LogoWhatsapp from "../assets/favicon.svg";
 
 const SidebarComponent: React.FC = () => {
 	const navigate = useNavigate();
@@ -100,7 +100,7 @@ const SidebarComponent: React.FC = () => {
 							exit={{ opacity: 0 }}
 							className="flex flex-col"
 						>
-							<span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
+							<span className="text-xl font-bold bg-gradient-to-r from-whatsapp-green to-whatsapp-eletrico/80 bg-clip-text text-transparent">
 								Warmer
 							</span>
 							<span className="text-xs text-gray-400">by Whatlead</span>
@@ -120,7 +120,7 @@ const SidebarComponent: React.FC = () => {
 										whileTap={{ scale: 0.98 }}
 										className={`flex items-center p-3 rounded-lg ${
 											isActive
-												? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400"
+												? "bg-gradient-to-r from-blue-700/20 to-whatsapp-green/20 text-green-400"
 												: "text-gray-400 hover:text-white hover:bg-white/5"
 										} transition-colors duration:200`}
 									>
@@ -136,7 +136,7 @@ const SidebarComponent: React.FC = () => {
 										{isActive && (
 											<motion.div
 												layoutId="activeTab"
-												className="absolute left-0 w-1 h-8 bg-green-400 rounded-r-full"
+												className="absolute left-0 w-1 h-8 bg-whatsapp-green rounded-r-full"
 											/>
 										)}
 									</motion.div>
@@ -167,7 +167,7 @@ const SidebarComponent: React.FC = () => {
 							whileHover={{ scale: 1.05 }}
 							whileTap={{ scale: 0.95 }}
 							onClick={handleUpgrade}
-							className="relative inline-flex items-center justify-center overflow-hidden text-sm font-bold text-white bg-gradient-to-r from-whatsapp-dark via-green-500 to-whatsapp-dark bg-size-200 bg-pos-0 hover:bg-pos-100 px-4 py-2 rounded-full transition-all duration-300 ease-in-out transform hover:rotate-3 hover:shadow-lg group"
+							className="relative inline-flex items-center justify-center overflow-hidden text-sm font-bold text-white bg-gradient-to-r from-whatsapp-dark via-whatsapp-green to-whatsapp-dark bg-size-200 bg-pos-0 hover:bg-pos-100 px-4 py-2 rounded-full transition-all duration-300 ease-in-out transform hover:rotate-3 hover:shadow-lg group"
 						>
 							<RocketIcon className="mr-2 w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
 							Upgrade

@@ -1118,7 +1118,7 @@ const Aquecimento: React.FC = () => {
 									setMessage("");
 								}
 							}}
-							className="bg-whatsapp-dark hover:bg-whatsapp-green text-white px-4 py-2 rounded-lg transition-colors"
+							className="bg-whatsapp-green hover:bg-whatsapp-green/70 text-white px-4 py-2 rounded-lg transition-colors"
 						>
 							Adicionar Texto
 						</button>
@@ -1252,7 +1252,7 @@ const Aquecimento: React.FC = () => {
         ${
 					loading
 						? "bg-gray-500 cursor-not-allowed"
-						: "bg-gradient-to-r from-whatsapp-dark to-whatsapp-green/80"
+						: "bg-gradient-to-r from-blue-700/90 to-whatsapp-green/80"
 				}
         text-white font-bold transition-all duration-300
         shadow-lg hover:shadow-xl

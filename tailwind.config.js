@@ -17,7 +17,7 @@ module.exports = {
 		extend: {
 			colors: {
 				whatsapp: {
-					green: "#00FF6A",
+					green: "#4f47e6",
 					dark: "#128C7E",
 					light: "#DCF8C6",
 					cinza: "#1B1B1F",
