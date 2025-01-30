@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "../axiosConfig";
-import { Logo } from "../components/Logo";
+import Logo from "../components/Logo";
 import MatrixRain from "../components/MatrixRain";
 import { API_BASE_URL } from "../config";
 
@@ -83,8 +83,9 @@ const Login: React.FC = () => {
 				className="relative z-10 w-full max-w-md bg-whatsapp-profundo/70 backdrop-blur-xl rounded-2xl shadow-2xl border border-whatsapp-prata/30 p-8"
 			>
 				<div className="text-center mb-8">
-					<Logo variant="default" className="mx-auto" />{" "}
-					{/* Substituído o texto pela componente Logo */}
+					<div className="flex justify-center items-center">
+						<Logo variant="default" className="mx-auto w-48" />
+					</div>
 					<p className="text-whatsapp-branco/70 mt-2">
 						Faça login na sua conta de Warmup
 					</p>
