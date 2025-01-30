@@ -1,22 +1,11 @@
+import { Button } from "@/components/ui/button";
 import { useDarkMode } from "@/hooks/useDarkMode";
-/* eslint-disable react/prop-types */
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-	Layers,
-	MessageSquareMore,
-	Plus,
-	Power,
-	RefreshCw,
-	Settings,
-	Trash2,
-	Wifi,
-	X,
-} from "lucide-react";
+import { Layers, Plus, Power, RefreshCw, Trash2, Wifi, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { FaWhatsapp } from "react-icons/fa";
-import TypebotConfigForm from "../components/TypebotConfigForm";
 
 const API_BASE_URL = "https://aquecerapi.whatlead.com.br";
 const API_URL = "https://evo.whatlead.com.br";
@@ -90,29 +79,29 @@ const InstanceCard = ({
 	onReconnect,
 	onLogout,
 	onDelete,
-	onConfigureTypebot,
-	onConfigureProxy,
 	deletingInstance,
 }) => {
 	const isConnected = instance.connectionStatus === "open";
-	const hasTypebot = !!instance.typebot;
 
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			exit={{ opacity: 0, y: -20 }}
+			layout
 			className="relative backdrop-blur-lg bg-gradient-to-br from-whatsapp-profundo/80 to-whatsapp-cinza/50 rounded-3xl p-6 shadow-2xl border border-whatsapp-green/30 overflow-hidden transition-all duration-300 ease-in-out hover:shadow-whatsapp-green/20 hover:scale-105"
 		>
-			{/* Efeito de gradiente de fundo */}
 			<div className="absolute inset-0 bg-gradient-to-tr from-whatsapp-eletrico/10 to-whatsapp-luminoso/5 opacity-50" />
 
 			<div className="relative z-10 space-y-6">
 				{/* Cabeçalho do Card */}
 				<div className="flex justify-between items-center">
 					<div className="flex items-center space-x-4">
-						{/* Foto de perfil */}
-						<div className="relative">
+						<motion.div
+							className="relative"
+							whileHover={{ scale: 1.1 }}
+							whileTap={{ scale: 0.9 }}
+						>
 							{instance.profilePicUrl ? (
 								<img
 									src={instance.profilePicUrl}
@@ -130,12 +119,14 @@ const InstanceCard = ({
 									}`}
 								/>
 							)}
-							<div
+							<motion.div
 								className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
 									isConnected ? "bg-green-500" : "bg-red-500"
 								} border-2 border-whatsapp-profundo`}
+								animate={{ scale: isConnected ? [1, 1.2, 1] : 1 }}
+								transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
 							/>
-						</div>
+						</motion.div>
 						<div>
 							<h3 className="text-xl font-bold text-whatsapp-branco">
 								{instance.instanceName}
@@ -148,109 +139,41 @@ const InstanceCard = ({
 					<ConnectionStatus connected={isConnected} />
 				</div>
 
-				{/* Informações do Proxy */}
-				{instance.proxyConfig && (
-					<div className="mt-4 p-4 bg-black/20 backdrop-blur-md rounded-xl border border-purple-500/20">
-						<div className="flex items-center space-x-2 mb-2">
-							<div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
-							<p className="text-sm font-semibold text-purple-400">
-								Proxy Configurado
-							</p>
-						</div>
-						<p className="text-sm text-whatsapp-branco">
-							{instance.proxyConfig.host}:{instance.proxyConfig.port}
-						</p>
-						{instance.proxyConfig.username && (
-							<p className="text-xs text-whatsapp-cinzaClaro mt-1">
-								Usuário: {instance.proxyConfig.username}
-							</p>
-						)}
-					</div>
-				)}
-
 				{/* Botões de Ação */}
-				<div className="space-y-3">
-					{!isConnected && (
-						<motion.button
+				<div className="flex flex-col space-y-3">
+					{!isConnected ? (
+						<Button
+							variant="glow"
 							onClick={() => onReconnect(instance.instanceName)}
-							className={`${buttonVariants.connect} w-full`}
-							whileHover={{ scale: 1.02 }}
-							whileTap={{ scale: 0.98 }}
+							className="w-full"
 						>
 							<Wifi className="mr-2 w-5 h-5" /> Conectar
-						</motion.button>
-					)}
-
-					<div className="grid grid-cols-3 gap-3">
-						<motion.button
+						</Button>
+					) : (
+						<Button
+							variant="secondary"
 							onClick={() => onLogout(instance.instanceName)}
-							className={buttonVariants.logout}
-							whileHover={{ scale: 1.02 }}
-							whileTap={{ scale: 0.98 }}
+							className="w-full"
 						>
 							<Power className="mr-2 w-5 h-5" /> Logout
-						</motion.button>
+						</Button>
+					)}
 
-						<motion.button
-							onClick={() => onConfigureTypebot(instance)}
-							className={`${
-								hasTypebot ? buttonVariants.typebot : buttonVariants.typebot
-							} col-span-2`}
-							whileHover={{ scale: 1.02 }}
-							whileTap={{ scale: 0.98 }}
-						>
-							<MessageSquareMore className="mr-2 w-5 h-5" />
-							{hasTypebot ? "Editar Fluxo" : "Adicionar Fluxo"}
-						</motion.button>
-					</div>
-
-					<div className="grid grid-cols-2 gap-3">
-						<motion.button
-							onClick={() => onConfigureProxy(instance)}
-							className={buttonVariants.proxy}
-							whileHover={{ scale: 1.02 }}
-							whileTap={{ scale: 0.98 }}
-						>
-							<Settings className="mr-2 w-5 h-5" /> Proxy
-						</motion.button>
-
-						<motion.button
-							onClick={() => onDelete(instance.id, instance.instanceName)}
-							disabled={deletingInstance === instance.id}
-							className={buttonVariants.delete}
-							whileHover={{ scale: 1.02 }}
-							whileTap={{ scale: 0.98 }}
-						>
-							{deletingInstance === instance.id ? (
-								<LoadingSpinner />
-							) : (
-								<>
-									<Trash2 className="mr-2 w-5 h-5" /> Excluir
-								</>
-							)}
-						</motion.button>
-					</div>
-				</div>
-
-				{/* Informações do Typebot */}
-				{hasTypebot && (
-					<div className="mt-4 p-4 bg-black/20 backdrop-blur-md rounded-xl border border-whatsapp-green/20">
-						<div className="flex items-center space-x-2 mb-2">
-							<div className="w-2 h-2 bg-whatsapp-green rounded-full animate-pulse" />
-							<p className="text-sm font-semibold text-whatsapp-green">
-								Fluxo Ativo
-							</p>
-						</div>
-						<p className="text-sm text-whatsapp-branco">
-							{instance.typebot.typebot}
-						</p>
-						{instance.typebot.description && (
-							<p className="text-xs text-whatsapp-cinzaClaro mt-1">
-								{instance.typebot.description}
-							</p>
+					<Button
+						variant="destructive"
+						onClick={() => onDelete(instance.id, instance.instanceName)}
+						disabled={deletingInstance === instance.id}
+						className="w-full"
+					>
+						{deletingInstance === instance.id ? (
+							<LoadingSpinner />
+						) : (
+							<>
+								<Trash2 className="mr-2 w-5 h-5" /> Excluir Instância
+							</>
 						)}
-					</div>
-				)}
+					</Button>
+				</div>
 			</div>
 		</motion.div>
 	);
@@ -758,30 +681,36 @@ const Numeros = () => {
 		try {
 			const token = localStorage.getItem("token");
 
-			// Confirma com o usuário
 			if (!window.confirm("Tem certeza que deseja remover este fluxo?")) {
 				return;
 			}
 
-			// Primeiro, desativa o typebot na API externa
-			await axios.post(
-				`${API_URL}/typebot/create/${instanceName}`,
-				{
-					enabled: false,
-					url: "",
-					typebot: "",
-					expire: 0,
-					keywordFinish: "#EXIT",
-					delayMessage: 1000,
-					unknownMessage: "",
-					triggerType: "none",
-					triggerOperator: "contains",
-					triggerValue: "",
-					listeningFromMe: false,
-					stopBotFromMe: false,
-					keepOpen: false,
-					debounceTime: 10,
-				},
+			const emptyTypebotConfig = {
+				enabled: false,
+				url: "",
+				typebot: "",
+				triggerType: "none",
+				triggerOperator: "contains",
+				triggerValue: "",
+				expire: 0,
+				keywordFinish: "#EXIT",
+				delayMessage: 1000,
+				unknownMessage: "",
+				listeningFromMe: false,
+				stopBotFromMe: false,
+				keepOpen: false,
+				debounceTime: 10,
+			};
+
+			console.log(
+				"Enviando configuração para API Evolution:",
+				emptyTypebotConfig,
+			);
+
+			// Tente usar PUT em vez de POST
+			const evolutionResponse = await axios.put(
+				`${API_URL}/typebot/update/${instanceName}`,
+				emptyTypebotConfig,
 				{
 					headers: {
 						apikey: API_KEY,
@@ -790,27 +719,12 @@ const Numeros = () => {
 				},
 			);
 
-			// Depois, atualiza no banco local
+			console.log("Resposta da API Evolution:", evolutionResponse.data);
+
+			// Atualiza no banco de dados local
 			await axios.put(
 				`${API_BASE_URL}/api/instances/instance/${instanceId}/typebot`,
-				{
-					typebot: {
-						enabled: false,
-						url: "",
-						typebot: "",
-						expire: 0,
-						keywordFinish: "#EXIT",
-						delayMessage: 1000,
-						unknownMessage: "",
-						triggerType: "none",
-						triggerOperator: "contains",
-						triggerValue: "",
-						listeningFromMe: false,
-						stopBotFromMe: false,
-						keepOpen: false,
-						debounceTime: 10,
-					},
-				},
+				{ typebot: emptyTypebotConfig },
 				{
 					headers: {
 						Authorization: `Bearer ${token}`,
@@ -824,16 +738,17 @@ const Numeros = () => {
 			await fetchInstances();
 		} catch (error) {
 			console.error("Erro ao remover fluxo:", error);
-
 			let errorMessage = "Erro ao remover fluxo";
 			if (error.response) {
-				if (error.response.status === 404) {
+				if (error.response.status === 500) {
+					console.error("Detalhes do erro 500:", error.response.data);
+					errorMessage = "Erro interno do servidor ao remover fluxo";
+				} else if (error.response.status === 404) {
 					errorMessage = "Fluxo não encontrado";
 				} else if (error.response.data?.message) {
 					errorMessage = error.response.data.message;
 				}
 			}
-
 			toast.error(errorMessage);
 		}
 	};
@@ -970,56 +885,75 @@ const Numeros = () => {
 	}, []);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-whatsapp-profundo to-whatsapp-profundo px-4 sm:px-6 lg:px-8 py-10">
+		<motion.div
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			exit={{ opacity: 0 }}
+			className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-whatsapp-profundo to-whatsapp-profundo px-4 sm:px-6 lg:px-8 py-10"
+		>
 			<Toaster position="top-right" />
 
 			<div className="max-w-8xl mx-auto">
 				{/* Header */}
-				<div className="mb-10 flex justify-between items-center">
+				<motion.div
+					initial={{ y: -20, opacity: 0 }}
+					animate={{ y: 0, opacity: 1 }}
+					className="mb-10 flex justify-between items-center"
+				>
 					<h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-whatsapp-green to-whatsapp-light">
 						Instâncias WhatsApp
 					</h1>
 
 					<div className="flex space-x-4">
-						<motion.button
+						<Button
+							variant="outline"
+							size="icon"
 							onClick={handleRefresh}
 							disabled={isRefreshing}
-							className={`bg-white/10 p-3 rounded-full shadow-md hover:bg-white/20 ${
-								isRefreshing ? "cursor-not-allowed opacity-50" : ""
-							}`}
 						>
-							<RefreshCw
-								className={`text-white ${isRefreshing ? "animate-spin" : ""}`}
-							/>
-						</motion.button>
-						<motion.button
-							onClick={openModal}
-							className="flex items-center bg-gradient-to-r from-whatsapp-eletrico to-whatsapp-green text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl"
-						>
+							<RefreshCw className={`${isRefreshing ? "animate-spin" : ""}`} />
+						</Button>
+						<Button onClick={openModal}>
 							<Plus className="mr-2" /> Nova Instância
-						</motion.button>
+						</Button>
 					</div>
-				</div>
+				</motion.div>
 
 				{/* Status Bar */}
-				<div className="mb-4 bg-blue-100 dark:bg-whatsapp-prata/20 p-3 rounded text-black dark:text-white flex justify-between items-center">
+				<motion.div
+					initial={{ y: 20, opacity: 0 }}
+					animate={{ y: 0, opacity: 1 }}
+					className="mb-4 bg-blue-100 dark:bg-whatsapp-prata/20 p-3 rounded-lg text-black dark:text-white flex justify-between items-center"
+				>
 					<div className="flex space-x-4">
 						<span>Plano Atual: {currentPlan || ""}</span>
 						<span>Limite de Instâncias: {instanceLimit || 0}</span>
 						<span>Slots Restantes: {remainingSlots || 0}</span>
 					</div>
-				</div>
+				</motion.div>
 
 				{/* Instances Grid */}
 				{loading ? (
 					<div className="flex justify-center items-center h-64">
-						<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+						<motion.div
+							animate={{ rotate: 360 }}
+							transition={{
+								duration: 1,
+								repeat: Number.POSITIVE_INFINITY,
+								ease: "linear",
+							}}
+							className="w-16 h-16 border-4 border-whatsapp-green border-t-transparent rounded-full"
+						/>
 					</div>
 				) : instances.length === 0 ? (
-					<div className="text-center bg-white/10 p-10 rounded-xl shadow-lg">
+					<motion.div
+						initial={{ scale: 0.8, opacity: 0 }}
+						animate={{ scale: 1, opacity: 1 }}
+						className="text-center bg-white/10 p-10 rounded-xl shadow-lg"
+					>
 						<Layers className="mx-auto w-16 h-16 text-gray-400 mb-4" />
 						<p className="text-gray-300">Nenhuma instância encontrada</p>
-					</div>
+					</motion.div>
 				) : (
 					<motion.div
 						layout
@@ -1033,8 +967,6 @@ const Numeros = () => {
 									onReconnect={handleReconnectInstance}
 									onLogout={handleLogoutInstance}
 									onDelete={handleDeleteInstance}
-									onConfigureTypebot={handleConfigureTypebot}
-									onConfigureProxy={handleConfigureProxy}
 									deletingInstance={deletingInstance}
 								/>
 							))}
@@ -1188,119 +1120,7 @@ const Numeros = () => {
 					</motion.div>
 				</motion.div>
 			)}
-			{showProxyConfig && selectedInstanceForProxy && (
-				<motion.div
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
-					exit={{ opacity: 0 }}
-					className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-				>
-					<motion.div
-						initial={{ y: 20, opacity: 0 }}
-						animate={{ y: 0, opacity: 1 }}
-						exit={{ y: 20, opacity: 0 }}
-						className="bg-white dark:bg-whatsapp-profundo p-8 rounded-xl shadow-2xl w-full max-w-md relative"
-					>
-						<button
-							onClick={() => setShowProxyConfig(false)}
-							className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
-						>
-							<X className="w-6 h-6" />
-						</button>
-						<h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
-							Configurar Proxy para {selectedInstanceForProxy.instanceName}
-						</h2>
-						<div className="mb-4">
-							<label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-								Host do Proxy
-							</label>
-							<input
-								type="text"
-								value={proxyHost}
-								onChange={(e) => setProxyHost(e.target.value)}
-								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
-								placeholder="Ex: proxy.example.com"
-							/>
-						</div>
-						<div className="mb-4">
-							<label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-								Porta do Proxy
-							</label>
-							<input
-								type="number"
-								value={proxyPort}
-								onChange={(e) => setProxyPort(e.target.value)}
-								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
-								placeholder="Ex: 8080"
-							/>
-						</div>
-						<div className="mb-4">
-							<label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-								Usuário do Proxy
-							</label>
-							<input
-								type="text"
-								value={proxyUsername}
-								onChange={(e) => setProxyUsername(e.target.value)}
-								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
-								placeholder="Usuário (opcional)"
-							/>
-						</div>
-						<div className="mb-4">
-							<label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
-								Senha do Proxy
-							</label>
-							<input
-								type="password"
-								value={proxyPassword}
-								onChange={(e) => setProxyPassword(e.target.value)}
-								className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata leading-tight focus:outline-none focus:shadow-outline"
-								placeholder="Senha (opcional)"
-							/>
-						</div>
-						<motion.button
-							onClick={saveProxyConfig}
-							className="bg-gradient-to-r from-whatsapp-green to-whatsapp-dark text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl w-full"
-						>
-							Salvar Configurações
-						</motion.button>
-					</motion.div>
-				</motion.div>
-			)}
-
-			{/* Modal de Configuração do Typebot */}
-			{showTypebotConfig && selectedInstance && (
-				<motion.div
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
-					exit={{ opacity: 0 }}
-					className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-				>
-					<motion.div
-						initial={{ y: 20, opacity: 0 }}
-						animate={{ y: 0, opacity: 1 }}
-						exit={{ y: 20, opacity: 0 }}
-						className="bg-white dark:bg-whatsapp-profundo p-8 rounded-xl shadow-2xl w-full max-w-md relative"
-					>
-						<button
-							onClick={() => setShowTypebotConfig(false)}
-							className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
-						>
-							<X className="w-6 h-6" />
-						</button>
-						<h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
-							Configurações do Typebot
-						</h2>
-						<TypebotConfigForm
-							instance={selectedInstance}
-							onUpdate={handleUpdateTypebotConfig}
-							onDelete={handleDeleteTypebotConfig}
-							isEditing={!!selectedInstance?.typebot}
-						/>
-					</motion.div>
-				</motion.div>
-			)}
-		</div>
+		</motion.div>
 	);
 };
 export default Numeros;

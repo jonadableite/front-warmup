@@ -18,7 +18,7 @@ module.exports = {
 			colors: {
 				whatsapp: {
 					green: "#4f47e6",
-					dark: "#128C7E",
+					dark: "#2e87c7",
 					light: "#DCF8C6",
 					cinza: "#1B1B1F",
 					eletrico: "#7D00FF",
@@ -27,6 +27,19 @@ module.exports = {
 					branco: "#F0F0F5",
 					prata: "#535353",
 					cinzaClaro: "#B3B3B3",
+				},
+				// Adicionando cores para os botões
+				primary: {
+					DEFAULT: "#4f47e6", // Verde do WhatsApp para botões primários
+					foreground: "#FFFFFF", // Texto branco para contraste
+				},
+				secondary: {
+					DEFAULT: "#7D00FF", // Verde escuro do WhatsApp para botões secundários
+					foreground: "#FFFFFF", // Texto branco para contraste
+				},
+				destructive: {
+					DEFAULT: "#FF4136", // Vermelho para botões de ação destrutiva
+					foreground: "#FFFFFF", // Texto branco para contraste
 				},
 			},
 
