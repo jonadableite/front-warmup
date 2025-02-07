@@ -22,6 +22,7 @@ import PricingPage from "./pages/Pricing";
 import Register from "./pages/Register";
 import Return from "./pages/Return";
 import TutorialPage from "./pages/TutorialPage";
+import { AdminDashboard } from "./pages/AdminDashboard";
 
 function App() {
 	const [isDarkMode] = useDarkMode();
@@ -117,6 +118,16 @@ function AppContent() {
 								<PrivateRoute>
 									<CompanyRequiredRoute>
 										<Numeros />
+									</CompanyRequiredRoute>
+								</PrivateRoute>
+							}
+						/>
+						<Route
+							path="/admin"
+							element={
+								<PrivateRoute>
+									<CompanyRequiredRoute>
+										<AdminDashboard />
 									</CompanyRequiredRoute>
 								</PrivateRoute>
 							}
