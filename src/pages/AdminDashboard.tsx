@@ -2,18 +2,9 @@
 import { differenceInDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Calendar,
-  CheckCircle,
-  DollarSign,
-  Edit2,
-  PlusCircle,
-  User,
-  X,
-} from "lucide-react";
+import { Calendar, DollarSign, Edit2, PlusCircle, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import axios from "../axiosConfig";
-import { getToken, isAuthenticated } from "../utils/auth";
 import CustomDatePicker from "../components/CustomDatePicker";
 import EditPaymentModal from "../components/EditPaymentModal";
 import { BarChart, LineChart } from "../components/charts/index";
@@ -22,11 +13,11 @@ import { Button } from "../components/ui/button";
 import { Table, Tbody, Td, Th, Thead, Tr } from "../components/ui/table.jsx";
 import { useToast } from "../components/ui/use-toast";
 import type { Affiliate, DashboardData, Payment } from "../interface/index";
+import { getToken } from "../utils/auth";
 
 // Constants
-  const API_URL =
-    import.meta.env.VITE_API_URL || "https://aquecerapi.whatlead.com.br";
-
+const API_URL =
+  import.meta.env.VITE_API_URL || "https://aquecerapi.whatlead.com.br";
 
 // Animation variants
 const animations = {
@@ -48,11 +39,11 @@ const animations = {
 const StatCard = ({ icon: Icon, title, value }: any) => (
   <motion.div
     variants={animations.item}
-    className="bg-deep/80 backdrop-blur-xl p-6 rounded-xl border border-electric shadow-lg hover:shadow-electric transition-all duration-300"
+    className="bg-whatsapp-cinza p-6 rounded-xl border border-whatsapp-green shadow-lg hover:shadow-whatsapp-green transition-all duration-300"
   >
     <div className="flex items-center mb-4">
-      <div className="p-2 bg-electric/10 rounded-lg">
-        <Icon className="text-electric w-6 h-6" />
+      <div className="p-2 bg-whatsapp-green/10 rounded-lg">
+        <Icon className="text-whatsapp-green w-6 h-6" />
       </div>
       <span className="text-2xl font-bold text-white ml-3">{value}</span>
     </div>
@@ -143,6 +134,11 @@ export function AdminDashboard() {
     }
   };
 
+  const formattedUserSignups = userSignups.map((item) => ({
+    ...item,
+    date: format(new Date(item.date), "dd/MM/yyyy", { locale: ptBR }),
+  }));
+
   const fetchUserSignups = async () => {
     try {
       const token = getToken();
@@ -150,7 +146,13 @@ export function AdminDashboard() {
       const response = await axios.get(`${API_URL}/api/admin/user-signups`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUserSignups(response.data);
+
+      // Ordena os dados por data
+      const sortedData = response.data.sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      );
+
+      setUserSignups(sortedData);
     } catch (error) {
       console.error("Erro ao buscar cadastros de usuários:", error);
     }
@@ -229,9 +231,9 @@ export function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-deep to-neon-purple/10 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-cinza to-neon-purple/10 p-8">
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-32 bg-deep/80 mb-4" />
+          <Skeleton key={i} className="h-32 bg-cinza/80 mb-4" />
         ))}
       </div>
     );
@@ -242,7 +244,7 @@ export function AdminDashboard() {
       initial="hidden"
       animate="visible"
       variants={animations.container}
-      className="min-h-screen bg-gradient-to-br from-deep to-neon-purple/10 p-8"
+      className="min-h-screen bg-gradient-to-br from-whatsapp-profundo via-whatsapp-profundo to-whatsapp-profundo p-8"
     >
       <h1 className="text-3xl font-bold text-white mb-4">
         Painel de Administração
@@ -276,22 +278,22 @@ export function AdminDashboard() {
           value={data?.overduePayments || 0}
         />
         <StatCard
-          icon={CheckCircle}
-          title="Pagamentos Concluídos"
-          value={data?.completedPayments || 0}
+          icon={Calendar}
+          title="Pagamentos Pendentes"
+          value={formatCurrency(data?.pendingPaymentsTotal || 0)}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <motion.div
           variants={animations.item}
-          className="bg-deep/80 backdrop-blur-xl p-6 rounded-xl border border-electric"
+          className="bg-whatsapp-cinza p-6 rounded-xl border border-whatsapp-green"
         >
           <h2 className="text-2xl font-bold text-white mb-6">
             Cadastros de Usuários
           </h2>
           <BarChart
-            data={userSignups}
+            data={formattedUserSignups}
             xKey="date"
             yKey="count"
             fill="#7c3aed"
@@ -300,7 +302,7 @@ export function AdminDashboard() {
 
         <motion.div
           variants={animations.item}
-          className="bg-deep/80 backdrop-blur-xl p-6 rounded-xl border border-electric"
+          className="bg-whatsapp-cinza p-6 rounded-xl border border-whatsapp-green"
         >
           <h2 className="text-2xl font-bold text-white mb-6">
             Faturamento por Dia
@@ -308,8 +310,8 @@ export function AdminDashboard() {
           <LineChart
             data={revenueByDay}
             xKey="date"
-            yKey="amount"
-            stroke="#19eb4e"
+            yKeys={["completed", "pending", "overdue"]}
+            colors={["#19eb4e", "#fbbf24", "#ef4444"]}
           />
         </motion.div>
       </div>
@@ -318,66 +320,78 @@ export function AdminDashboard() {
         <h2 className="text-2xl font-bold text-white">Pagamentos Próximos</h2>
         <button
           onClick={() => setShowAddUserModal(true)}
-          className="flex items-center bg-electric text-white px-4 py-2 rounded-md hover:bg-electric/80 transition"
+          className="flex items-center bg-whatsapp-green text-white px-4 py-2 rounded-md hover:bg-whatsapp-green/80 transition"
         >
           <PlusCircle className="w-5 h-5 mr-2" />
           Adicionar Usuário
         </button>
       </div>
-
       <motion.div
-        className="bg-deep/90 backdrop-blur-2xl rounded-2xl border border-electric/40 overflow-hidden shadow-2xl"
+        className="bg-whatsapp-cinza rounded-2xl border border-whatsapp-green/40 overflow-hidden shadow-2xl"
         variants={animations.item}
       >
-        <Table>
+        <Table className="[&_tr:hover]:!bg-transparent">
           <Thead>
-            <Tr className="bg-electric/20">
-              <Th className="text-electric font-bold">Nome</Th>
-              <Th className="text-electric font-bold">Email</Th>
-              <Th className="text-electric font-bold">Plano</Th>
-              <Th className="text-electric font-bold">Valor</Th>
-              <Th className="text-electric font-bold">Vencimento</Th>
-              <Th className="text-electric font-bold">Status</Th>
-              <Th className="text-electric font-bold">Afiliado</Th>
-              <Th className="text-electric font-bold">Ações</Th>
+            <Tr className="bg-whatsapp-green/20">
+              <Th className="text-whatsapp-green font-bold">Nome</Th>
+              <Th className="text-whatsapp-green font-bold">Email</Th>
+              <Th className="text-whatsapp-green font-bold">Plano</Th>
+              <Th className="text-whatsapp-green font-bold">Valor</Th>
+              <Th className="text-whatsapp-green font-bold">Vencimento</Th>
+              <Th className="text-whatsapp-green font-bold">Status</Th>
+              <Th className="text-whatsapp-green font-bold">Afiliado</Th>
+              <Th className="text-whatsapp-green font-bold">Ações</Th>
             </Tr>
           </Thead>
-          <Tbody>
+          <Tbody className="[&_tr:hover]:bg-transparent">
             {data?.usersWithDuePayments &&
-              data.usersWithDuePayments.map((user) => (
-                <Tr key={user.id} className="hover:bg-electric/10">
-                  <Td className="font-medium">{user.name}</Td>
-                  <Td>{user.email}</Td>
-                  <Td>{user.plan}</Td>
-                  <Td>{formatCurrency(user.payments[0]?.amount || 0)}</Td>
-                  <Td>
-                    {user.payments[0] &&
-                      format(new Date(user.payments[0].dueDate), "dd/MM/yyyy", {
-                        locale: ptBR,
-                      })}
-                  </Td>
-                  <Td>
-                    <PaymentStatus
-                      dueDate={user.payments[0]?.dueDate}
-                      status={user.payments[0]?.status}
-                    />
-                  </Td>
-                  <Td>{user.affiliate?.name || "Nenhum"}</Td>
-                  <Td>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="hover:bg-electric/30 hover:text-electric transition-all duration-200"
-                        onClick={() => handleEditPayment(user.payments[0])}
-                      >
-                        <Edit2 className="w-4 h-4 mr-1" />
-                        Editar
-                      </Button>
-                    </div>
-                  </Td>
-                </Tr>
-              ))}
+              [...data.usersWithDuePayments]
+                .sort((a, b) => {
+                  const dateA = new Date(a.payments[0]?.dueDate || "");
+                  const dateB = new Date(b.payments[0]?.dueDate || "");
+                  return dateA.getTime() - dateB.getTime();
+                })
+                .map((user) => (
+                  <Tr
+                    key={user.id}
+                    className="bg-transparent hover:bg-transparent"
+                  >
+                    <Td className="font-medium">{user.name}</Td>
+                    <Td>{user.email}</Td>
+                    <Td>{user.plan}</Td>
+                    <Td>{formatCurrency(user.payments[0]?.amount || 0)}</Td>
+                    <Td>
+                      {user.payments[0] &&
+                        format(
+                          new Date(user.payments[0].dueDate),
+                          "dd/MM/yyyy",
+                          {
+                            locale: ptBR,
+                          },
+                        )}
+                    </Td>
+                    <Td>
+                      <PaymentStatus
+                        dueDate={user.payments[0]?.dueDate}
+                        status={user.payments[0]?.status}
+                      />
+                    </Td>
+                    <Td>{user.affiliate?.name || "Nenhum"}</Td>
+                    <Td>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="hover:bg-whatsapp-green/30 hover:text-whatsapp-green transition-all duration-200"
+                          onClick={() => handleEditPayment(user.payments[0])}
+                        >
+                          <Edit2 className="w-4 h-4 mr-1" />
+                          Editar
+                        </Button>
+                      </div>
+                    </Td>
+                  </Tr>
+                ))}
           </Tbody>
         </Table>
       </motion.div>
@@ -401,7 +415,7 @@ export function AdminDashboard() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-deep/80 p-6 rounded-lg shadow-lg w-96"
+              className="bg-whatsapp-cinza p-6 rounded-lg shadow-lg w-96"
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.2 }}
@@ -430,7 +444,7 @@ export function AdminDashboard() {
                     name="name"
                     type="text"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-deep/60 text-white shadow-sm focus:border-electric focus:ring-electric"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -441,7 +455,7 @@ export function AdminDashboard() {
                     name="email"
                     type="email"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-deep/60 text-white shadow-sm focus:border-electric focus:ring-electric"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -452,7 +466,7 @@ export function AdminDashboard() {
                     name="password"
                     type="password"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-deep/60 text-white shadow-sm focus:border-electric focus:ring-electric"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -462,7 +476,7 @@ export function AdminDashboard() {
                   <input
                     name="phone"
                     type="text"
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-deep/60 text-white shadow-sm focus:border-electric focus:ring-electric"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -472,7 +486,7 @@ export function AdminDashboard() {
                   <input
                     name="plan"
                     type="text"
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-deep/60 text-white shadow-sm focus:border-electric focus:ring-electric"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -483,7 +497,7 @@ export function AdminDashboard() {
                     name="payment"
                     type="number"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-deep/60 text-white shadow-sm focus:border-electric focus:ring-electric"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -494,7 +508,7 @@ export function AdminDashboard() {
                     name="dueDate"
                     type="date"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-deep/60 text-white shadow-sm focus:border-electric focus:ring-electric"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -504,7 +518,7 @@ export function AdminDashboard() {
                   <input
                     name="maxInstances"
                     type="number"
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-deep/60 text-white shadow-sm focus:border-electric focus:ring-electric"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -514,7 +528,7 @@ export function AdminDashboard() {
                   <input
                     name="messagesPerDay"
                     type="number"
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-deep/60 text-white shadow-sm focus:border-electric focus:ring-electric"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -523,7 +537,7 @@ export function AdminDashboard() {
                   </label>
                   <select
                     name="referredBy"
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-deep/60 text-white shadow-sm focus:border-electric focus:ring-electric"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   >
                     <option value="">Nenhum</option>
                     {affiliates.map((affiliate) => (
@@ -543,7 +557,7 @@ export function AdminDashboard() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-electric text-white rounded-md hover:bg-electric/80"
+                    className="px-4 py-2 bg-whatsapp-green text-white rounded-md hover:bg-whatsapp-green/80"
                   >
                     Salvar
                   </button>
