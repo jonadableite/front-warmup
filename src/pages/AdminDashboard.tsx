@@ -444,7 +444,7 @@ export function AdminDashboard() {
                     name="name"
                     type="text"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-neutral-600/40 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -455,7 +455,7 @@ export function AdminDashboard() {
                     name="email"
                     type="email"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-neutral-600/40 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -466,7 +466,7 @@ export function AdminDashboard() {
                     name="password"
                     type="password"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-neutral-600/40 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -476,7 +476,7 @@ export function AdminDashboard() {
                   <input
                     name="phone"
                     type="text"
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-neutral-600/40 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -486,7 +486,7 @@ export function AdminDashboard() {
                   <input
                     name="plan"
                     type="text"
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-neutral-600/40 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -497,7 +497,7 @@ export function AdminDashboard() {
                     name="payment"
                     type="number"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-neutral-600/40 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -508,7 +508,7 @@ export function AdminDashboard() {
                     name="dueDate"
                     type="date"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-neutral-600/40 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -518,7 +518,7 @@ export function AdminDashboard() {
                   <input
                     name="maxInstances"
                     type="number"
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-neutral-600/40 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -528,7 +528,7 @@ export function AdminDashboard() {
                   <input
                     name="messagesPerDay"
                     type="number"
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-neutral-600/40 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   />
                 </div>
                 <div className="mb-4">
@@ -537,7 +537,7 @@ export function AdminDashboard() {
                   </label>
                   <select
                     name="referredBy"
-                    className="mt-1 block w-full rounded-md border-gray-600 bg-cinza/60 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-neutral-600/40 text-white shadow-sm focus:border-whatsapp-green focus:ring-whatsapp-green"
                   >
                     <option value="">Nenhum</option>
                     {affiliates.map((affiliate) => (
@@ -551,7 +551,7 @@ export function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() => setShowAddUserModal(false)}
-                    className="mr-4 px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
+                    className="mr-4 px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800/80 transition-colors duration-200"
                   >
                     Cancelar
                   </button>
