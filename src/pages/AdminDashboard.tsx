@@ -165,7 +165,18 @@ export function AdminDashboard() {
       const response = await axios.get(`${API_URL}/api/admin/revenue-by-day`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setRevenueByDay(response.data);
+
+      // Ordena os dados por data e garante que as datas estão no formato correto
+      const sortedData = response.data
+        .map((item) => ({
+          ...item,
+          date: item.date.split("T")[0], // Pega apenas a parte da data, removendo a hora se existir
+        }))
+        .sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+        );
+
+      setRevenueByDay(sortedData);
     } catch (error) {
       console.error("Erro ao buscar faturamento por dia:", error);
     }
