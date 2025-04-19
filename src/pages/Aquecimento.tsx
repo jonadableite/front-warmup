@@ -845,18 +845,17 @@ const Aquecimento: React.FC = () => {
 
 	const renderStatusIcon = (status: string) => {
 		const statusColors = {
-			open: "text-green-500",
+			OPEN: "text-green-500",
 			connecting: "text-yellow-500",
 			disconnected: "text-red-500",
 		};
 
-		const StatusIcon = status === "open" ? BsWifi : BsWifiOff;
+		const StatusIcon = status === "OPEN" ? BsWifi : BsWifiOff;
 
 		return (
 			<div
-				className={`${
-					statusColors[status as keyof typeof statusColors]
-				} text-2xl`}
+				className={`${statusColors[status as keyof typeof statusColors]
+					} text-2xl`}
 			>
 				<StatusIcon />
 			</div>
@@ -957,11 +956,10 @@ const Aquecimento: React.FC = () => {
 							transition={{ duration: 0.2 }}
 							className={`
               relative backdrop-blur-lg rounded-xl p-6
-              ${
-								selectedInstances.has(instance.name)
+              ${selectedInstances.has(instance.name)
 									? "bg-gradient-to-br from-whatsapp-eletrico/20 to-whatsapp-green/5 border-2 border-whatsapp-eletrico"
 									: "bg-gradient-to-br from-whatsapp-profundo/80 to-whatsapp-cinza/50 border border-whatsapp-green/30"
-							}
+								}
               shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer
               overflow-hidden group
             `}
@@ -1001,21 +999,19 @@ const Aquecimento: React.FC = () => {
 										<div
 											className={`
                       p-3 rounded-full
-                      ${
-												instance.connectionStatus === "open"
+                      ${instance.connectionStatus === "OPEN"
 													? "bg-whatsapp-green/20"
 													: "bg-red-500/20"
-											}
+												}
                     `}
 										>
 											<FaWhatsapp
 												className={`
                         w-6 h-6
-                        ${
-													instance.connectionStatus === "open"
+                        ${instance.connectionStatus === "OPEN"
 														? "text-whatsapp-green animate-pulse"
 														: "text-red-500"
-												}
+													}
                       `}
 											/>
 										</div>
@@ -1032,14 +1028,13 @@ const Aquecimento: React.FC = () => {
 									<div
 										className={`
               px-3 py-1 rounded-full text-sm
-              ${
-								instance.connectionStatus === "open"
-									? "bg-green-500/20 text-green-400"
-									: "bg-red-500/20 text-red-400"
-							}
+              ${instance.connectionStatus === "OPEN"
+												? "bg-green-500/20 text-green-400"
+												: "bg-red-500/20 text-red-400"
+											}
             `}
 									>
-										{instance.connectionStatus === "open"
+										{instance.connectionStatus === "OPEN"
 											? "Online"
 											: "Offline"}
 									</div>
@@ -1049,25 +1044,23 @@ const Aquecimento: React.FC = () => {
 								<div
 									className={`
             flex items-center space-x-2 p-2 rounded-lg
-            ${
-							instance.connectionStatus === "open"
-								? "bg-green-500/10 text-green-400 border border-green-500/20"
-								: "bg-red-500/10 text-red-400 border border-red-500/20"
-						}
+            ${instance.connectionStatus === "OPEN"
+											? "bg-green-500/10 text-green-400 border border-green-500/20"
+											: "bg-red-500/10 text-red-400 border border-red-500/20"
+										}
           `}
 								>
 									<div
 										className={`
               w-2 h-2 rounded-full
-              ${
-								instance.connectionStatus === "open"
-									? "bg-green-400 animate-pulse"
-									: "bg-red-400"
-							}
+              ${instance.connectionStatus === "OPEN"
+												? "bg-green-400 animate-pulse"
+												: "bg-red-400"
+											}
             `}
 									/>
 									<span className="text-sm font-medium flex items-center gap-1">
-										{instance.connectionStatus === "open" ? (
+										{instance.connectionStatus === "OPEN" ? (
 											<>
 												<BsWifi className="w-3 h-3" />
 												Conectado
@@ -1249,11 +1242,10 @@ const Aquecimento: React.FC = () => {
 							disabled={loading}
 							className={`
         flex items-center justify-center gap-2 px-8 py-3 rounded-lg
-        ${
-					loading
-						? "bg-gray-500 cursor-not-allowed"
-						: "bg-gradient-to-r from-blue-700/90 to-whatsapp-green/80"
-				}
+        ${loading
+									? "bg-gray-500 cursor-not-allowed"
+									: "bg-gradient-to-r from-blue-700/90 to-whatsapp-green/80"
+								}
         text-white font-bold transition-all duration-300
         shadow-lg hover:shadow-xl
         border border-whatsapp-eletrico/20
@@ -1303,11 +1295,10 @@ const Aquecimento: React.FC = () => {
 							disabled={isStoppingWarmup}
 							className={`
         flex items-center justify-center gap-2 px-8 py-3 rounded-lg
-        ${
-					isStoppingWarmup
-						? "bg-gray-500 cursor-not-allowed"
-						: "bg-gradient-to-r from-red-500 to-orange-600"
-				}
+        ${isStoppingWarmup
+									? "bg-gray-500 cursor-not-allowed"
+									: "bg-gradient-to-r from-red-500 to-orange-600"
+								}
         text-white font-bold transition-all duration-300
         shadow-lg hover:shadow-xl
         border border-red-500/20

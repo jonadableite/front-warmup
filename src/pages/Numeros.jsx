@@ -81,7 +81,7 @@ const InstanceCard = ({
   onDelete,
   deletingInstance,
 }) => {
-  const isConnected = instance.connectionStatus === "open";
+  const isConnected = instance.connectionStatus === "OPEN";
 
   return (
     <motion.div
@@ -228,7 +228,7 @@ const Numeros = () => {
         `${API_URL}/instance/fetchInstances`,
         {
           headers: { apikey: API_KEY },
-        },
+        }
       );
 
       console.log("Resposta da API externa:", externalResponse.data);
@@ -242,7 +242,7 @@ const Numeros = () => {
       // Atualize as instâncias locais com base nas instâncias externas
       for (const localInstance of localInstances) {
         const externalInstance = externalInstances.find(
-          (e) => e.name === localInstance.instanceName,
+          (e) => e.name === localInstance.instanceName
         );
 
         if (externalInstance) {
@@ -267,20 +267,20 @@ const Numeros = () => {
               },
               {
                 headers: { Authorization: `Bearer ${token}` },
-              },
+              }
             );
             console.log(`Instância ${localInstance.instanceName} atualizada`);
           }
         } else {
           // A instância não existe mais na API externa, vamos removê-la do banco local
           console.log(
-            `Removendo instância ${localInstance.instanceName} do banco local`,
+            `Removendo instância ${localInstance.instanceName} do banco local`
           );
           await axios.delete(
             `${API_BASE_URL}/api/instances/instance/${localInstance.id}`,
             {
               headers: { Authorization: `Bearer ${token}` },
-            },
+            }
           );
         }
       }
@@ -293,7 +293,9 @@ const Numeros = () => {
         console.error("Resposta do servidor:", error.response.data);
       }
       toast.error(
-        `Erro ao sincronizar instâncias: ${error.message || "Erro desconhecido"}`,
+        `Erro ao sincronizar instâncias: ${
+          error.message || "Erro desconhecido"
+        }`
       );
     }
   };
@@ -326,7 +328,7 @@ const Numeros = () => {
         toast.error("Você não tem permissão para acessar este recurso.");
       } else {
         toast.error(
-          error.response.data?.message || "Erro ao carregar instâncias",
+          error.response.data?.message || "Erro ao carregar instâncias"
         );
       }
     } else if (error.request) {
@@ -393,7 +395,7 @@ const Numeros = () => {
           qrcode: true,
           integration: "WHATSAPP-BAILEYS",
         },
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("Resposta da API:", response.data);
@@ -405,7 +407,7 @@ const Numeros = () => {
         });
         setShowQrCodeModal(true);
         toast.success(
-          "Instância criada com sucesso! Escaneie o QR Code para conectar.",
+          "Instância criada com sucesso! Escaneie o QR Code para conectar."
         );
         setIsModalOpen(false);
 
@@ -417,7 +419,7 @@ const Numeros = () => {
           try {
             attempts++;
             console.log(
-              `Verificando status da nova instância (tentativa ${attempts})`,
+              `Verificando status da nova instância (tentativa ${attempts})`
             );
 
             const statusResponse = await axios.get(
@@ -426,7 +428,7 @@ const Numeros = () => {
                 headers: {
                   apikey: API_KEY,
                 },
-              },
+              }
             );
 
             console.log("Status response:", statusResponse.data);
@@ -436,19 +438,19 @@ const Numeros = () => {
 
             console.log("Current status:", currentStatus);
 
-            if (currentStatus === "open") {
+            if (currentStatus === "OPEN") {
               try {
                 // Atualiza o status no banco local
                 await axios.put(
                   `${API_BASE_URL}/api/instances/instance/${instance.id}/connection-status`,
                   {
-                    connectionStatus: "open",
+                    connectionStatus: "OPEN",
                   },
                   {
                     headers: {
                       Authorization: `Bearer ${token}`,
                     },
-                  },
+                  }
                 );
 
                 console.log("Status atualizado para open no banco local");
@@ -502,7 +504,7 @@ const Numeros = () => {
           headers: {
             apikey: API_KEY,
           },
-        },
+        }
       );
 
       if (response.status === 200) {
@@ -532,7 +534,7 @@ const Numeros = () => {
                   headers: {
                     apikey: API_KEY,
                   },
-                },
+                }
               );
 
               console.log("Status response:", statusResponse.data);
@@ -542,10 +544,10 @@ const Numeros = () => {
 
               console.log("Current status:", currentStatus);
 
-              if (currentStatus === "open") {
+              if (currentStatus === "OPEN") {
                 const token = localStorage.getItem("token");
                 const instanceToUpdate = instances.find(
-                  (instance) => instance.instanceName === instanceName,
+                  (instance) => instance.instanceName === instanceName
                 );
 
                 if (instanceToUpdate) {
@@ -553,13 +555,13 @@ const Numeros = () => {
                     const updateResponse = await axios.put(
                       `${API_BASE_URL}/api/instances/instance/${instanceToUpdate.instanceId}/connection-status`,
                       {
-                        connectionStatus: "open",
+                        connectionStatus: "OPEN",
                       },
                       {
                         headers: {
                           Authorization: `Bearer ${token}`,
                         },
-                      },
+                      }
                     );
 
                     console.log("Update response:", updateResponse.data);
@@ -571,7 +573,7 @@ const Numeros = () => {
                     console.error("Erro ao atualizar status:", updateError);
                     console.log(
                       "Update error details:",
-                      updateError.response?.data,
+                      updateError.response?.data
                     );
                     toast.error("Erro ao atualizar status da instância");
                   }
@@ -617,7 +619,7 @@ const Numeros = () => {
       // Após logout bem-sucedido, atualiza o status no banco local
       const token = localStorage.getItem("token");
       const instanceToUpdate = instances.find(
-        (instance) => instance.instanceName === instanceName,
+        (instance) => instance.instanceName === instanceName
       );
 
       if (instanceToUpdate) {
@@ -631,7 +633,7 @@ const Numeros = () => {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            },
+            }
           );
 
           toast.success("Instância desconectada com sucesso!");
@@ -639,7 +641,7 @@ const Numeros = () => {
         } catch (updateError) {
           console.error(
             "Erro ao atualizar status no banco local:",
-            updateError,
+            updateError
           );
           toast.error("Erro ao atualizar status da instância no banco local");
         }
@@ -647,7 +649,7 @@ const Numeros = () => {
     } catch (error) {
       console.error("Erro ao desconectar instância:", error);
       toast.error(
-        error.response?.data?.message || "Erro ao desconectar instância",
+        error.response?.data?.message || "Erro ao desconectar instância"
       );
     }
   };
@@ -676,7 +678,7 @@ const Numeros = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       // Atualiza na API externa
@@ -688,7 +690,7 @@ const Numeros = () => {
             apikey: API_KEY,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       toast.success("Configurações de proxy salvas com sucesso!");
@@ -703,8 +705,7 @@ const Numeros = () => {
     } catch (error) {
       console.error("Erro ao salvar configurações de proxy:", error);
       toast.error(
-        error.response?.data?.message ||
-          "Erro ao salvar configurações de proxy",
+        error.response?.data?.message || "Erro ao salvar configurações de proxy"
       );
     }
   };
@@ -733,7 +734,7 @@ const Numeros = () => {
       await axios.put(
         `${API_BASE_URL}/api/instances/instance/${selectedInstance.id}/typebot`,
         config,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       // Depois, atualiza na API externa
@@ -796,7 +797,7 @@ const Numeros = () => {
 
       console.log(
         "Enviando configuração para API Evolution:",
-        emptyTypebotConfig,
+        emptyTypebotConfig
       );
 
       // Tente usar PUT em vez de POST
@@ -808,7 +809,7 @@ const Numeros = () => {
             apikey: API_KEY,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       console.log("Resposta da API Evolution:", evolutionResponse.data);
@@ -822,7 +823,7 @@ const Numeros = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       toast.success("Fluxo removido com sucesso!");
@@ -848,7 +849,7 @@ const Numeros = () => {
   const handleDeleteInstance = async (instanceId, instanceName) => {
     if (
       !window.confirm(
-        `Tem certeza que deseja excluir a instância ${instanceName}?`,
+        `Tem certeza que deseja excluir a instância ${instanceName}?`
       )
     ) {
       return;
@@ -870,7 +871,7 @@ const Numeros = () => {
         // Se o erro não for 404, exibimos um aviso mas continuamos com a deleção local
         if (externalError.response && externalError.response.status !== 404) {
           toast.warn(
-            "Erro ao excluir na API externa, continuando com exclusão local",
+            "Erro ao excluir na API externa, continuando com exclusão local"
           );
         }
       }
@@ -878,7 +879,7 @@ const Numeros = () => {
       // Deletar a instância localmente (isso irá lidar com MediaStats e outros registros relacionados)
       await axios.delete(
         `${API_BASE_URL}/api/instances/instance/${instanceId}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("Instância excluída com sucesso!");
@@ -887,7 +888,9 @@ const Numeros = () => {
       console.error("Erro ao excluir instância:", error);
       if (error.response) {
         toast.error(
-          `Erro ao excluir instância: ${error.response.data.error || "Erro desconhecido"}`,
+          `Erro ao excluir instância: ${
+            error.response.data.error || "Erro desconhecido"
+          }`
         );
       } else {
         toast.error("Erro ao excluir instância. Por favor, tente novamente.");
@@ -1070,7 +1073,11 @@ const Numeros = () => {
     text-white px-4 py-2 rounded-lg shadow-lg
     hover:shadow-xl w-full
     transition-all duration-300
-    ${isCreatingInstance || !newInstaceName.trim() ? "opacity-50 cursor-not-allowed" : ""}
+    ${
+      isCreatingInstance || !newInstaceName.trim()
+        ? "opacity-50 cursor-not-allowed"
+        : ""
+    }
   `}
             >
               {isCreatingInstance ? (
