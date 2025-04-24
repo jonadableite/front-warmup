@@ -14,6 +14,19 @@ export interface Plan {
   };
 }
 
+export interface ConnectionStatusProps {
+  connected: boolean;
+}
+
+export interface Instance {
+  id: string;
+  instanceName: string;
+  connectionStatus: "OPEN" | "CLOSED";
+  profilePicUrl?: string;
+  profileName?: string;
+  phoneNumber?: string;
+}
+
 export interface Payment {
   dueDate: string;
   status: "pending" | "overdue" | "completed";
@@ -27,7 +40,12 @@ export interface DashboardData {
   overduePayments: number;
   completedPayments: number;
   pendingPaymentsTotal: number;
-  usersWithDuePayments: UserWithPayment[];
+  usersWithDuePayments: Array<{
+    userId: string;
+    userName: string;
+    dueAmount: number;
+    dueDate: string;
+  }>;
 }
 
 export interface DecodedToken {

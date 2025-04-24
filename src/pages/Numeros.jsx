@@ -1,3 +1,4 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import axios from "axios";
@@ -7,7 +8,8 @@ import { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { FaWhatsapp } from "react-icons/fa";
 
-const API_BASE_URL = "https://aquecerapi.whatlead.com.br";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:9000";
 const API_URL = "https://evo.whatlead.com.br";
 const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
 
@@ -74,110 +76,105 @@ const buttonVariants = {
   delete: `${buttonBaseStyle} bg-gradient-to-r from-red-500/90 to-red-600/90 text-white`,
 };
 
-const InstanceCard = ({
-  instance,
-  onReconnect,
-  onLogout,
-  onDelete,
-  deletingInstance,
-}) => {
-  const isConnected = instance.connectionStatus === "OPEN";
+const InstanceCard = React.forwardRef(
+  ({ instance, onReconnect, onLogout, onDelete, deletingInstance }, ref) => {
+    const isConnected = instance.connectionStatus === "OPEN";
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      layout
-      className="relative backdrop-blur-lg bg-gradient-to-br from-whatsapp-profundo/80 to-whatsapp-cinza/50 rounded-3xl p-6 shadow-2xl border border-whatsapp-green/30 overflow-hidden transition-all duration-300 ease-in-out hover:shadow-whatsapp-green/20 hover:scale-105"
-    >
-      <div className="absolute inset-0 bg-gradient-to-tr from-whatsapp-eletrico/10 to-whatsapp-luminoso/5 opacity-50" />
-
-      <div className="relative z-10 space-y-6">
-        {/* Cabeçalho do Card */}
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <motion.div
-              className="relative"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              {instance.profilePicUrl ? (
-                <img
-                  src={instance.profilePicUrl}
-                  alt="Profile"
-                  className={`w-12 h-12 rounded-full object-cover border-2 ${
-                    isConnected ? "border-green-500" : "border-red-500"
-                  }`}
-                />
-              ) : (
-                <FaWhatsapp
-                  className={`w-12 h-12 p-2 rounded-full ${
-                    isConnected
-                      ? "text-whatsapp-green bg-whatsapp-green/20"
-                      : "text-red-500 bg-red-500/20"
-                  }`}
-                />
-              )}
+    return (
+      <motion.div
+        ref={ref} // Adicione a ref aqui
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        layout
+        className="relative backdrop-blur-lg bg-gradient-to-br from-whatsapp-profundo/80 to-whatsapp-cinza/50 rounded-3xl p-6 shadow-2xl border border-whatsapp-green/30 overflow-hidden transition-all duration-300 ease-in-out hover:shadow-whatsapp-green/20 hover:scale-105"
+      >
+        {/* Resto do código existente permanece o mesmo */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-whatsapp-eletrico/10 to-whatsapp-luminoso/5 opacity-50" />
+        <div className="relative z-10 space-y-6">
+          {/* Cabeçalho do Card */}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
               <motion.div
-                className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
-                  isConnected ? "bg-green-500" : "bg-red-500"
-                } border-2 border-whatsapp-profundo`}
-                animate={{ scale: isConnected ? [1, 1.2, 1] : 1 }}
-                transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
-              />
-            </motion.div>
-            <div>
-              <h3 className="text-xl font-bold text-whatsapp-branco">
-                {instance.instanceName}
-              </h3>
-              <p className="text-sm text-whatsapp-cinzaClaro">
-                {instance.profileName || instance.phoneNumber || "Sem nome"}
-              </p>
+                className="relative"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                {instance.profilePicUrl ? (
+                  <img
+                    src={instance.profilePicUrl}
+                    alt="Profile"
+                    className={`w-12 h-12 rounded-full object-cover border-2 ${
+                      isConnected ? "border-green-500" : "border-red-500"
+                    }`}
+                  />
+                ) : (
+                  <FaWhatsapp
+                    className={`w-12 h-12 p-2 rounded-full ${
+                      isConnected
+                        ? "text-whatsapp-green bg-whatsapp-green/20"
+                        : "text-red-500 bg-red-500/20"
+                    }`}
+                  />
+                )}
+                <motion.div
+                  className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
+                    isConnected ? "bg-green-500" : "bg-red-500"
+                  } border-2 border-whatsapp-profundo`}
+                  animate={{ scale: isConnected ? [1, 1.2, 1] : 1 }}
+                  transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
+                />
+              </motion.div>
+              <div>
+                <h3 className="text-xl font-bold text-whatsapp-branco">
+                  {instance.instanceName}
+                </h3>
+                <p className="text-sm text-whatsapp-cinzaClaro">
+                  {instance.profileName || instance.phoneNumber || "Sem nome"}
+                </p>
+              </div>
             </div>
+            <ConnectionStatus connected={isConnected} />
           </div>
-          <ConnectionStatus connected={isConnected} />
-        </div>
-
-        {/* Botões de Ação */}
-        <div className="flex flex-col space-y-3">
-          {!isConnected ? (
-            <Button
-              variant="glow"
-              onClick={() => onReconnect(instance.instanceName)}
-              className="w-full"
-            >
-              <Wifi className="mr-2 w-5 h-5" /> Conectar
-            </Button>
-          ) : (
-            <Button
-              variant="secondary"
-              onClick={() => onLogout(instance.instanceName)}
-              className="w-full"
-            >
-              <Power className="mr-2 w-5 h-5" /> Logout
-            </Button>
-          )}
-
-          <Button
-            variant="destructive"
-            onClick={() => onDelete(instance.id, instance.instanceName)}
-            disabled={deletingInstance === instance.id}
-            className="w-full"
-          >
-            {deletingInstance === instance.id ? (
-              <LoadingSpinner />
+          {/* Botões de Ação */}
+          <div className="flex flex-col space-y-3">
+            {!isConnected ? (
+              <Button
+                variant="glow"
+                onClick={() => onReconnect(instance.instanceName)}
+                className="w-full"
+              >
+                <Wifi className="mr-2 w-5 h-5" /> Conectar
+              </Button>
             ) : (
-              <>
-                <Trash2 className="mr-2 w-5 h-5" /> Excluir Instância
-              </>
+              <Button
+                variant="secondary"
+                onClick={() => onLogout(instance.instanceName)}
+                className="w-full"
+              >
+                <Power className="mr-2 w-5 h-5" /> Logout
+              </Button>
             )}
-          </Button>
+            <Button
+              variant="destructive"
+              onClick={() => onDelete(instance.id, instance.instanceName)}
+              disabled={deletingInstance === instance.id}
+              className="w-full"
+            >
+              {deletingInstance === instance.id ? (
+                <LoadingSpinner />
+              ) : (
+                <>
+                  <Trash2 className="mr-2 w-5 h-5" /> Excluir Instância
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
-    </motion.div>
-  );
-};
+      </motion.div>
+    );
+  }
+);
 
 const Numeros = () => {
   const [proxyHost, setProxyHost] = useState("");
@@ -213,16 +210,47 @@ const Numeros = () => {
         throw new Error("Token não encontrado");
       }
 
-      // Primeiro, obtenha as instâncias locais do usuário
+      // Função para normalizar o status de conexão
+      const normalizeConnectionStatus = (status) => {
+        const validStatuses = [
+          "pending",
+          "connected",
+          "disconnected",
+          "OPEN",
+          "connecting",
+          "close",
+        ];
+
+        const statusMap = {
+          online: "OPEN",
+          connected: "connected",
+          offline: "disconnected",
+        };
+
+        // Converter status para minúsculas para comparação
+        const normalizedStatus = status?.toLowerCase();
+
+        // Verificar se o status está no mapeamento
+        if (statusMap[normalizedStatus]) {
+          return statusMap[normalizedStatus];
+        }
+
+        // Verificar se o status original é válido
+        if (validStatuses.includes(status)) {
+          return status;
+        }
+
+        // Valor padrão se nenhum status for reconhecido
+        return "disconnected";
+      };
+
       console.log("Buscando instâncias locais...");
       const localResponse = await axios.get(`${API_BASE_URL}/api/instances`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       console.log("Resposta da API local:", localResponse.data);
       const localInstances = localResponse.data.instances || [];
 
-      // Agora, busque as instâncias da API externa
       console.log("Buscando instâncias da API externa...");
       const externalResponse = await axios.get(
         `${API_URL}/instance/fetchInstances`,
@@ -230,14 +258,15 @@ const Numeros = () => {
           headers: { apikey: API_KEY },
         }
       );
-
       console.log("Resposta da API externa:", externalResponse.data);
 
       if (!Array.isArray(externalResponse.data)) {
         throw new Error("Resposta inválida da API externa");
       }
-
       const externalInstances = externalResponse.data;
+
+      // Array para rastrear operações de sincronização
+      const syncOperations = [];
 
       // Atualize as instâncias locais com base nas instâncias externas
       for (const localInstance of localInstances) {
@@ -246,55 +275,107 @@ const Numeros = () => {
         );
 
         if (externalInstance) {
-          // Atualize a instância local com os dados da API externa
-          if (
-            localInstance.connectionStatus !==
-              externalInstance.connectionStatus ||
-            localInstance.ownerJid !== externalInstance.ownerJid ||
-            localInstance.profileName !== externalInstance.profileName ||
-            localInstance.profilePicUrl !== externalInstance.profilePicUrl
-          ) {
-            await axios.put(
+          // Preparar dados para atualização
+          const updateData = {
+            connectionStatus: normalizeConnectionStatus(
+              externalInstance.connectionStatus
+            ),
+            ownerJid: externalInstance.ownerJid || localInstance.ownerJid,
+            profileName:
+              externalInstance.profileName || localInstance.profileName,
+            profilePicUrl:
+              externalInstance.profilePicUrl || localInstance.profilePicUrl,
+          };
+
+          // Verificar se há mudanças necessárias
+          const needsUpdate =
+            updateData.connectionStatus !== localInstance.connectionStatus ||
+            updateData.ownerJid !== localInstance.ownerJid ||
+            updateData.profileName !== localInstance.profileName ||
+            updateData.profilePicUrl !== localInstance.profilePicUrl;
+
+          if (needsUpdate) {
+            const updateOperation = axios.put(
               `${API_BASE_URL}/api/instances/instance/${localInstance.id}`,
+              updateData,
               {
-                connectionStatus:
-                  externalInstance.connectionStatus || "unknown",
-                ownerJid: externalInstance.ownerJid || localInstance.ownerJid,
-                profileName:
-                  externalInstance.profileName || localInstance.profileName,
-                profilePicUrl:
-                  externalInstance.profilePicUrl || localInstance.profilePicUrl,
-              },
-              {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }
             );
-            console.log(`Instância ${localInstance.instanceName} atualizada`);
+
+            syncOperations.push({
+              instanceName: localInstance.instanceName,
+              operation: updateOperation,
+              type: "update",
+            });
+
+            console.log(
+              `Preparando atualização para instância ${localInstance.instanceName}`
+            );
           }
         } else {
           // A instância não existe mais na API externa, vamos removê-la do banco local
-          console.log(
-            `Removendo instância ${localInstance.instanceName} do banco local`
-          );
-          await axios.delete(
+          const deleteOperation = axios.delete(
             `${API_BASE_URL}/api/instances/instance/${localInstance.id}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
           );
+
+          syncOperations.push({
+            instanceName: localInstance.instanceName,
+            operation: deleteOperation,
+            type: "delete",
+          });
+
+          console.log(
+            `Preparando remoção da instância ${localInstance.instanceName}`
+          );
         }
+      }
+
+      // Executar todas as operações de sincronização em paralelo
+      if (syncOperations.length > 0) {
+        const results = await Promise.allSettled(
+          syncOperations.map((op) => op.operation)
+        );
+
+        // Registrar resultados das operações
+        results.forEach((result, index) => {
+          const operation = syncOperations[index];
+          if (result.status === "fulfilled") {
+            console.log(
+              `${operation.type.toUpperCase()} para ${
+                operation.instanceName
+              } concluído com sucesso`
+            );
+          } else {
+            console.error(
+              `Erro ao ${operation.type} ${operation.instanceName}:`,
+              result.reason
+            );
+          }
+        });
       }
 
       console.log("Sincronização concluída com sucesso");
       await fetchInstances(); // Atualiza a lista de instâncias após a sincronização
     } catch (error) {
       console.error("Erro detalhado ao sincronizar instâncias:", error);
+
+      // Log detalhado de erros de resposta
       if (error.response) {
         console.error("Resposta do servidor:", error.response.data);
+        console.error("Status do erro:", error.response.status);
+        console.error("Cabeçalhos do erro:", error.response.headers);
       }
+
       toast.error(
         `Erro ao sincronizar instâncias: ${
-          error.message || "Erro desconhecido"
+          error.response?.data?.message || error.message || "Erro desconhecido"
         }`
       );
     }
