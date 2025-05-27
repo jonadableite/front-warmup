@@ -76,9 +76,20 @@ const buttonVariants = {
   delete: `${buttonBaseStyle} bg-gradient-to-r from-red-500/90 to-red-600/90 text-white`,
 };
 
+<<<<<<< HEAD
 const InstanceCard = React.forwardRef(
   ({ instance, onReconnect, onLogout, onDelete, deletingInstance }, ref) => {
     const isConnected = instance.connectionStatus === "OPEN";
+=======
+const InstanceCard = ({
+  instance,
+  onReconnect,
+  onLogout,
+  onDelete,
+  deletingInstance,
+}) => {
+  const isConnected = instance.connectionStatus === "OPEN";
+>>>>>>> 2b510ff (Sua mensagem descrevendo as alterações)
 
     return (
       <motion.div

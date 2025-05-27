@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+=======
+import {
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+>>>>>>> 2b510ff (Sua mensagem descrevendo as alterações)
 import { motion } from "framer-motion";
 import {
 	BarChart2,
@@ -87,8 +95,12 @@ const SidebarComponent: React.FC = () => {
 			id: 7,
 			icon: Zap,
 			label: "Disparos",
+<<<<<<< HEAD
 			path: "https://acesso.whatlead.com.br",
 			isExternal: true,
+=======
+			path: "https://acesso.whatlead.com.br/",
+>>>>>>> 2b510ff (Sua mensagem descrevendo as alterações)
 		},
 	];
 
@@ -136,6 +148,7 @@ const SidebarComponent: React.FC = () => {
 				<div className="flex-1 py-4 px-3">
 					<nav className="space-y-1">
 						{sidebarItems.map((item) => {
+<<<<<<< HEAD
 							const isActive =
 								location.pathname === item.path && !item.isExternal;
 
@@ -303,6 +316,148 @@ const SidebarComponent: React.FC = () => {
 							<span>Requisito de Suporte</span>
 						</DropdownMenuItem>
 
+=======
+							const isActive = location.pathname === item.path;
+							return (
+								<Link key={item.id} to={item.path}>
+									<motion.div
+										whileHover={{ scale: 1.02, x: 5 }}
+										whileTap={{ scale: 0.98 }}
+										className={`flex items-center p-3 rounded-lg ${
+											isActive
+												? "bg-gradient-to-r from-blue-700/20 to-whatsapp-green/20 text-green-400"
+												: "text-gray-400 hover:text-white hover:bg-white/5"
+										} transition-colors duration:200`}
+									>
+										<item.icon size={20} />
+										<motion.span
+											initial={{ opacity: 0, x: -10 }}
+											animate={{ opacity: 1, x: 0 }}
+											exit={{ opacity: 0, x: -10 }}
+											className="ml-3 text-sm font-medium"
+										>
+											{item.label}
+										</motion.span>
+										{isActive && (
+											<motion.div
+												layoutId="activeTab"
+												className="absolute left-0 w-1 h-8 bg-whatsapp-green rounded-r-full"
+											/>
+										)}
+									</motion.div>
+								</Link>
+							);
+						})}
+					</nav>
+				</div>
+
+				{/* Upgrade Section */}
+				<div className="p-4 border-t border-gray-800/50">
+					<div className="mb-4 flex flex-col items-center">
+						<h4 className="text-sm font-semibold text-gray-400">
+							Upgrade do Plano
+						</h4>
+						<motion.p
+							initial={{ opacity: 0, y: 10 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: 10 }}
+							className="text-xs text-gray-500 mt-1 text-center"
+						>
+							Desbloqueie todos os recursos e tenha acesso ilimitado à nossa
+							plataforma
+						</motion.p>
+					</div>
+					<div className="flex justify-center">
+						<motion.button
+							whileHover={{ scale: 1.05 }}
+							whileTap={{ scale: 0.95 }}
+							onClick={handleUpgrade}
+							className="relative inline-flex items-center justify-center overflow-hidden text-sm font-bold text-white bg-gradient-to-r from-whatsapp-dark via-whatsapp-green to-whatsapp-dark bg-size-200 bg-pos-0 hover:bg-pos-100 px-4 py-2 rounded-full transition-all duration-300 ease-in-out transform hover:rotate-3 hover:shadow-lg group"
+						>
+							<RocketIcon className="mr-2 w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
+							Upgrade
+							<motion.span
+								initial={{ width: 0 }}
+								animate={{ width: "100%" }}
+								transition={{
+									duration: 2,
+									repeat: Number.POSITIVE_INFINITY,
+									repeatType: "reverse",
+									ease: "easeInOut",
+								}}
+								className="absolute bottom-0 left-0 h-1 bg-white/30 group-hover:bg-white/50"
+							/>
+							<motion.div
+								initial={{ opacity: 0 }}
+								whileHover={{ opacity: 1 }}
+								className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full animate-pulse"
+							/>
+						</motion.button>
+					</div>
+				</div>
+
+				{/* Footer */}
+				<div className="p-4 border-t border-gray-800/50">
+					<DropdownMenuTrigger asChild>
+						<motion.button
+							whileHover={{ scale: 1.02 }}
+							whileTap={{ scale: 0.98 }}
+							className="flex items-center w-full p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5"
+						>
+							<User2 size={20} />
+							<motion.div
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								exit={{ opacity: 0 }}
+								className="ml-3 flex-1 text-left text-sm font-medium"
+							>
+								{user?.name}
+							</motion.div>
+							<motion.div
+								animate={{ rotate: false ? 180 : 0 }}
+								transition={{ duration: 0.2 }}
+								className="ml-auto"
+							>
+								<ChevronUp size={16} />
+							</motion.div>
+						</motion.button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent
+						side="top"
+						align="start"
+						className="w-56 bg-whatsapp-profundo border border-whatsapp-cinza text-gray-300"
+					>
+						<DropdownMenuItem onClick={() => navigate("/account-info")}>
+							<User2 className="mr-2" size={16} />
+							<span>Informações da Conta</span>
+						</DropdownMenuItem>
+
+						<DropdownMenuItem onClick={() => navigate("/tutorial")}>
+							<BookOpen className="mr-2" size={16} />
+							<span>Tutorial</span>
+						</DropdownMenuItem>
+
+						{trialDaysLeft !== null && (
+							<DropdownMenuItem>
+								<CalendarIcon className="mr-2" size={16} />
+								<span>
+									{trialDaysLeft > 0
+										? `${trialDaysLeft} dias restantes`
+										: "Período de teste expirado"}
+								</span>
+							</DropdownMenuItem>
+						)}
+
+						<DropdownMenuItem
+							onClick={() =>
+								window.open("mailto:suporte@whatlead.com.br", "_blank")
+							}
+						>
+							<LifeBuoy className="mr-2" size={16} />
+							<span>Requisito de Suporte</span>
+						</DropdownMenuItem>
+
+>>>>>>> 2b510ff (Sua mensagem descrevendo as alterações)
 						<DropdownMenuItem
 							onClick={() => {
 								localStorage.removeItem("token");
