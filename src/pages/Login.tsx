@@ -1,26 +1,29 @@
 // src/pages/Login.tsx
-import { motion } from "framer-motion";
-import type React from "react";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import axios from "../axiosConfig";
-import Logo from "../components/Logo";
-import MatrixRain from "../components/MatrixRain";
-import { API_BASE_URL } from "../config";
+import { motion } from 'framer-motion';
+import type React from 'react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import axios from '../axiosConfig';
+import Logo from '../components/Logo';
+import MatrixRain from '../components/MatrixRain';
+import { API_BASE_URL } from '../config';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const isTemporaryCompanyName = (companyName: string, userName: string) => {
+  const isTemporaryCompanyName = (
+    companyName: string,
+    userName: string,
+  ) => {
     return (
-      companyName === "Temporary Company" ||
+      companyName === 'Temporary Company' ||
       companyName === `${userName}'s Company`
     );
   };
@@ -29,43 +32,48 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/session`, {
-        email,
-        password,
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/api/session`,
+        {
+          email,
+          password,
+        },
+      );
 
-      const { token, user } = response.data;
+      const { tokenInterno, user } = response.data;
 
       // Adicione um log para debug
-      console.log("Token recebido:", token);
+      console.log('Token interno recebido:', tokenInterno);
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      // Armazene 'tokenInterno' no localStorage
+      localStorage.setItem('token', tokenInterno);
+      localStorage.setItem('user', JSON.stringify(user));
 
       // Verificar o status da empresa
       const companyStatus = await axios.get(
         `${API_BASE_URL}/api/users/company/status`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${tokenInterno}` },
         },
       );
 
       if (companyStatus.data.isTemporaryCompany) {
-        toast.info("Por favor, configure sua empresa para continuar.");
-        navigate("/company-setup");
+        toast.info(
+          'Por favor, configure sua empresa para continuar.',
+        );
+        navigate('/company-setup');
       } else {
-        toast.success("Login realizado com sucesso!");
-        navigate("/");
+        toast.success('Login realizado com sucesso!');
+        navigate('/');
       }
     } catch (err: any) {
       if (err.response) {
-        setError(err.response.data.error || "Erro ao fazer login");
-        toast.error(err.response.data.error || "Erro ao fazer login");
+        setError(err.response.data.error || 'Erro ao fazer login');
+        toast.error(err.response.data.error || 'Erro ao fazer login');
       } else {
-        setError("Erro desconhecido");
-        toast.error("Erro desconhecido");
+        setError('Erro desconhecido');
+        toast.error('Erro desconhecido');
       }
     } finally {
       setLoading(false);
@@ -110,7 +118,7 @@ const Login: React.FC = () => {
               Email
             </label>
             <motion.input
-              whileFocus={{ scale: 1.02, borderColor: "#00FF6A" }}
+              whileFocus={{ scale: 1.02, borderColor: '#00FF6A' }}
               type="email"
               id="email"
               value={email}
@@ -130,8 +138,8 @@ const Login: React.FC = () => {
             </label>
             <div className="relative">
               <motion.input
-                whileFocus={{ scale: 1.02, borderColor: "#0fa94f" }}
-                type={showPassword ? "text" : "password"}
+                whileFocus={{ scale: 1.02, borderColor: '#0fa94f' }}
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -146,7 +154,7 @@ const Login: React.FC = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-whatsapp-branco/70 hover:text-whatsapp-branco"
               >
-                {showPassword ? "👁️" : "👁️‍🗨️"}
+                {showPassword ? '👁️' : '👁️‍🗨️'}
               </motion.button>
             </div>
           </div>
@@ -182,7 +190,7 @@ const Login: React.FC = () => {
             className="w-full py-3 bg-gradient-to-r from-whatsapp-green/30 to-whatsapp-green text-white rounded-xl hover:from-whatsapp-green/80 hover:to-whatsapp-green transition duration-300 transform hover:scale-105"
             disabled={loading}
           >
-            {loading ? "Carregando..." : "Entrar"}
+            {loading ? 'Carregando...' : 'Entrar'}
           </motion.button>
         </form>
 
