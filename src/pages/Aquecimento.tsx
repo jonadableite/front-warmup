@@ -15,7 +15,7 @@ import {
 import { FaWhatsapp } from 'react-icons/fa';
 
 // Configurações da API
-const API_BASE_URL = 'http://localhost:9000';
+const API_BASE_URL = 'https://evo.whatlead.com.br';
 const API_KEY = '429683C4C977415CAAFCCE10F7D57E11';
 
 interface InstanceStatus {
