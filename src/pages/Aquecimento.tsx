@@ -2,6 +2,7 @@ import axios from 'axios';
 import Compressor from 'compressorjs';
 import { motion } from 'framer-motion';
 import type React from 'react';
+import type { ReactElement } from 'react';
 import { type ChangeEvent, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
@@ -53,10 +54,19 @@ interface FreePlanWarningProps {
   onContinue: () => Promise<void>;
 }
 
+interface MediaContent {
+  type: 'image' | 'video' | 'audio' | 'sticker';
+  base64: string;
+  fileName: string;
+  mimetype: string;
+  caption?: string;
+  preview?: string;
+}
+
 const SyncButton: React.FC<{
   onClick: () => void;
   loading: boolean;
-}> = ({ onClick, loading }) => {
+}> = ({ onClick, loading }): ReactElement => {
   return (
     <motion.button
       onClick={onClick}
@@ -149,6 +159,7 @@ interface MediaContent {
   fileName: string;
   mimetype: string;
   caption?: string;
+  preview?: string;
 }
 
 interface PhoneInstance {
@@ -199,7 +210,7 @@ export interface WarmupConfig {
   };
 }
 
-const Aquecimento: React.FC = () => {
+const Aquecimento: React.FC = (): ReactElement => {
   const [instances, setInstances] = useState<Instancia[]>([]);
   const [selectedInstances, setSelectedInstances] = useState<
     Set<string>
@@ -682,6 +693,46 @@ const Aquecimento: React.FC = () => {
           videoChance: 0.1,
           minDelay: 3000,
           maxDelay: 90000,
+          // Configurações para grupos e números externos
+          groupChance: 0.3, // 30% chance de enviar para grupo
+          externalNumbersChance: 0.4, // 40% chance de usar números externos
+          groupId: '120363419940617369@g.us', // ID do grupo padrão
+          // Configurações de comportamento humano
+          typingSimulation: true,
+          onlineStatusSimulation: true,
+          readReceiptSimulation: true,
+          // Configurações de horário
+          activeHours: {
+            start: 8,
+            end: 22,
+          },
+          weekendBehavior: 'normal',
+          // Configurações de resposta
+          autoReplyChance: 0.3,
+          replyDelay: {
+            min: 2000,
+            max: 10000,
+          },
+          // Configurações de status
+          statusUpdateChance: 0.1,
+          statusTexts: ['Disponível', 'Em reunião', 'No trabalho'],
+          // Configurações de perfil
+          profileUpdateChance: 0.05,
+          profileNames: ['João Silva', 'Maria Santos'],
+          profileBios: ['Desenvolvedor', 'Analista'],
+          // Configurações de grupo
+          groupJoinChance: 0.02,
+          groupLeaveChance: 0.01,
+          groupInviteChance: 0.01,
+          // Configurações de mídia
+          mediaDownloadChance: 0.5,
+          mediaForwardChance: 0.2,
+          // Configurações de segurança
+          antiDetectionMode: false,
+          randomDeviceInfo: false,
+          // Configurações de qualidade
+          messageQuality: 'medium',
+          engagementOptimization: true,
         },
       };
 
