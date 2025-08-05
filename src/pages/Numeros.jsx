@@ -1,25 +1,18 @@
-import { Button } from '@/components/ui/button';
-import { useDarkMode } from '@/hooks/useDarkMode';
-import axios from 'axios';
-import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Layers,
-  Plus,
-  Power,
-  RefreshCw,
-  Trash2,
-  Wifi,
-  X,
-} from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { Toaster, toast } from 'react-hot-toast';
-import { FaWhatsapp } from 'react-icons/fa';
+//src/pages/Numeros.jsx
+import { Button } from "@/components/ui/button";
+import { useDarkMode } from "@/hooks/useDarkMode";
+import axios from "axios";
+import { AnimatePresence, motion } from "framer-motion";
+import { Layers, Plus, Power, RefreshCw, Trash2, Wifi, X } from "lucide-react";
+import PropTypes from "prop-types";
+import React, { useEffect, useState } from "react";
+import { Toaster, toast } from "react-hot-toast";
+import { FaWhatsapp } from "react-icons/fa";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  'https://aquecerapi.whatlead.com.br';
-const API_URL = 'https://evo.whatlead.com.br';
-const API_KEY = '429683C4C977415CAAFCCE10F7D57E11';
+  import.meta.env.VITE_API_BASE_URL || "https://aquecerapi.whatlead.com.br";
+const API_URL = "https://evo.whatlead.com.br";
+const API_KEY = "429683C4C977415CAAFCCE10F7D57E11";
 
 const ConnectionStatus = ({ connected }) => (
   <motion.div
@@ -33,8 +26,8 @@ const ConnectionStatus = ({ connected }) => (
       backdrop-blur-md
       ${
         connected
-          ? 'bg-green-400/10 text-green-500 border border-green-500/20'
-          : 'bg-red-400/10 text-red-500 border border-red-500/20'
+          ? "bg-green-400/10 text-green-500 border border-green-500/20"
+          : "bg-red-400/10 text-red-500 border border-red-500/20"
       }
     `}
   >
@@ -42,11 +35,11 @@ const ConnectionStatus = ({ connected }) => (
       animate={{ scale: connected ? [1, 1.2, 1] : 1 }}
       transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
       className={`w-3 h-3 mr-2 rounded-full ${
-        connected ? 'bg-green-500' : 'bg-red-500'
+        connected ? "bg-green-500" : "bg-red-500"
       }`}
     />
     <span className="text-xs font-semibold">
-      {connected ? 'Online' : 'Offline'}
+      {connected ? "Online" : "Offline"}
     </span>
   </motion.div>
 );
@@ -57,7 +50,7 @@ const LoadingSpinner = () => (
     transition={{
       duration: 1,
       repeat: Number.POSITIVE_INFINITY,
-      ease: 'linear',
+      ease: "linear",
     }}
     className="w-5 h-5 border-2 border-white rounded-full border-t-transparent"
   />
@@ -85,22 +78,18 @@ const buttonVariants = {
 };
 
 const InstanceCard = React.forwardRef(
-  (
-    { instance, onReconnect, onLogout, onDelete, deletingInstance },
-    ref,
-  ) => {
-    const isConnected = instance.connectionStatus === 'OPEN';
+  ({ instance, onReconnect, onLogout, onDelete, deletingInstance }, ref) => {
+    const isConnected = instance.connectionStatus === "OPEN";
 
     return (
       <motion.div
-        ref={ref} // Adicione a ref aqui
+        ref={ref}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         layout
         className="relative backdrop-blur-lg bg-gradient-to-br from-whatsapp-profundo/80 to-whatsapp-cinza/50 rounded-3xl p-6 shadow-2xl border border-whatsapp-green/30 overflow-hidden transition-all duration-300 ease-in-out hover:shadow-whatsapp-green/20 hover:scale-105"
       >
-        {/* Resto do código existente permanece o mesmo */}
         <div className="absolute inset-0 bg-gradient-to-tr from-whatsapp-eletrico/10 to-whatsapp-luminoso/5 opacity-50" />
         <div className="relative z-10 space-y-6">
           {/* Cabeçalho do Card */}
@@ -116,23 +105,21 @@ const InstanceCard = React.forwardRef(
                     src={instance.profilePicUrl}
                     alt="Profile"
                     className={`w-12 h-12 rounded-full object-cover border-2 ${
-                      isConnected
-                        ? 'border-green-500'
-                        : 'border-red-500'
+                      isConnected ? "border-green-500" : "border-red-500"
                     }`}
                   />
                 ) : (
                   <FaWhatsapp
                     className={`w-12 h-12 p-2 rounded-full ${
                       isConnected
-                        ? 'text-whatsapp-green bg-whatsapp-green/20'
-                        : 'text-red-500 bg-red-500/20'
+                        ? "text-whatsapp-green bg-whatsapp-green/20"
+                        : "text-red-500 bg-red-500/20"
                     }`}
                   />
                 )}
                 <motion.div
                   className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
-                    isConnected ? 'bg-green-500' : 'bg-red-500'
+                    isConnected ? "bg-green-500" : "bg-red-500"
                   } border-2 border-whatsapp-profundo`}
                   animate={{ scale: isConnected ? [1, 1.2, 1] : 1 }}
                   transition={{
@@ -146,9 +133,7 @@ const InstanceCard = React.forwardRef(
                   {instance.instanceName}
                 </h3>
                 <p className="text-sm text-whatsapp-cinzaClaro">
-                  {instance.profileName ||
-                    instance.phoneNumber ||
-                    'Sem nome'}
+                  {instance.profileName || instance.phoneNumber || "Sem nome"}
                 </p>
               </div>
             </div>
@@ -175,9 +160,7 @@ const InstanceCard = React.forwardRef(
             )}
             <Button
               variant="destructive"
-              onClick={() =>
-                onDelete(instance.id, instance.instanceName)
-              }
+              onClick={() => onDelete(instance.id, instance.instanceName)}
               disabled={deletingInstance === instance.id}
               className="w-full"
             >
@@ -185,8 +168,7 @@ const InstanceCard = React.forwardRef(
                 <LoadingSpinner />
               ) : (
                 <>
-                  <Trash2 className="mr-2 w-5 h-5" /> Excluir
-                  Instância
+                  <Trash2 className="mr-2 w-5 h-5" /> Excluir Instância
                 </>
               )}
             </Button>
@@ -197,21 +179,38 @@ const InstanceCard = React.forwardRef(
   },
 );
 
+InstanceCard.displayName = "InstanceCard";
+
+InstanceCard.propTypes = {
+  instance: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    instanceName: PropTypes.string.isRequired,
+    connectionStatus: PropTypes.string,
+    profilePicUrl: PropTypes.string,
+    profileName: PropTypes.string,
+    phoneNumber: PropTypes.string,
+  }).isRequired,
+  onReconnect: PropTypes.func.isRequired,
+  onLogout: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+  deletingInstance: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
+
 const Numeros = () => {
-  const [proxyHost, setProxyHost] = useState('');
-  const [proxyPort, setProxyPort] = useState('');
-  const [proxyUsername, setProxyUsername] = useState('');
-  const [proxyPassword, setProxyPassword] = useState('');
+  const [proxyHost, setProxyHost] = useState("");
+  const [proxyPort, setProxyPort] = useState("");
+  const [proxyUsername, setProxyUsername] = useState("");
+  const [proxyPassword, setProxyPassword] = useState("");
   const [isDarkMode] = useDarkMode();
   const [instances, setInstances] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentPlan, setCurrentPlan] = useState('');
+  const [currentPlan, setCurrentPlan] = useState("");
   const [instanceLimit, setInstanceLimit] = useState(0);
   const [remainingSlots, setRemainingSlots] = useState(0);
   const [qrCode, setQrCode] = useState(null);
   const [qrCodeError, setQrCodeError] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newInstaceName, setNewInstaceName] = useState('');
+  const [newInstaceName, setNewInstaceName] = useState("");
   const [showQrCodeModal, setShowQrCodeModal] = useState(false);
   const [selectedInstance, setSelectedInstance] = useState(null);
   const [showTypebotConfig, setShowTypebotConfig] = useState(false);
@@ -224,31 +223,47 @@ const Numeros = () => {
   const [selectedInstanceForProxy, setSelectedInstanceForProxy] =
     useState(null);
 
+  useEffect(() => {
+    // 1. Busca inicial de dados ao montar o componente
+    fetchInstances();
+
+    const pollingInterval = setInterval(() => {
+      console.log("Polling para atualizações de instância...");
+      syncInstancesWithExternalApi();
+    }, 15000); // Polling a cada 15 segundos (ajuste conforme a necessidade)
+
+    // 3. Função de limpeza: Limpa o intervalo quando o componente é desmontado
+    return () => clearInterval(pollingInterval);
+  }, []);
+
   const syncInstancesWithExternalApi = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error('Token não encontrado');
+        throw new Error("Token não encontrado");
       }
 
       // Função para normalizar o status de conexão
+      // Esta função é crucial para garantir que os diferentes termos de status da API externa
+      // sejam mapeados para um conjunto consistente que seu frontend entende (ex: "OPEN", "disconnected").
       const normalizeConnectionStatus = (status) => {
         const validStatuses = [
-          'pending',
-          'connected',
-          'disconnected',
-          'OPEN',
-          'connecting',
-          'close',
+          "pending",
+          "connected",
+          "disconnected",
+          "OPEN", // Este é o status que você usa para 'online'
+          "connecting",
+          "close",
         ];
 
         const statusMap = {
-          online: 'OPEN',
-          connected: 'connected',
-          offline: 'disconnected',
+          online: "OPEN",
+          connected: "OPEN", // Assumindo que 'connected' da API externa também significa 'OPEN' para você
+          offline: "disconnected",
+          // Adicione outros mapeamentos se a API externa usar termos diferentes para os mesmos estados
         };
 
-        // Converter status para minúsculas para comparação
+        // Converter status para minúsculas para comparação robusta
         const normalizedStatus = status?.toLowerCase();
 
         // Verificar se o status está no mapeamento
@@ -256,68 +271,62 @@ const Numeros = () => {
           return statusMap[normalizedStatus];
         }
 
-        // Verificar se o status original é válido
+        // Se o status original já for um dos válidos, retorne-o
         if (validStatuses.includes(status)) {
           return status;
         }
 
         // Valor padrão se nenhum status for reconhecido
-        return 'disconnected';
+        return "disconnected";
       };
 
-      console.log('Buscando instâncias locais...');
-      const localResponse = await axios.get(
-        `${API_BASE_URL}/api/instances`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      console.log('Resposta da API local:', localResponse.data);
+      console.log("Buscando instâncias locais...");
+      const localResponse = await axios.get(`${API_BASE_URL}/api/instances`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // console.log("Resposta da API local:", localResponse.data); // Mantenha para depuração, remova em produção
       const localInstances = localResponse.data.instances || [];
 
-      console.log('Buscando instâncias da API externa...');
+      console.log("Buscando instâncias da API externa...");
       const externalResponse = await axios.get(
         `${API_URL}/instance/fetchInstances`,
         {
           headers: { apikey: API_KEY },
         },
       );
-      console.log('Resposta da API externa:', externalResponse.data);
+      // console.log("Resposta da API externa:", externalResponse.data); // Mantenha para depuração, remova em produção
 
       if (!Array.isArray(externalResponse.data)) {
-        throw new Error('Resposta inválida da API externa');
+        throw new Error("Resposta inválida da API externa: Esperado um array.");
       }
       const externalInstances = externalResponse.data;
 
-      // Array para rastrear operações de sincronização
+      // Array para rastrear operações de sincronização (atualizações e exclusões)
       const syncOperations = [];
 
-      // Atualize as instâncias locais com base nas instâncias externas
+      // Itera sobre as instâncias locais para verificar seu estado na API externa
       for (const localInstance of localInstances) {
         const externalInstance = externalInstances.find(
           (e) => e.name === localInstance.instanceName,
         );
 
         if (externalInstance) {
-          // Preparar dados para atualização
+          // Caso: Instância existe tanto localmente quanto externamente
           const updateData = {
             connectionStatus: normalizeConnectionStatus(
               externalInstance.connectionStatus,
             ),
-            ownerJid:
-              externalInstance.ownerJid || localInstance.ownerJid,
+            // Prioriza dados da API externa se existirem, caso contrário, mantém os locais
+            ownerJid: externalInstance.ownerJid || localInstance.ownerJid,
             profileName:
-              externalInstance.profileName ||
-              localInstance.profileName,
+              externalInstance.profileName || localInstance.profileName,
             profilePicUrl:
-              externalInstance.profilePicUrl ||
-              localInstance.profilePicUrl,
+              externalInstance.profilePicUrl || localInstance.profilePicUrl,
           };
 
-          // Verificar se há mudanças necessárias
+          // Verifica se há alguma diferença significativa que justifique uma atualização
           const needsUpdate =
-            updateData.connectionStatus !==
-              localInstance.connectionStatus ||
+            updateData.connectionStatus !== localInstance.connectionStatus ||
             updateData.ownerJid !== localInstance.ownerJid ||
             updateData.profileName !== localInstance.profileName ||
             updateData.profilePicUrl !== localInstance.profilePicUrl;
@@ -329,7 +338,7 @@ const Numeros = () => {
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
-                  'Content-Type': 'application/json',
+                  "Content-Type": "application/json",
                 },
               },
             );
@@ -337,15 +346,15 @@ const Numeros = () => {
             syncOperations.push({
               instanceName: localInstance.instanceName,
               operation: updateOperation,
-              type: 'update',
+              type: "update",
             });
-
             console.log(
               `Preparando atualização para instância ${localInstance.instanceName}`,
             );
           }
         } else {
-          // A instância não existe mais na API externa, vamos removê-la do banco local
+          // Caso: Instância existe localmente, mas NÃO existe na API externa.
+          // Isso indica que ela foi removida da Evolution API e deve ser removida localmente.
           const deleteOperation = axios.delete(
             `${API_BASE_URL}/api/instances/instance/${localInstance.id}`,
             {
@@ -356,25 +365,35 @@ const Numeros = () => {
           syncOperations.push({
             instanceName: localInstance.instanceName,
             operation: deleteOperation,
-            type: 'delete',
+            type: "delete",
           });
-
           console.log(
             `Preparando remoção da instância ${localInstance.instanceName}`,
           );
         }
       }
 
-      // Executar todas as operações de sincronização em paralelo
+      // Ponto de Observação: Esta lógica não adiciona instâncias que existem *externamente*
+      // mas *não localmente*. Presume-se que a criação de instâncias sempre começa
+      // pelo seu sistema, que então as adiciona ao seu banco de dados e à API externa.
+      // Se você precisar descobrir e adicionar instâncias criadas fora do seu sistema,
+      // seria necessário um loop adicional aqui para `externalInstances` verificando se não existem em `localInstances`.
+
+      // Executar todas as operações de sincronização (atualizações e exclusões) em paralelo.
+      // `Promise.allSettled` é usado para que todas as operações sejam tentadas,
+      // mesmo que algumas falhem, sem interromper o processo.
       if (syncOperations.length > 0) {
+        console.log(
+          `Executando ${syncOperations.length} operações de sincronização...`,
+        );
         const results = await Promise.allSettled(
           syncOperations.map((op) => op.operation),
         );
 
-        // Registrar resultados das operações
+        // Registrar os resultados de cada operação para depuração
         results.forEach((result, index) => {
           const operation = syncOperations[index];
-          if (result.status === 'fulfilled') {
+          if (result.status === "fulfilled") {
             console.log(
               `${operation.type.toUpperCase()} para ${
                 operation.instanceName
@@ -387,28 +406,27 @@ const Numeros = () => {
             );
           }
         });
+      } else {
+        console.log("Nenhuma operação de sincronização necessária.");
       }
 
-      console.log('Sincronização concluída com sucesso');
-      await fetchInstances(); // Atualiza a lista de instâncias após a sincronização
+      console.log("Sincronização concluída com sucesso. Atualizando UI...");
+      // Após a sincronização, busca as instâncias novamente para atualizar o estado do React
+      // e refletir as mudanças na interface do usuário.
+      await fetchInstances();
     } catch (error) {
-      console.error(
-        'Erro detalhado ao sincronizar instâncias:',
-        error,
-      );
+      console.error("Erro detalhado ao sincronizar instâncias:", error);
 
-      // Log detalhado de erros de resposta
-      if (error.response) {
-        console.error('Resposta do servidor:', error.response.data);
-        console.error('Status do erro:', error.response.status);
-        console.error('Cabeçalhos do erro:', error.response.headers);
+      // Log detalhado de erros de resposta da API para facilitar a depuração
+      if (axios.isAxiosError(error) && error.response) {
+        console.error("Resposta do servidor:", error.response.data);
+        console.error("Status do erro:", error.response.status);
+        console.error("Cabeçalhos do erro:", error.response.headers);
       }
 
       toast.error(
         `Erro ao sincronizar instâncias: ${
-          error.response?.data?.message ||
-          error.message ||
-          'Erro desconhecido'
+          error.response?.data?.message || error.message || "Erro desconhecido"
         }`,
       );
     }
@@ -420,62 +438,53 @@ const Numeros = () => {
   };
 
   const handleRefresh = async () => {
+    if (isRefreshing) return; // Evita cliques múltiplos enquanto atualiza
     setIsRefreshing(true);
-    try {
-      await syncInstancesWithExternalApi();
-      toast.success('Dados atualizados com sucesso!');
-    } catch (error) {
-      console.error('Erro ao atualizar dados:', error);
-      toast.error('Erro ao atualizar dados');
-    } finally {
-      setIsRefreshing(false);
-    }
+    toast.loading("Atualizando instâncias...");
+    await syncInstancesWithExternalApi(); // Chama a sincronização completa
+    toast.dismiss(); // Descarta o toast de carregamento
+    toast.success("Página atualizada com sucesso!");
+    setIsRefreshing(false);
   };
 
   const handleError = (error) => {
     if (error.response) {
       const status = error.response.status;
       if (status === 401) {
-        toast.error('Sessão expirada. Faça login novamente.');
-        window.location.href = '/login';
+        toast.error("Sessão expirada. Faça login novamente.");
+        window.location.href = "/login";
       } else if (status === 403) {
-        toast.error(
-          'Você não tem permissão para acessar este recurso.',
-        );
+        toast.error("Você não tem permissão para acessar este recurso.");
       } else {
         toast.error(
-          error.response.data?.message ||
-            'Erro ao carregar instâncias',
+          error.response.data?.message || "Erro ao carregar instâncias",
         );
       }
     } else if (error.request) {
-      toast.error('Sem resposta do servidor. Verifique sua conexão.');
+      toast.error("Sem resposta do servidor. Verifique sua conexão.");
     } else {
-      toast.error('Erro ao configurar a requisição.');
+      toast.error("Erro ao configurar a requisição.");
     }
   };
 
   const fetchInstances = async () => {
+    setLoading(true);
+    setIsRefreshing(true); // Indica que a atualização está em andamento
     try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-
+      const token = localStorage.getItem("token");
       if (!token) {
-        toast.error('Token de autenticação não encontrado');
-        window.location.href = '/login';
+        toast.error(
+          "Token de autenticação não encontrado. Por favor, faça login novamente.",
+        );
+        // Opcional: Redirecionar para a página de login
         return;
       }
 
-      const response = await axios.get(
-        `${API_BASE_URL}/api/instances`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      console.log('Dados das instâncias:', response.data);
+      console.log("Buscando instâncias locais e informações do plano...");
+      const response = await axios.get(`${API_BASE_URL}/api/instances`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Instâncias locais buscadas:", response.data);
 
       const {
         instances: instancesData,
@@ -485,138 +494,108 @@ const Numeros = () => {
       } = response.data;
 
       setInstances(instancesData || []);
-      setCurrentPlan(currentPlan || '');
+      setCurrentPlan(currentPlan || "");
       setInstanceLimit(instanceLimit || 0);
       setRemainingSlots(remainingSlots || 0);
     } catch (error) {
-      console.error('Erro na busca de instâncias:', error);
-      handleError(error);
+      console.error("Erro ao buscar instâncias e plano:", error);
+      let errorMessage = "Erro ao carregar instâncias e informações do plano.";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
+      setIsRefreshing(false); // Finaliza a indicação de atualização
     }
   };
 
   const handleCreateInstance = async () => {
-    if (isCreatingInstance || !newInstaceName.trim()) return;
-
+    if (!newInstaceName.trim()) {
+      toast.error("Por favor, insira um nome para a instância.");
+      return;
+    }
     if (remainingSlots <= 0) {
-      toast.error(
-        `Limite de instâncias atingido para o plano ${currentPlan}`,
-      );
+      toast.error(`Limite de instâncias atingido para o plano ${currentPlan}.`);
       return;
     }
 
     setIsCreatingInstance(true);
-
+    toast.loading("Criando nova instância...");
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Token não encontrado");
+      }
+
+      // 1. Criar instância na API externa (e ela será salva no DB local pelo backend)
       const response = await axios.post(
-        `${API_BASE_URL}/api/instances/create`,
+        `${API_BASE_URL}/api/instances/create`, // Esta rota já cuida de salvar no seu DB local
         {
           instanceName: newInstaceName,
           qrcode: true,
-          integration: 'WHATSAPP-BAILEYS',
+          integration: "WHATSAPP-BAILEYS",
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
+      console.log("Resposta da API (criação):", response.data);
 
-      console.log('Resposta da API:', response.data);
-      const { qrcode, instance } = response.data;
+      // Desestruturação da resposta. Renomeamos 'qrcode' para 'rawQrCodeData' para evitar conflito.
+      const { instance, qrcode: rawQrCodeData, pairingCode } = response.data;
+      const instanceNameFromResponse = instance.instanceName; // Use o nome retornado pelo backend
 
-      if (qrcode && (typeof qrcode === 'string' || qrcode.base64)) {
-        setQrCode({
-          base64: typeof qrcode === 'string' ? qrcode : qrcode.base64,
-        });
-        setShowQrCodeModal(true);
-        toast.success(
-          'Instância criada com sucesso! Escaneie o QR Code para conectar.',
-        );
-        setIsModalOpen(false);
+      let qrCodeBase64String = null;
 
-        // Inicia o monitoramento do status
-        let attempts = 0;
-        const maxAttempts = 60;
-
-        const intervalId = setInterval(async () => {
-          try {
-            attempts++;
-            console.log(
-              `Verificando status da nova instância (tentativa ${attempts})`,
-            );
-
-            const statusResponse = await axios.get(
-              `${API_URL}/instance/connectionState/${newInstaceName}`,
-              {
-                headers: {
-                  apikey: API_KEY,
-                },
-              },
-            );
-
-            console.log('Status response:', statusResponse.data);
-            const currentStatus =
-              statusResponse.data?.instance?.connectionStatus ||
-              statusResponse.data?.instance?.state;
-
-            console.log('Current status:', currentStatus);
-
-            if (currentStatus === 'OPEN') {
-              try {
-                // Atualiza o status no banco local
-                await axios.put(
-                  `${API_BASE_URL}/api/instances/instance/${instance.id}/connection-status`,
-                  {
-                    connectionStatus: 'OPEN',
-                  },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                    },
-                  },
-                );
-
-                console.log(
-                  'Status atualizado para open no banco local',
-                );
-                toast.success('Instância conectada com sucesso!');
-                setShowQrCodeModal(false);
-                await syncInstancesWithExternalApi();
-                clearInterval(intervalId);
-              } catch (updateError) {
-                console.error(
-                  'Erro ao atualizar status:',
-                  updateError,
-                );
-                toast.error('Erro ao atualizar status da instância');
-              }
-            } else if (attempts >= maxAttempts) {
-              toast.error('Tempo limite de conexão excedido');
-              clearInterval(intervalId);
-            }
-          } catch (error) {
-            console.error('Erro ao verificar status:', error);
-            if (attempts >= maxAttempts) {
-              clearInterval(intervalId);
-            }
-          }
-        }, 2000);
-
-        // Limpa o intervalo após o tempo máximo
-        setTimeout(() => {
-          clearInterval(intervalId);
-        }, 120000);
-      } else {
-        console.error('Formato de QR code inválido:', qrcode);
-        toast.error('Erro ao processar QR code');
-        return;
+      // Lógica para extrair a string base64 corretamente
+      if (rawQrCodeData) {
+        if (typeof rawQrCodeData === "string") {
+          // Se a API retornar a string base64 diretamente
+          qrCodeBase64String = rawQrCodeData;
+        } else if (rawQrCodeData.base64) {
+          // Se a API retornar um objeto com a propriedade 'base64'
+          qrCodeBase64String = rawQrCodeData.base64;
+        } else if (rawQrCodeData.code) {
+          // Se a API retornar um objeto com a propriedade 'code' (como em handleReconnectInstance)
+          qrCodeBase64String = `data:image/png;base64,${rawQrCodeData.code}`;
+        }
       }
+
+      // Verifica se conseguimos obter uma string de QR Code válida
+      if (!qrCodeBase64String) {
+        throw new Error(
+          "Formato de QR Code inválido ou ausente na resposta da API.",
+        );
+      }
+
+      // Define o estado do QR Code com a string base64 extraída
+      setQrCode({ base64: qrCodeBase64String, pairingCode });
+      setQrCodeError(false); // Reseta o estado de erro do QR Code para falso
+      setShowQrCodeModal(true);
+      closeModal(); // Fecha o modal de criação de instância
+      toast.dismiss(); // Descarta o toast de carregamento
+      toast.success(
+        `Instância '${instanceNameFromResponse}' criada com sucesso! Escaneie o QR Code.`,
+      );
 
       await syncInstancesWithExternalApi();
     } catch (error) {
-      console.error('Erro ao criar instância:', error);
-      const errorMessage =
-        error.response?.data?.message ||
-        'Erro desconhecido ao criar instância';
+      console.error("Erro ao criar instância:", error);
+      let errorMessage = "Erro ao criar instância. Tente novamente.";
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.status === 409) {
+          errorMessage = "Já existe uma instância com este nome.";
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data === "PRO FEATURE ONLY") {
+          errorMessage = "Esta é uma funcionalidade PRO. Verifique seu plano.";
+        }
+      } else if (
+        error.message ===
+        "Formato de QR Code inválido ou ausente na resposta da API."
+      ) {
+        errorMessage = error.message; // Usa a mensagem de erro específica que criamos
+      }
+      toast.dismiss(); // Descarta o toast de carregamento
       toast.error(errorMessage);
     } finally {
       setIsCreatingInstance(false);
@@ -641,12 +620,11 @@ const Numeros = () => {
         if (qrCodeData && (qrCodeData.base64 || qrCodeData.code)) {
           setQrCode({
             base64:
-              qrCodeData.base64 ||
-              `data:image/png;base64,${qrCodeData.code}`,
+              qrCodeData.base64 || `data:image/png;base64,${qrCodeData.code}`,
             pairingCode: qrCodeData.pairingCode,
           });
           setShowQrCodeModal(true);
-          toast.success('Escaneie o QR Code para conectar');
+          toast.success("Escaneie o QR Code para conectar");
 
           let attempts = 0;
           const maxAttempts = 60;
@@ -655,9 +633,7 @@ const Numeros = () => {
           const intervalId = setInterval(async () => {
             try {
               attempts++;
-              console.log(
-                `Verificando status (tentativa ${attempts})`,
-              );
+              console.log(`Verificando status (tentativa ${attempts})`);
 
               const statusResponse = await axios.get(
                 `${API_URL}/instance/connectionState/${instanceName}`,
@@ -668,18 +644,17 @@ const Numeros = () => {
                 },
               );
 
-              console.log('Status response:', statusResponse.data);
+              console.log("Status response:", statusResponse.data);
               const currentStatus =
                 statusResponse.data?.instance?.connectionStatus ||
                 statusResponse.data?.instance?.state;
 
-              console.log('Current status:', currentStatus);
+              console.log("Current status:", currentStatus);
 
-              if (currentStatus === 'OPEN') {
-                const token = localStorage.getItem('token');
+              if (currentStatus === "OPEN") {
+                const token = localStorage.getItem("token");
                 const instanceToUpdate = instances.find(
-                  (instance) =>
-                    instance.instanceName === instanceName,
+                  (instance) => instance.instanceName === instanceName,
                 );
 
                 if (instanceToUpdate) {
@@ -687,7 +662,7 @@ const Numeros = () => {
                     const updateResponse = await axios.put(
                       `${API_BASE_URL}/api/instances/instance/${instanceToUpdate.instanceId}/connection-status`,
                       {
-                        connectionStatus: 'OPEN',
+                        connectionStatus: "OPEN",
                       },
                       {
                         headers: {
@@ -696,34 +671,26 @@ const Numeros = () => {
                       },
                     );
 
-                    console.log(
-                      'Update response:',
-                      updateResponse.data,
-                    );
-                    toast.success('Instância conectada com sucesso!');
+                    console.log("Update response:", updateResponse.data);
+                    toast.success("Instância conectada com sucesso!");
                     setShowQrCodeModal(false);
                     await syncInstancesWithExternalApi();
                     clearInterval(intervalId);
                   } catch (updateError) {
-                    console.error(
-                      'Erro ao atualizar status:',
-                      updateError,
-                    );
+                    console.error("Erro ao atualizar status:", updateError);
                     console.log(
-                      'Update error details:',
+                      "Update error details:",
                       updateError.response?.data,
                     );
-                    toast.error(
-                      'Erro ao atualizar status da instância',
-                    );
+                    toast.error("Erro ao atualizar status da instância");
                   }
                 }
               } else if (attempts >= maxAttempts) {
-                toast.error('Tempo limite de conexão excedido');
+                toast.error("Tempo limite de conexão excedido");
                 clearInterval(intervalId);
               }
             } catch (error) {
-              console.error('Erro ao verificar status:', error);
+              console.error("Erro ao verificar status:", error);
               if (attempts >= maxAttempts) {
                 clearInterval(intervalId);
               }
@@ -735,79 +702,45 @@ const Numeros = () => {
             clearInterval(intervalId);
           }, 120000);
         } else {
-          console.error(
-            'QR code não encontrado na resposta:',
-            qrCodeData,
-          );
-          toast.error('Erro ao obter QR code para reconexão');
+          console.error("QR code não encontrado na resposta:", qrCodeData);
+          toast.error("Erro ao obter QR code para reconexão");
         }
       } else {
-        toast.error('Erro ao tentar reconectar a instância');
+        toast.error("Erro ao tentar reconectar a instância");
       }
     } catch (error) {
-      console.error('Erro ao reconectar instância:', error);
+      console.error("Erro ao reconectar instância:", error);
       handleError(error);
+      await syncInstancesWithExternalApi(); // Sincroniza para refletir possíveis mudanças
     }
   };
 
   const handleLogoutInstance = async (instanceName) => {
+    toast.loading(`Desconectando instância ${instanceName}...`);
     try {
-      // Primeiro faz logout na API externa
-      await axios.delete(
-        `${API_URL}/instance/logout/${instanceName}`,
-        {
-          headers: {
-            apikey: API_KEY,
-          },
-        },
-      );
-
-      // Após logout bem-sucedido, atualiza o status no banco local
-      const token = localStorage.getItem('token');
-      const instanceToUpdate = instances.find(
-        (instance) => instance.instanceName === instanceName,
-      );
-
-      if (instanceToUpdate) {
-        try {
-          await axios.put(
-            `${API_BASE_URL}/api/instances/instance/${instanceToUpdate.instanceId}/connection-status`,
-            {
-              connectionStatus: 'close',
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          );
-
-          toast.success('Instância desconectada com sucesso!');
-          await syncInstancesWithExternalApi(); // Recarrega os dados atualizados
-        } catch (updateError) {
-          console.error(
-            'Erro ao atualizar status no banco local:',
-            updateError,
-          );
-          toast.error(
-            'Erro ao atualizar status da instância no banco local',
-          );
-        }
-      }
+      await axios.delete(`${API_URL}/instance/logout/${instanceName}`, {
+        headers: { apikey: API_KEY },
+      });
+      toast.dismiss();
+      toast.success(`Instância ${instanceName} desconectada com sucesso.`);
+      await syncInstancesWithExternalApi(); // Atualiza o status após o logout
     } catch (error) {
-      console.error('Erro ao desconectar instância:', error);
-      toast.error(
-        error.response?.data?.message ||
-          'Erro ao desconectar instância',
-      );
+      console.error("Erro ao desconectar instância:", error);
+      let errorMessage = `Erro ao desconectar instância ${instanceName}.`;
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      toast.dismiss();
+      toast.error(errorMessage);
+      await syncInstancesWithExternalApi(); // Ainda sincroniza para refletir possíveis mudanças
     }
   };
 
   const saveProxyConfig = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!selectedInstanceForProxy?.id) {
-        toast.error('ID da instância não encontrado');
+        toast.error("ID da instância não encontrado");
         return;
       }
 
@@ -825,7 +758,7 @@ const Numeros = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         },
       );
@@ -837,33 +770,33 @@ const Numeros = () => {
         {
           headers: {
             apikey: API_KEY,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         },
       );
 
-      toast.success('Configurações de proxy salvas com sucesso!');
+      toast.success("Configurações de proxy salvas com sucesso!");
       setShowProxyConfig(false);
       await syncInstancesWithExternalApi();
 
       // Limpa os campos
-      setProxyHost('');
-      setProxyPort('');
-      setProxyUsername('');
-      setProxyPassword('');
+      setProxyHost("");
+      setProxyPort("");
+      setProxyUsername("");
+      setProxyPassword("");
     } catch (error) {
-      console.error('Erro ao salvar configurações de proxy:', error);
+      console.error("Erro ao salvar configurações de proxy:", error);
       toast.error(
         error.response?.data?.message ||
-          'Erro ao salvar configurações de proxy',
+          "Erro ao salvar configurações de proxy",
       );
     }
   };
 
   const handleConfigureTypebot = (instance) => {
-    console.log('Instance selected for typebot:', instance);
+    console.log("Instance selected for typebot:", instance);
     if (!instance.id) {
-      toast.error('ID da instância não encontrado');
+      toast.error("ID da instância não encontrado");
       return;
     }
     setSelectedInstance(instance);
@@ -872,11 +805,11 @@ const Numeros = () => {
 
   const handleUpdateTypebotConfig = async (config) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
 
       if (!selectedInstance?.id) {
         // Mudança aqui: de instanceId para id
-        toast.error('ID da instância não encontrado');
+        toast.error("ID da instância não encontrado");
         return;
       }
 
@@ -902,53 +835,43 @@ const Numeros = () => {
       // 	},
       // );
 
-      toast.success(
-        'Configurações do Typebot atualizadas com sucesso!',
-      );
+      toast.success("Configurações do Typebot atualizadas com sucesso!");
       setShowTypebotConfig(false);
       await syncInstancesWithExternalApi();
     } catch (error) {
-      console.error(
-        'Erro ao atualizar configurações do Typebot:',
-        error,
-      );
+      console.error("Erro ao atualizar configurações do Typebot:", error);
 
       if (error.response) {
         const errorMessage =
           error.response.data?.error ||
           error.response.data?.message ||
-          'Erro ao atualizar configurações do Typebot';
+          "Erro ao atualizar configurações do Typebot";
         toast.error(`Erro: ${errorMessage}`);
       } else {
-        toast.error('Erro ao atualizar configurações do Typebot');
+        toast.error("Erro ao atualizar configurações do Typebot");
       }
     }
   };
 
-  const handleDeleteTypebotConfig = async (
-    instanceId,
-    instanceName,
-  ) => {
+  const handleDeleteTypebotConfig = async (instanceId, instanceName) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
 
-      if (
-        !window.confirm('Tem certeza que deseja remover este fluxo?')
-      ) {
+      if (!window.confirm("Tem certeza que deseja remover este fluxo?")) {
         return;
       }
 
       const emptyTypebotConfig = {
         enabled: false,
-        url: '',
-        typebot: '',
-        triggerType: 'none',
-        triggerOperator: 'contains',
-        triggerValue: '',
+        url: "",
+        typebot: "",
+        triggerType: "none",
+        triggerOperator: "contains",
+        triggerValue: "",
         expire: 0,
-        keywordFinish: '#EXIT',
+        keywordFinish: "#EXIT",
         delayMessage: 1000,
-        unknownMessage: '',
+        unknownMessage: "",
         listeningFromMe: false,
         stopBotFromMe: false,
         keepOpen: false,
@@ -956,26 +879,23 @@ const Numeros = () => {
       };
 
       console.log(
-        'Enviando configuração para API Evolution:',
+        "Enviando configuração para API Evolution:",
         emptyTypebotConfig,
       );
 
       // Tente usar PUT em vez de POST
-      const evolutionResponse = await axios.put(
+      const response = await axios.put(
         `${API_URL}/typebot/update/${instanceName}`,
         emptyTypebotConfig,
         {
           headers: {
             apikey: API_KEY,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         },
       );
 
-      console.log(
-        'Resposta da API Evolution:',
-        evolutionResponse.data,
-      );
+      console.log("Resposta da API Evolution:", response.data);
 
       // Atualiza no banco de dados local
       await axios.put(
@@ -984,23 +904,23 @@ const Numeros = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         },
       );
 
-      toast.success('Fluxo removido com sucesso!');
+      toast.success("Fluxo removido com sucesso!");
       setShowTypebotConfig(false);
       await syncInstancesWithExternalApi();
     } catch (error) {
-      console.error('Erro ao remover fluxo:', error);
-      let errorMessage = 'Erro ao remover fluxo';
+      console.error("Erro ao remover fluxo:", error);
+      let errorMessage = "Erro ao remover fluxo";
       if (error.response) {
         if (error.response.status === 500) {
-          console.error('Detalhes do erro 500:', error.response.data);
-          errorMessage = 'Erro interno do servidor ao remover fluxo';
+          console.error("Detalhes do erro 500:", error.response.data);
+          errorMessage = "Erro interno do servidor ao remover fluxo";
         } else if (error.response.status === 404) {
-          errorMessage = 'Fluxo não encontrado';
+          errorMessage = "Fluxo não encontrado";
         } else if (error.response.data?.message) {
           errorMessage = error.response.data.message;
         }
@@ -1021,31 +941,20 @@ const Numeros = () => {
     setDeletingInstance(instanceId);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
 
       // Tenta deletar na API externa
       try {
-        await axios.delete(
-          `${API_URL}/instance/delete/${instanceName}`,
-          {
-            headers: { apikey: API_KEY },
-          },
-        );
-        console.log(
-          `Instância ${instanceName} deletada na API externa`,
-        );
+        await axios.delete(`${API_URL}/instance/delete/${instanceName}`, {
+          headers: { apikey: API_KEY },
+        });
+        console.log(`Instância ${instanceName} deletada na API externa`);
       } catch (externalError) {
-        console.error(
-          'Erro ao deletar na API externa:',
-          externalError,
-        );
+        console.error("Erro ao deletar na API externa:", externalError);
         // Se o erro não for 404, exibimos um aviso mas continuamos com a deleção local
-        if (
-          externalError.response &&
-          externalError.response.status !== 404
-        ) {
+        if (externalError.response && externalError.response.status !== 404) {
           toast.warn(
-            'Erro ao excluir na API externa, continuando com exclusão local',
+            "Erro ao excluir na API externa, continuando com exclusão local",
           );
         }
       }
@@ -1056,20 +965,18 @@ const Numeros = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      toast.success('Instância excluída com sucesso!');
+      toast.success("Instância excluída com sucesso!");
       await syncInstancesWithExternalApi(); // Sincroniza após a deleção
     } catch (error) {
-      console.error('Erro ao excluir instância:', error);
+      console.error("Erro ao excluir instância:", error);
       if (error.response) {
         toast.error(
           `Erro ao excluir instância: ${
-            error.response.data.error || 'Erro desconhecido'
+            error.response.data.error || "Erro desconhecido"
           }`,
         );
       } else {
-        toast.error(
-          'Erro ao excluir instância. Por favor, tente novamente.',
-        );
+        toast.error("Erro ao excluir instância. Por favor, tente novamente.");
       }
     } finally {
       setDeletingInstance(null);
@@ -1078,9 +985,7 @@ const Numeros = () => {
 
   const openModal = () => {
     if (remainingSlots <= 0) {
-      toast.error(
-        `Limite de instâncias atingido para o plano ${currentPlan}`,
-      );
+      toast.error(`Limite de instâncias atingido para o plano ${currentPlan}`);
       return;
     }
     setIsModalOpen(true);
@@ -1088,7 +993,7 @@ const Numeros = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setNewInstaceName('');
+    setNewInstaceName("");
   };
 
   const closeQrCodeModal = () => {
@@ -1129,9 +1034,7 @@ const Numeros = () => {
               onClick={handleRefresh}
               disabled={isRefreshing}
             >
-              <RefreshCw
-                className={`${isRefreshing ? 'animate-spin' : ''}`}
-              />
+              <RefreshCw className={`${isRefreshing ? "animate-spin" : ""}`} />
             </Button>
             <Button onClick={openModal}>
               <Plus className="mr-2" /> Nova Instância
@@ -1146,7 +1049,7 @@ const Numeros = () => {
           className="mb-4 bg-blue-100 dark:bg-whatsapp-prata/20 p-3 rounded-lg text-black dark:text-white flex justify-between items-center"
         >
           <div className="flex space-x-4">
-            <span>Plano Atual: {currentPlan || ''}</span>
+            <span>Plano Atual: {currentPlan || ""}</span>
             <span>Limite de Instâncias: {instanceLimit || 0}</span>
             <span>Slots Restantes: {remainingSlots || 0}</span>
           </div>
@@ -1160,7 +1063,7 @@ const Numeros = () => {
               transition={{
                 duration: 1,
                 repeat: Number.POSITIVE_INFINITY,
-                ease: 'linear',
+                ease: "linear",
               }}
               className="w-16 h-16 border-4 border-whatsapp-green border-t-transparent rounded-full"
             />
@@ -1172,9 +1075,7 @@ const Numeros = () => {
             className="text-center bg-white/10 p-10 rounded-xl shadow-lg"
           >
             <Layers className="mx-auto w-16 h-16 text-gray-400 mb-4" />
-            <p className="text-gray-300">
-              Nenhuma instância encontrada
-            </p>
+            <p className="text-gray-300">Nenhuma instância encontrada</p>
           </motion.div>
         ) : (
           <motion.div
@@ -1234,7 +1135,7 @@ const Numeros = () => {
     shadow appearance-none border rounded w-full py-2 px-3
     text-gray-700 dark:text-gray-300 dark:bg-whatsapp-prata
     leading-tight focus:outline-none focus:shadow-outline
-    ${!newInstaceName.trim() ? 'border-red-500' : 'border-gray-300'}
+    ${!newInstaceName.trim() ? "border-red-500" : "border-gray-300"}
   `}
                 placeholder="Ex: Instância Principal"
                 value={newInstaceName}
@@ -1257,8 +1158,8 @@ const Numeros = () => {
     transition-all duration-300
     ${
       isCreatingInstance || !newInstaceName.trim()
-        ? 'opacity-50 cursor-not-allowed'
-        : ''
+        ? "opacity-50 cursor-not-allowed"
+        : ""
     }
   `}
             >
@@ -1287,7 +1188,7 @@ const Numeros = () => {
                   <span>Criando instância...</span>
                 </div>
               ) : (
-                'Criar Instância'
+                "Criar Instância"
               )}
             </motion.button>
           </motion.div>
@@ -1319,26 +1220,23 @@ const Numeros = () => {
               alt="QR Code"
               className="mx-auto max-w-full h-auto"
               onError={(e) => {
-                console.error('Erro ao carregar QR code');
+                console.error("Erro ao carregar QR code");
                 setQrCodeError(true);
               }}
             />
             {qrCodeError && (
               <p className="text-red-500 text-center mt-4">
-                Erro ao carregar o QR code. Tente fechar e abrir
-                novamente.
+                Erro ao carregar o QR code. Tente fechar e abrir novamente.
               </p>
             )}
             {qrCode.pairingCode && (
               <p className="text-center mt-4 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                Código de pareamento:{' '}
-                <strong>{qrCode.pairingCode}</strong>
+                Código de pareamento: <strong>{qrCode.pairingCode}</strong>
               </p>
             )}
             <p className="text-gray-700 dark:text-gray-300 mt-4">
               Use o aplicativo para escanear o QR code e conectar.
-              {qrCode.pairingCode &&
-                ' Ou use o código de pareamento acima.'}
+              {qrCode.pairingCode && " Ou use o código de pareamento acima."}
             </p>
             <motion.button
               onClick={closeQrCodeModal}
