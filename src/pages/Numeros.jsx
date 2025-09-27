@@ -176,7 +176,7 @@ const InstanceCard = React.forwardRef(
         </div>
       </motion.div>
     );
-  },
+  }
 );
 
 InstanceCard.displayName = "InstanceCard";
@@ -230,7 +230,7 @@ const Numeros = () => {
     const pollingInterval = setInterval(() => {
       console.log("Polling para atualizações de instância...");
       syncInstancesWithExternalApi();
-    }, 15000); // Polling a cada 15 segundos (ajuste conforme a necessidade)
+    }, 30000); // ✅ OTIMIZADO: Polling a cada 30 segundos (menos agressivo)
 
     // 3. Função de limpeza: Limpa o intervalo quando o componente é desmontado
     return () => clearInterval(pollingInterval);
@@ -292,7 +292,7 @@ const Numeros = () => {
         `${API_URL}/instance/fetchInstances`,
         {
           headers: { apikey: API_KEY },
-        },
+        }
       );
       // console.log("Resposta da API externa:", externalResponse.data); // Mantenha para depuração, remova em produção
 
@@ -307,14 +307,14 @@ const Numeros = () => {
       // Itera sobre as instâncias locais para verificar seu estado na API externa
       for (const localInstance of localInstances) {
         const externalInstance = externalInstances.find(
-          (e) => e.name === localInstance.instanceName,
+          (e) => e.name === localInstance.instanceName
         );
 
         if (externalInstance) {
           // Caso: Instância existe tanto localmente quanto externamente
           const updateData = {
             connectionStatus: normalizeConnectionStatus(
-              externalInstance.connectionStatus,
+              externalInstance.connectionStatus
             ),
             // Prioriza dados da API externa se existirem, caso contrário, mantém os locais
             ownerJid: externalInstance.ownerJid || localInstance.ownerJid,
@@ -340,7 +340,7 @@ const Numeros = () => {
                   Authorization: `Bearer ${token}`,
                   "Content-Type": "application/json",
                 },
-              },
+              }
             );
 
             syncOperations.push({
@@ -349,7 +349,7 @@ const Numeros = () => {
               type: "update",
             });
             console.log(
-              `Preparando atualização para instância ${localInstance.instanceName}`,
+              `Preparando atualização para instância ${localInstance.instanceName}`
             );
           }
         } else {
@@ -359,7 +359,7 @@ const Numeros = () => {
             `${API_BASE_URL}/api/instances/instance/${localInstance.id}`,
             {
               headers: { Authorization: `Bearer ${token}` },
-            },
+            }
           );
 
           syncOperations.push({
@@ -368,7 +368,7 @@ const Numeros = () => {
             type: "delete",
           });
           console.log(
-            `Preparando remoção da instância ${localInstance.instanceName}`,
+            `Preparando remoção da instância ${localInstance.instanceName}`
           );
         }
       }
@@ -384,10 +384,10 @@ const Numeros = () => {
       // mesmo que algumas falhem, sem interromper o processo.
       if (syncOperations.length > 0) {
         console.log(
-          `Executando ${syncOperations.length} operações de sincronização...`,
+          `Executando ${syncOperations.length} operações de sincronização...`
         );
         const results = await Promise.allSettled(
-          syncOperations.map((op) => op.operation),
+          syncOperations.map((op) => op.operation)
         );
 
         // Registrar os resultados de cada operação para depuração
@@ -397,12 +397,12 @@ const Numeros = () => {
             console.log(
               `${operation.type.toUpperCase()} para ${
                 operation.instanceName
-              } concluído com sucesso`,
+              } concluído com sucesso`
             );
           } else {
             console.error(
               `Erro ao ${operation.type} ${operation.instanceName}:`,
-              result.reason,
+              result.reason
             );
           }
         });
@@ -427,7 +427,7 @@ const Numeros = () => {
       toast.error(
         `Erro ao sincronizar instâncias: ${
           error.response?.data?.message || error.message || "Erro desconhecido"
-        }`,
+        }`
       );
     }
   };
@@ -441,7 +441,11 @@ const Numeros = () => {
     if (isRefreshing) return; // Evita cliques múltiplos enquanto atualiza
     setIsRefreshing(true);
     toast.loading("Atualizando instâncias...");
-    await syncInstancesWithExternalApi(); // Chama a sincronização completa
+
+    // ✅ FORÇA ATUALIZAÇÃO: Busca dados diretamente sem cache
+    await fetchInstances(); // Busca dados frescos
+    await syncInstancesWithExternalApi(); // Sincroniza com API externa
+
     toast.dismiss(); // Descarta o toast de carregamento
     toast.success("Página atualizada com sucesso!");
     setIsRefreshing(false);
@@ -457,7 +461,7 @@ const Numeros = () => {
         toast.error("Você não tem permissão para acessar este recurso.");
       } else {
         toast.error(
-          error.response.data?.message || "Erro ao carregar instâncias",
+          error.response.data?.message || "Erro ao carregar instâncias"
         );
       }
     } else if (error.request) {
@@ -474,7 +478,7 @@ const Numeros = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         toast.error(
-          "Token de autenticação não encontrado. Por favor, faça login novamente.",
+          "Token de autenticação não encontrado. Por favor, faça login novamente."
         );
         // Opcional: Redirecionar para a página de login
         return;
@@ -482,7 +486,12 @@ const Numeros = () => {
 
       console.log("Buscando instâncias locais e informações do plano...");
       const response = await axios.get(`${API_BASE_URL}/api/instances`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // ✅ BYPASS CACHE: Força busca nova dos dados
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
       });
       console.log("Instâncias locais buscadas:", response.data);
 
@@ -536,7 +545,7 @@ const Numeros = () => {
           qrcode: true,
           integration: "WHATSAPP-BAILEYS",
         },
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       console.log("Resposta da API (criação):", response.data);
 
@@ -563,7 +572,7 @@ const Numeros = () => {
       // Verifica se conseguimos obter uma string de QR Code válida
       if (!qrCodeBase64String) {
         throw new Error(
-          "Formato de QR Code inválido ou ausente na resposta da API.",
+          "Formato de QR Code inválido ou ausente na resposta da API."
         );
       }
 
@@ -574,10 +583,11 @@ const Numeros = () => {
       closeModal(); // Fecha o modal de criação de instância
       toast.dismiss(); // Descarta o toast de carregamento
       toast.success(
-        `Instância '${instanceNameFromResponse}' criada com sucesso! Escaneie o QR Code.`,
+        `Instância '${instanceNameFromResponse}' criada com sucesso! Escaneie o QR Code.`
       );
 
-      await syncInstancesWithExternalApi();
+      // ✅ ATUALIZAÇÃO IMEDIATA: Atualiza os dados sem esperar o cache
+      await fetchInstances(); // Força busca nova dos dados
     } catch (error) {
       console.error("Erro ao criar instância:", error);
       let errorMessage = "Erro ao criar instância. Tente novamente.";
@@ -611,7 +621,7 @@ const Numeros = () => {
           headers: {
             apikey: API_KEY,
           },
-        },
+        }
       );
 
       if (response.status === 200) {
@@ -641,7 +651,7 @@ const Numeros = () => {
                   headers: {
                     apikey: API_KEY,
                   },
-                },
+                }
               );
 
               console.log("Status response:", statusResponse.data);
@@ -654,7 +664,7 @@ const Numeros = () => {
               if (currentStatus === "OPEN") {
                 const token = localStorage.getItem("token");
                 const instanceToUpdate = instances.find(
-                  (instance) => instance.instanceName === instanceName,
+                  (instance) => instance.instanceName === instanceName
                 );
 
                 if (instanceToUpdate) {
@@ -668,7 +678,7 @@ const Numeros = () => {
                         headers: {
                           Authorization: `Bearer ${token}`,
                         },
-                      },
+                      }
                     );
 
                     console.log("Update response:", updateResponse.data);
@@ -680,7 +690,7 @@ const Numeros = () => {
                     console.error("Erro ao atualizar status:", updateError);
                     console.log(
                       "Update error details:",
-                      updateError.response?.data,
+                      updateError.response?.data
                     );
                     toast.error("Erro ao atualizar status da instância");
                   }
@@ -760,7 +770,7 @@ const Numeros = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       // Atualiza na API externa
@@ -772,7 +782,7 @@ const Numeros = () => {
             apikey: API_KEY,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       toast.success("Configurações de proxy salvas com sucesso!");
@@ -787,8 +797,7 @@ const Numeros = () => {
     } catch (error) {
       console.error("Erro ao salvar configurações de proxy:", error);
       toast.error(
-        error.response?.data?.message ||
-          "Erro ao salvar configurações de proxy",
+        error.response?.data?.message || "Erro ao salvar configurações de proxy"
       );
     }
   };
@@ -817,7 +826,7 @@ const Numeros = () => {
       await axios.put(
         `${API_BASE_URL}/api/instances/instance/${selectedInstance.id}/typebot`,
         config,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       // Depois, atualiza na API externa
@@ -880,7 +889,7 @@ const Numeros = () => {
 
       console.log(
         "Enviando configuração para API Evolution:",
-        emptyTypebotConfig,
+        emptyTypebotConfig
       );
 
       // Tente usar PUT em vez de POST
@@ -892,7 +901,7 @@ const Numeros = () => {
             apikey: API_KEY,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       console.log("Resposta da API Evolution:", response.data);
@@ -906,7 +915,7 @@ const Numeros = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       toast.success("Fluxo removido com sucesso!");
@@ -932,7 +941,7 @@ const Numeros = () => {
   const handleDeleteInstance = async (instanceId, instanceName) => {
     if (
       !window.confirm(
-        `Tem certeza que deseja excluir a instância ${instanceName}?`,
+        `Tem certeza que deseja excluir a instância ${instanceName}?`
       )
     ) {
       return;
@@ -954,7 +963,7 @@ const Numeros = () => {
         // Se o erro não for 404, exibimos um aviso mas continuamos com a deleção local
         if (externalError.response && externalError.response.status !== 404) {
           toast.warn(
-            "Erro ao excluir na API externa, continuando com exclusão local",
+            "Erro ao excluir na API externa, continuando com exclusão local"
           );
         }
       }
@@ -962,18 +971,20 @@ const Numeros = () => {
       // Deletar a instância localmente (isso irá lidar com MediaStats e outros registros relacionados)
       await axios.delete(
         `${API_BASE_URL}/api/instances/instance/${instanceId}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("Instância excluída com sucesso!");
-      await syncInstancesWithExternalApi(); // Sincroniza após a deleção
+
+      // ✅ ATUALIZAÇÃO IMEDIATA: Atualiza os dados sem esperar o cache
+      await fetchInstances(); // Força busca nova dos dados
     } catch (error) {
       console.error("Erro ao excluir instância:", error);
       if (error.response) {
         toast.error(
           `Erro ao excluir instância: ${
             error.response.data.error || "Erro desconhecido"
-          }`,
+          }`
         );
       } else {
         toast.error("Erro ao excluir instância. Por favor, tente novamente.");
