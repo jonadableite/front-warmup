@@ -81,37 +81,37 @@ const SidebarComponent: React.FC = () => {
       label: 'Aquecimento',
       path: '/aquecimento',
     },
-    { id: 3, icon: PhoneIcon, label: 'Números', path: '/numeros' },
+    // { id: 3, icon: PhoneIcon, label: 'Números', path: '/numeros' },
     ...(isUploadAllowed
       ? [
-          {
-            id: 4,
-            icon: UploadIcon,
-            label: 'Upload',
-            path: '/upload',
-          },
-        ]
+        {
+          id: 4,
+          icon: UploadIcon,
+          label: 'Upload',
+          path: '/upload',
+        },
+      ]
       : []),
     // Adicione os novos itens condicionalmente com base na role do usuário
     ...(user?.role === 'affiliate' || user?.role === 'admin'
       ? [
-          {
-            id: 5,
-            icon: BarChart2,
-            label: 'Painel de Parceiro',
-            path: '/parceiro',
-          },
-        ]
+        {
+          id: 5,
+          icon: BarChart2,
+          label: 'Painel de Parceiro',
+          path: '/parceiro',
+        },
+      ]
       : []),
     ...(user?.role === 'admin'
       ? [
-          {
-            id: 6,
-            icon: Users,
-            label: 'Painel de Admin',
-            path: '/admin',
-          },
-        ]
+        {
+          id: 6,
+          icon: Users,
+          label: 'Painel de Admin',
+          path: '/admin',
+        },
+      ]
       : []),
     {
       id: 7,
@@ -177,11 +177,10 @@ const SidebarComponent: React.FC = () => {
                   <motion.div
                     whileHover={{ scale: 1.02, x: 5 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`flex items-center p-3 rounded-lg ${
-                      isActive
+                    className={`flex items-center p-3 rounded-lg ${isActive
                         ? 'bg-gradient-to-r from-blue-700/20 to-whatsapp-green/20 text-green-400'
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    } transition-colors duration:200`}
+                      } transition-colors duration:200`}
                   >
                     <item.icon size={20} />
                     <motion.span
