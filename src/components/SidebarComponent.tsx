@@ -178,8 +178,8 @@ const SidebarComponent: React.FC = () => {
                     whileHover={{ scale: 1.02, x: 5 }}
                     whileTap={{ scale: 0.98 }}
                     className={`flex items-center p-3 rounded-lg ${isActive
-                        ? 'bg-gradient-to-r from-blue-700/20 to-whatsapp-green/20 text-green-400'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-gradient-to-r from-blue-700/20 to-whatsapp-green/20 text-green-400'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
                       } transition-colors duration:200`}
                   >
                     <item.icon size={20} />
@@ -280,12 +280,12 @@ const SidebarComponent: React.FC = () => {
             align="start"
             className="w-56 bg-whatsapp-profundo border border-whatsapp-cinza text-gray-300"
           >
-            <DropdownMenuItem
+            {/* <DropdownMenuItem
               onClick={() => navigate('/account-info')}
             >
               <User2 className="mr-2" size={16} />
               <span>Informações da Conta</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
 
             <DropdownMenuItem onClick={() => navigate('/tutorial')}>
               <BookOpen className="mr-2" size={16} />
