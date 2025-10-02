@@ -165,6 +165,7 @@ interface MediaContent {
 interface PhoneInstance {
   phoneNumber: string;
   instanceId: string;
+  ownerJid?: string; // Adicionando ownerJid para identificar o número da instância
 }
 
 export interface WarmupConfig {
@@ -651,6 +652,7 @@ const Aquecimento: React.FC = (): ReactElement => {
             .ownerJid!.trim()
             .replace('@s.whatsapp.net', ''),
           instanceId: instance.name,
+          ownerJid: instance.ownerJid!.trim(), // Incluindo ownerJid para identificar a instância
         }));
 
       // Criação do payload
