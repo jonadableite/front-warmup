@@ -208,6 +208,7 @@ export interface WarmupConfig {
     videoChance: number;
     minDelay: number;
     maxDelay: number;
+    messageLimit?: number;
   };
 }
 
@@ -241,6 +242,19 @@ const Aquecimento: React.FC = (): ReactElement => {
   const [dailyMessageCount, setDailyMessageCount] = useState<{
     [key: string]: number;
   }>({});
+  const [messageLimit, setMessageLimit] = useState<number | undefined>(undefined);
+
+  // Função para validar messageLimit baseado no plano
+  const validateMessageLimit = (limit: number | undefined): boolean => {
+    if (!limit) return true; // Se não definido, usa o padrão
+    
+    const maxAllowed = currentPlan === 'free' ? 20 
+      : currentPlan === 'basic' ? 50 
+      : currentPlan === 'pro' ? 500 
+      : 1000;
+    
+    return limit >= 1 && limit <= maxAllowed;
+  };
 
   useEffect(() => {
     fetchInstances();
@@ -633,13 +647,23 @@ const Aquecimento: React.FC = (): ReactElement => {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error('Token de autenticação não encontrado');
-      }
+      throw new Error('Token de autenticação não encontrado');
+    }
 
-      if (selectedInstances.size < 2) {
-        toast.error('Selecione pelo menos duas instâncias');
-        return;
-      }
+    if (selectedInstances.size < 2) {
+      toast.error('Selecione pelo menos duas instâncias');
+      return;
+    }
+
+    // Validar messageLimit antes de enviar
+    if (!validateMessageLimit(messageLimit)) {
+      const maxAllowed = currentPlan === 'free' ? 20 
+        : currentPlan === 'basic' ? 50 
+        : currentPlan === 'pro' ? 500 
+        : 1000;
+      toast.error(`O limite de mensagens deve estar entre 1 e ${maxAllowed} para o seu plano ${currentPlan}`);
+      return;
+    }
 
       const phoneInstances = instances
         .filter((instance) => {
@@ -735,6 +759,8 @@ const Aquecimento: React.FC = (): ReactElement => {
           // Configurações de qualidade
           messageQuality: 'medium',
           engagementOptimization: true,
+          // Limite de mensagens personalizado
+          messageLimit: messageLimit,
         },
       };
 
@@ -1041,6 +1067,71 @@ const Aquecimento: React.FC = (): ReactElement => {
               <span>Limite de Instâncias: {instanceLimit}</span>
               <span>Slots Restantes: {remainingSlots}</span>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Configuração de Limite de Mensagens */}
+        <motion.div
+          className="mb-6 bg-gradient-to-r from-whatsapp-profundo/80 to-whatsapp-cinza/50 p-4 rounded-xl border border-whatsapp-green/30"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex flex-col space-y-4">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              Limite de Mensagens Diárias
+            </h3>
+            <div className="flex items-center space-x-4">
+              <label className="text-sm text-gray-300 min-w-fit">
+                Mensagens por dia:
+              </label>
+              <div className="flex-1 flex items-center space-x-3">
+                <input
+                  type="range"
+                  min="1"
+                  max={currentPlan === 'free' ? '20' : currentPlan === 'basic' ? '50' : currentPlan === 'pro' ? '500' : '1000'}
+                  value={messageLimit || (currentPlan === 'free' ? 20 : currentPlan === 'basic' ? 50 : currentPlan === 'pro' ? 500 : 1000)}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (validateMessageLimit(value)) {
+                      setMessageLimit(value);
+                    }
+                  }}
+                  className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  style={{
+                    background: `linear-gradient(to right, #25D366 0%, #25D366 ${((messageLimit || (currentPlan === 'free' ? 20 : currentPlan === 'basic' ? 50 : currentPlan === 'pro' ? 500 : 1000)) / (currentPlan === 'free' ? 20 : currentPlan === 'basic' ? 50 : currentPlan === 'pro' ? 500 : 1000)) * 100}%, #374151 ${((messageLimit || (currentPlan === 'free' ? 20 : currentPlan === 'basic' ? 50 : currentPlan === 'pro' ? 500 : 1000)) / (currentPlan === 'free' ? 20 : currentPlan === 'basic' ? 50 : currentPlan === 'pro' ? 500 : 1000)) * 100}%, #374151 100%)`
+                  }}
+                />
+                <input
+                  type="number"
+                  min="1"
+                  max={currentPlan === 'free' ? '20' : currentPlan === 'basic' ? '50' : currentPlan === 'pro' ? '500' : '1000'}
+                  value={messageLimit || (currentPlan === 'free' ? 20 : currentPlan === 'basic' ? 50 : currentPlan === 'pro' ? 500 : 1000)}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (validateMessageLimit(value)) {
+                      setMessageLimit(value);
+                    } else {
+                      toast.error(`Valor deve estar entre 1 e ${currentPlan === 'free' ? 20 : currentPlan === 'basic' ? 50 : currentPlan === 'pro' ? 500 : 1000}`);
+                    }
+                  }}
+                  className="w-20 px-2 py-1 bg-gray-700 text-white rounded border border-gray-600 focus:border-whatsapp-green focus:outline-none"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-400">
+              {currentPlan === 'free' 
+                ? 'Plano gratuito: máximo 20 mensagens por dia por instância'
+                : currentPlan === 'basic'
+                ? 'Plano básico: máximo 50 mensagens por dia por instância'
+                : currentPlan === 'pro'
+                ? 'Plano pro: máximo 500 mensagens por dia por instância'
+                : 'Plano enterprise: máximo 1000 mensagens por dia por instância'
+              }
+            </p>
           </div>
         </motion.div>
 
