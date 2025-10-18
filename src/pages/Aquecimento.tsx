@@ -247,12 +247,12 @@ const Aquecimento: React.FC = (): ReactElement => {
   // Função para validar messageLimit baseado no plano
   const validateMessageLimit = (limit: number | undefined): boolean => {
     if (!limit) return true; // Se não definido, usa o padrão
-    
-    const maxAllowed = currentPlan === 'free' ? 20 
-      : currentPlan === 'basic' ? 50 
-      : currentPlan === 'pro' ? 500 
-      : 1000;
-    
+
+    const maxAllowed = currentPlan === 'free' ? 20
+      : currentPlan === 'basic' ? 50
+        : currentPlan === 'pro' ? 500
+          : 1000;
+
     return limit >= 1 && limit <= maxAllowed;
   };
 
@@ -647,23 +647,23 @@ const Aquecimento: React.FC = (): ReactElement => {
       const token = localStorage.getItem('token');
 
       if (!token) {
-      throw new Error('Token de autenticação não encontrado');
-    }
+        throw new Error('Token de autenticação não encontrado');
+      }
 
-    if (selectedInstances.size < 2) {
-      toast.error('Selecione pelo menos duas instâncias');
-      return;
-    }
+      if (selectedInstances.size < 2) {
+        toast.error('Selecione pelo menos duas instâncias');
+        return;
+      }
 
-    // Validar messageLimit antes de enviar
-    if (!validateMessageLimit(messageLimit)) {
-      const maxAllowed = currentPlan === 'free' ? 20 
-        : currentPlan === 'basic' ? 50 
-        : currentPlan === 'pro' ? 500 
-        : 1000;
-      toast.error(`O limite de mensagens deve estar entre 1 e ${maxAllowed} para o seu plano ${currentPlan}`);
-      return;
-    }
+      // Validar messageLimit antes de enviar
+      if (!validateMessageLimit(messageLimit)) {
+        const maxAllowed = currentPlan === 'free' ? 20
+          : currentPlan === 'basic' ? 50
+            : currentPlan === 'pro' ? 500
+              : 1000;
+        toast.error(`O limite de mensagens deve estar entre 1 e ${maxAllowed} para o seu plano ${currentPlan}`);
+        return;
+      }
 
       const phoneInstances = instances
         .filter((instance) => {
@@ -1123,13 +1123,13 @@ const Aquecimento: React.FC = (): ReactElement => {
               </div>
             </div>
             <p className="text-xs text-gray-400">
-              {currentPlan === 'free' 
+              {currentPlan === 'free'
                 ? 'Plano gratuito: máximo 20 mensagens por dia por instância'
                 : currentPlan === 'basic'
-                ? 'Plano básico: máximo 50 mensagens por dia por instância'
-                : currentPlan === 'pro'
-                ? 'Plano pro: máximo 500 mensagens por dia por instância'
-                : 'Plano enterprise: máximo 1000 mensagens por dia por instância'
+                  ? 'Plano básico: máximo 50 mensagens por dia por instância'
+                  : currentPlan === 'pro'
+                    ? 'Plano pro: máximo 500 mensagens por dia por instância'
+                    : 'Plano enterprise: máximo 1000 mensagens por dia por instância'
               }
             </p>
           </div>

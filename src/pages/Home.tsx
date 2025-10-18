@@ -66,9 +66,8 @@ const StatCard = ({ icon: Icon, title, value, trend, color, description }) => (
 			{trend && (
 				<div className="mt-4 flex items-center gap-2">
 					<div
-						className={`flex items-center text-sm ${
-							trend.direction === "up" ? "text-green-200" : "text-red-200"
-						} bg-white/10 px-2 py-1 rounded-full`}
+						className={`flex items-center text-sm ${trend.direction === "up" ? "text-green-200" : "text-red-200"
+							} bg-white/10 px-2 py-1 rounded-full`}
 					>
 						{trend.direction === "up" ? "↑" : "↓"}
 						<span className="ml-1">{trend.percentage}%</span>
@@ -278,7 +277,7 @@ const Home: React.FC = () => {
 							dashboardData.instanceDetails.map((instance, index) => {
 								const progressValue =
 									typeof instance.warmupTime === "number" &&
-									instance.warmupTime > 0
+										instance.warmupTime > 0
 										? Math.min((instance.warmupTime / (480 * 3600)) * 100, 100)
 										: 0;
 								return (
